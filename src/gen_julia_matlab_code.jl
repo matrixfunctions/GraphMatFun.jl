@@ -183,7 +183,10 @@ function write_operation_julia(file,T,graph,node,lang,op,
     return (nodemem,parent1mem,parent2mem);
 end
 
-function write_operation_matlab(file,T,node,nodename,op,parentname1,parentname2,dealloc_list)
+function write_operation_matlab(file,T,graph,node,nodename,op,
+                               parentname1,
+                               parentname2,
+                               dealloc_list)
 
     # Needs to be updated
     if op == :mult
@@ -305,7 +308,7 @@ function gen_code(fname,graph;
                 parent1mem= get_mem!(mem,graph.parents[node][1],lang);
                 parent2mem= get_mem!(mem,graph.parents[node][2],lang);
             end
-            write_operation_matlab(file,T,node,nodemem,op,
+            write_operation_matlab(file,T,graph,node,nodemem,op,
                                    parent1mem,parent2mem,
                                    can_be_deallocated[i])
         else
