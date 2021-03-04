@@ -7,8 +7,14 @@ import Base.eltype
 import Base.big
 
 export Compgraph
-
-
+export get_topo_order
+export add_mult!
+export add_lincomb!
+export add_ldiv!
+export add_sum!
+export add_output!
+export rename_node!
+export del_node!
 
 
 # Hash tables representing a computation graph
@@ -19,14 +25,24 @@ struct Compgraph{T}
     outputs::Vector{Symbol}
 end
 
-# Constructor -- gives an empty graph
+
+"""
+    graph=Compgraph(T::Type=ComplexF64)
+
+Creates an empty computation graph of with coefficients of type `T`.
+
+    """
 function Compgraph(T::Type=ComplexF64)
     return Compgraph(Dict{Symbol,Symbol}(), Dict{Symbol,Tuple{Symbol,Symbol}}(),
      Dict{Symbol,Tuple{T,T}}(), Vector{Symbol}()
      );
 end
+"""
+    graph=Compgraph(T,orggraph::Compgraph)
 
-# Change the type of the coefficients to type T
+Converts a graph such that the coefficients become type `T`. Note that `T` can be a `Number` but can be other objects with defined operations, or just `Any`.
+
+    """
 function Compgraph(T,orggraph::Compgraph)
     newcoeffs=Dict{Symbol,Tuple{T,T}}();
     for node in keys(orggraph.coeffs)
@@ -280,10 +296,18 @@ function nof_uncomputed_children(graph,node,vals)
     return length(cv);
 end
 
-# Computes a legal order of computation
-# Heuristically trying to minimize number of allocations
-# Does a topological sort with objective to minimize pathwidth
-function get_computation_order(graph; priohelp=Dict{Symbol,Float64}())
+"""
+    get_topo_order(graph; priohelp=Dict{Symbol,Float64}())
+
+Computes a vector of all nodes sorted in a topological
+way, i.e., an order it can be computed. The `priohelp`
+kwarg can be used to obtain a different topological
+ordering, by changing the node priority.
+
+The code uses a heuristic to minimize pathwidth.
+
+    """
+function get_topo_order(graph; priohelp=Dict{Symbol,Float64}())
     # Assumed to be true for the computed nodes, and not exist for other nodes
     is_computed=Dict{Symbol,Bool}();
     is_computed[:I]=true;
@@ -376,57 +400,3 @@ function get_computation_order(graph; priohelp=Dict{Symbol,Float64}())
     end
     return (computation_order, can_be_deallocated, max_nof_nodes)
 end
-
-
-## Evaluating the graph
-
-
-#
-#  eval_graph(graph,x;vals=Dict,output=size(graph.outputs,1))
-#
-#  x::Vector  # Elementwise
-#   T=promote_type(eltype(graph),eltype(x))
-#   T_comp=Vector{T}
-#   vals::Dict{:Symbol,T_comp}
-#
-#  x::AbstractMatrix  # Matrix function
-#   T=promote_type(eltype(graph),eltype(x))
-#   if x isa Matrix
-#     T_comp=Matrix{T}
-#   else
-#     T_comp=AbstractMatrix{T}
-#   vals::Dict{:Symbol,T_mat}
-#
-#
-#  x
-#   T=promote_type(eltype(graph),typeof(x))
-#   T_comp=T
-#   vals::Dict{:Symbol,T}
-#
-#  ret::T_comp
-#
-
-#  eval_jac(graph,x,cref;vals=NaN)
-#
-#  if (isnan(vals))
-#     vals=eval_graph(graph,x)
-#  end
-#  x::Vector
-#   T=promote_type(eltype(graph),eltype(x))
-#   T_comp=Vector{T}
-#   vals::Dict{:Symbol,T_comp}
-#
-#  ret::Matrix{T} # size(x,1) times size(cref,1)
-#
-#  adjust_for_errtype!(...)   #
-
-#  eval_der(graph,x,c,vals)
-#
-#  c::Tuple(Symbol,Int)
-#  x::Vector
-#  T=promote_type(eltype(graph),eltype(x))
-#
-#  ret::Vector{T}
-
-;
-#
