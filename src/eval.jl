@@ -146,6 +146,13 @@ end
 # If the objective funcion is the sum of squared residuals, then the gradient
 # is sum_i (Z(x_i)-f(x_i)) dZ(x_i)/dc, i.e., J^T times vector of residual
 # values r_i=Z(x_i)-f(x_i).
+"""
+    J=eval_jac(graph, x, cref; vals=nothing, output=size(graph.outputs,1))
+
+Computes Jacobian ```J = dZ(x_i)/dc```, with respect to the coefficients given in the vector `cref`, and
+points `x[1],...,x[end]`. See `eval_graph` for
+ description of `vals` and `output`.
+     """
 function eval_jac(graph, x, cref; vals=nothing, output=size(graph.outputs,1))
     if (cref isa Tuple) #Workaround for single coefficient
         cref=[cref]
@@ -215,10 +222,14 @@ function der_prop!(graph, der, vals, node, curr_parent, other_parent, i)
 end
 
 
-# adjust_for_errtype!()
-# JR can be Jacobian or vector of residuals.
-# f is the objective function
-# errtype can be :abserr or :relerr, although the former is doing nothing
+"""
+    adjust_for_errtype!(JR, pts, f, errtype)
+
+Adjusts the jacobian and residuals to `errtype`.
+`JR` can be Jacobian or vector of residuals,
+and  `f` is the objective function.
+The kwarg `errtype` can be `:abserr` or `:relerr`.
+"""
 function adjust_for_errtype!(JR, pts, f, errtype)
     # Assumes a Jacobian and residual-vector that is computed in absolute error.
     # Adjusts Jacobian and residual-vector from absolute, to relative error, i.e.,
@@ -239,6 +250,21 @@ end
 # eval_runerr()
 # Modifies the Dict relerrs if passed as a kwarg
 # Returns the output specificed in graph.outputs[output]
+"""
+    err=eval_runerr(graph, x; vals=nothing, relerrs=nothing,
+                           output=size(graph.outputs,1),
+                           mode=:bounds,
+                           add_relerr=eps())
+
+Provides the running error of the graph evaluated in `x`.
+See `eval_graph` for meaning of `vals`. The kwarg
+`relerrs` is an anologous variable for the running
+error estimates in each node. The kwarg `mode`
+can be `:bounds`, `:rand`, `:estimate`, specifying
+if the code should make estimates or bounds, or
+random error within the bound.
+
+   """
 function eval_runerr(graph, x; vals=nothing, relerrs=nothing,
                     output=size(graph.outputs,1),
                     mode=:bounds, # Can be :bounds, :rand, :estimate
