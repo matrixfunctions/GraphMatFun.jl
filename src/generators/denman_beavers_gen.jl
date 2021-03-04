@@ -1,3 +1,5 @@
+export gen_denman_beavers
+
 """
         (graph,cref)=gen_denman_beavers(k;T=ComplexF64,cref_mode=0)
 
@@ -11,7 +13,7 @@ Reference:
 
   Denman, Eugene D.; Beavers, Alex N. (1976), "The matrix sign function and computations in systems", Applied Mathematics and Computation, 2 (1): 63–94, doi:10.1016/0096-3003(76)90020-5
     """
-function gen_denman_beavers(k;T=ComplexF64,cref_mode)
+function gen_denman_beavers(k;T=ComplexF64,cref_mode=0)
 
     graph = Compgraph(T);
 

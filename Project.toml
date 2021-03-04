@@ -3,6 +3,10 @@ uuid = "456a00ab-810a-4bbb-9f06-6bc08c0a1e82"
 authors = ["Elias Jarlebring <jarlebring@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
 [compat]
 julia = "1"
 

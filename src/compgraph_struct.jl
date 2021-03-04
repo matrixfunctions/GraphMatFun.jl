@@ -6,6 +6,8 @@ using LinearAlgebra
 import Base.eltype
 import Base.big
 
+export Compgraph
+
 
 
 

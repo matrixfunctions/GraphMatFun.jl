@@ -1,3 +1,6 @@
+
+export eval_graph,eval_jac,eval_runerr,adjust_for_errtype!
+
 # Evaluation of graph, Jacobian, and running error
 # eval_graph()
 # eval_jac()
