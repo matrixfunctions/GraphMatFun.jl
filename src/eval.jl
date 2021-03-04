@@ -1,11 +1,6 @@
 
 export eval_graph,eval_jac,eval_runerr,adjust_for_errtype!
 
-# Evaluation of graph, Jacobian, and running error
-# eval_graph()
-# eval_jac()
-# adjust_for_errtype!()
-# eval_runerr()
 
 # init_vals_eval_graph!()
 # init_relerrs_eval_runerr!()
@@ -15,10 +10,32 @@ export eval_graph,eval_jac,eval_runerr,adjust_for_errtype!
 # eval_graph()
 # Modifies the Dict vals if passed as a kwarg
 # Returns the output specificed in graph.outputs[output]
+"""
+    result=eval_graph(graph,x; vals=nothing,
+                      output=size(graph.outputs,1),
+                      comporder=nothing)
+
+Evaluates a graph in the value `x` which is typically a scalar value or a matrix. If `x` is a Vector, the values will be
+evaluated  elementwise.
+
+The `comporder` is a `Vector` of nodes specifying in which order the graph should be computed. By default `get_topo_order` is used.
+
+The `output` is an `Int` specifying which node should be considered as output. The output node is `graph.outputs[output]`.
+
+The `vals` is used to inspect contents other than the output inside the graph. Typically `vals` is a `Dict`. It will be modified to contain the computed nodes of the graph. If we wish to inspect node `X3`, we can initiate an empty dict as input:
+
+```julia-repl
+julia> vals=Dict{Symbol,Any}();
+julia> eval_graph(graph,A,vals=vals);
+julia> vals[:X3]
+
+```
+
+    """
 function eval_graph(graph, x; vals=nothing, output=size(graph.outputs,1), comporder=nothing)
     vals = init_vals_eval_graph!(graph, x, vals)
     if comporder == nothing
-        comporder = get_computation_order(graph)[1]
+        comporder = get_topo_order(graph)[1]
     end
     for node = comporder
         parentval1=vals[graph.parents[node][1]]

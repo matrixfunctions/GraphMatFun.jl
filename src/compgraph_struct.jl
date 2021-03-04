@@ -1,5 +1,5 @@
-# Main data structures of the computation graph.
-# Including evaluation, Jacobian computation, and running error computation
+# Main data structures of the computation graph,
+# including sorting and manipulation functions
 
 using LinearAlgebra
 
@@ -273,12 +273,15 @@ end
 function eltype(graph::Compgraph{T}) where {T}
     return T
 end
+"""
+     children=get_children(graph,node)
 
-# Get the (direct) children of the node
+Returns the (direct) children of `node`.
+
+     """
 function get_children(graph,node)
     c=Vector{Symbol}();
     for (child,parents) in graph.parents
-
         for s=1:2
             if (parents[s]==node)
                 push!(c,child);
@@ -289,6 +292,7 @@ function get_children(graph,node)
     return c;
 end
 
+# Only for topo order
 function nof_uncomputed_children(graph,node,vals)
     cv=get_children(graph,node);
     computed_nodes = keys(vals) # Assumption: vals only contain keys to computed elements
