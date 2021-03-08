@@ -9,4 +9,9 @@ include("eval.jl")
 include("generators/denman_beavers_gen.jl");
 include("generators/ps_poly.jl");
 
+
+# Code generations
+
+include("code_gen.jl")
+
 end

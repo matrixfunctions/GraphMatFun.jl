@@ -301,7 +301,7 @@ function nof_uncomputed_children(graph,node,vals)
 end
 
 """
-    get_topo_order(graph; priohelp=Dict{Symbol,Float64}())
+    (order,can_be_deallocated,max_nodes)=get_topo_order(graph; priohelp=Dict{Symbol,Float64}())
 
 Computes a vector of all nodes sorted in a topological
 way, i.e., an order it can be computed. The `priohelp`
@@ -309,6 +309,12 @@ kwarg can be used to obtain a different topological
 ordering, by changing the node priority.
 
 The code uses a heuristic to minimize pathwidth.
+
+The return value `order` is a `Vector` of Symbols, and
+`can_be_deallocated` is a `Vector{Vector{Symbol}}` where
+the element `i` specifies the `Symbols` that are unused
+after step `i` in the ordering. The `max_nodes` is
+the pathwidth.
 
     """
 function get_topo_order(graph; priohelp=Dict{Symbol,Float64}())
