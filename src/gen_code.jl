@@ -1,4 +1,3 @@
-using Printf
 include("gen_code_mem.jl");
 
 export gen_code,LangJulia,LangMatlab,LangC
@@ -59,7 +58,6 @@ function function_init(lang::LangJulia,T,mem)
     push_code!(code,"T=promote_type(eltype(A),$T); "*comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
 
 
-    matrix_type=lang.matrix_type;
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)");
     push_code!(code,"n=size(A,1)");
     start_j=2;

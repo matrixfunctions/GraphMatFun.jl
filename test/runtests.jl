@@ -5,4 +5,5 @@ using Test
     include("denman_beavers.jl");
     include("ps_poly.jl");
     include("graph_ops.jl");
+    include("code_gen_test.jl");
 end
