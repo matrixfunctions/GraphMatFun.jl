@@ -11,7 +11,7 @@ struct LangC end;
 
 
 function LangJulia()
-    return LangJulia(true,true,"Matrix");
+    return LangJulia(true,true);
 end
 
 
