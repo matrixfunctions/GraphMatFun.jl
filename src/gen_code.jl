@@ -15,6 +15,39 @@ function LangJulia()
 end
 
 
+# Code snippet handling
+struct CodeSnippet
+    code_lines::Vector{String}
+    lang
+end
+function init_code(lang)
+    return CodeSnippet(Vector{String}(undef,0),lang);
+end
+function push_code!(code,str)
+    push!(code.code_lines,str);
+end
+function push_comment!(code,str)
+    push!(code.code_lines,comment(code.lang,str));
+end
+function to_string(code)
+    return join(code.code_lines,"\n");
+end
+
+
+
+
+# Every language needs:
+# comment(::Lang,s)
+# slotname(::Lang,i) #
+# assign_coeff(::Lang,v,i)
+# function_definition(::Lang,funname)
+# function_init(lang::Lang,T,mem)
+# init_mem(lang::Lang,max_nof_nodes)
+# function_end(lang::Lang,graph,mem)
+# execute_operation!(lang::Lang,T,graph,node,
+#                    dealloc_list,   mem)
+
+
 # Language specific comment operations
 comment(::LangMatlab,s)="% $s";
 comment(::LangJulia,s)="# $s";
@@ -26,25 +59,13 @@ slotname(::LangMatlab,i)="memslots{$i}"
 
 # For julia more parsing may be required TODO
 assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
+assign_coeff(::LangMatlab,v,i)=("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
 
 
-# Code snippet handling
-function init_code(lang)
-    return Vector{String}(undef,0);
-end
-function push_code!(code,str)
-    push!(code,str);
-end
-function push_comment!(code,lang,str)
-    push!(code,comment(lang,str));
-end
 
 
-function function_definition(::LangMatlab,funname)
-    code=init_code(lang);
-    push_code!(code,"function output=$funname(A)");
-    return code
-end
+### Julia
+
 function function_definition(lang::LangJulia,funname)
     code=init_code(lang);
     push_code!(code,"using LinearAlgebra");
@@ -54,15 +75,15 @@ end
 function function_init(lang::LangJulia,T,mem)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
+
+    # Allocation
     push_code!(code,"max_memslots=$max_nodes;");
     push_code!(code,"T=promote_type(eltype(A),$T); "*comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
-
-
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)");
     push_code!(code,"n=size(A,1)");
     start_j=2;
 
-    push_comment!(code,lang,"The first slots are I and A");
+    push_comment!(code,"The first slots are I and A");
     if (lang.overwrite_input)
         start_j=3
     end
@@ -130,7 +151,7 @@ function execute_operation!(lang::LangJulia,
     parent2mem= get_slot_name(mem,parent2)
 
     code=init_code(lang);
-    push_comment!(code,lang,"Computing $node with operation: $op");
+    push_comment!(code,"Computing $node with operation: $op");
     if op == :mult
         # Multiplication has no inline
         (nodemem_i,nodemem)=get_free_slot(mem)
@@ -160,7 +181,7 @@ function execute_operation!(lang::LangJulia,
 
             recycle_parent=(parent1 in dealloc_list) ? parent1 : parent2
 
-            push_comment!(code,lang,"Smart lincomb recycle $recycle_parent");
+            push_comment!(code,"Smart lincomb recycle $recycle_parent");
 
 
             nodemem=get_slot_name(mem,recycle_parent)
@@ -196,13 +217,69 @@ function execute_operation!(lang::LangJulia,
     for n=dealloc_list
         i=get_slot_number(mem,n);
 
-        push_comment!(code,lang,"Deallocating $n in slot $i");
+        push_comment!(code,"Deallocating $n in slot $i");
         free!(mem,i);
 
     end
 
     return (code,nodemem)
 end
+
+
+
+### MATLAB
+
+
+function function_definition(lang::LangMatlab,funname)
+    code=init_code(lang);
+    push_code!(code,"function output=$funname(A)");
+    return code
+end
+
+function function_init(lang::LangMatlab,T,mem)
+    code=init_code(lang);
+    push_code!(code,"I=eye(n,n);");
+    return code;
+end
+
+function init_mem(lang::LangMatlab,max_nof_nodes)
+    mem=CodeMem(max_nof_nodes,i->slotname(lang,i));
+    return mem;
+end
+function function_end(lang::LangMatlab,graph,mem)
+    code=init_code(lang);
+    push_code!(code,"output=$(graph.outputs[end])");
+    push_code!(code,"end")
+    return code
+end
+
+
+function execute_operation!(lang::LangMatlab,
+                            T,graph,node,
+                            dealloc_list,
+                            mem)
+    op = graph.operations[node]
+    parent1=graph.parents[node][1]
+    parent2=graph.parents[node][2]
+
+
+    code=init_code(lang);
+    push_comment!(code,"Computing $node with operation: $op");
+    # Needs to be updated
+    if op == :mult
+        push_code!(code,"$node=$parent1 * $parent2;");
+    elseif op == :ldiv
+        push_code!(code,"$node=$parent1 \\ $parent2;");
+    elseif op == :lincomb
+        (coeff1,coeff1_code)=assign_coeff(lang,graph.coeffs[node][1],1);
+        push_code!(code,"$coeff1_code;");
+        (coeff2,coeff2_code)=assign_coeff(lang,graph.coeffs[node][2],2);
+        push_code!(code,"$coeff2_code;");
+        push_code!(code,"$node= $coeff1*$parent1+$coeff2*parent2;")
+    end
+    return (code,"$node");
+end
+
 
 
 
@@ -220,6 +297,7 @@ function gen_code(fname,graph;
         fname = abspath(fname)
         file = open(fname, "w+")
     else
+        # Lazy: Print out if no filename
         file=Base.stdout;
     end
 
@@ -230,7 +308,7 @@ function gen_code(fname,graph;
     # a bound on the number memory slots needed.
 
 
-    println(file,join(function_definition(lang,funname),"\n"));
+    println(file,to_string(function_definition(lang,funname)));
 
     # We do a double sweep in order to determine exactly
     # how many memory slots are needed. The first sweep
@@ -241,7 +319,7 @@ function gen_code(fname,graph;
 
     mem=init_mem(lang,max_nof_slots+2)
 
-    # Sweep 1: Determine the number of slots needed
+    # Sweep 1: Determine exactly the number of slots needed
     nof_slots=0;
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
@@ -250,13 +328,16 @@ function gen_code(fname,graph;
                                      mem)
 
         # How many slots needed to reach this point
-        nof_slots=max(nof_slots,findlast(mem.slots .!= :Free))
+        if (!isnothing(findlast(mem.slots .!= :Free)))
+            nof_slots=max(nof_slots,findlast(mem.slots .!= :Free))
+        end
+
     end
 
 
     # Sweep 2:
     mem=init_mem(lang,nof_slots)
-    println(file,join(function_init(lang,T,mem),"\n"));
+    println(file,to_string(function_init(lang,T,mem)));
 
 
     for (i,node) in enumerate(order)
@@ -264,9 +345,9 @@ function gen_code(fname,graph;
                                      T,graph,node,
                                      can_be_deallocated[i],
                                      mem)
-        println(file,join(exec_code,"\n"))
+        println(file,to_string(exec_code))
     end
-    println(file,join(function_end(lang,graph,mem),"\n"));
+    println(file,to_string(function_end(lang,graph,mem)));
 
     if (fname isa String)
         close(file)
