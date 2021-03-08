@@ -4,12 +4,19 @@ include("gen_code_mem.jl");
 export gen_code,LangJulia,LangMatlab,LangC
 
 struct LangMatlab end;
-struct LangJulia end;
+struct LangJulia
+    overwrite_input # Overwrite input
+    exploit_uniformscaling  # I=UniformScaling. Should it be exploited?
+end;
 struct LangC end;
 
 
+function LangJulia()
+    return LangJulia(true,true,"Matrix");
+end
 
-# Language specific operations
+
+# Language specific comment operations
 comment(::LangMatlab,s)="% $s";
 comment(::LangJulia,s)="# $s";
 comment(::LangC,s)="/* $s */";
@@ -18,21 +25,21 @@ comment(::LangC,s)="/* $s */";
 slotname(::LangJulia,i)="memslots[$i]"
 slotname(::LangMatlab,i)="memslots{$i}"
 
-# For julia more parsing may be required
+# For julia more parsing may be required TODO
 assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
 
 
-
+# Code snippet handling
 function init_code(lang)
     return Vector{String}(undef,0);
 end
-
 function push_code!(code,str)
     push!(code,str);
 end
 function push_comment!(code,lang,str)
     push!(code,comment(lang,str));
 end
+
 
 function function_definition(::LangMatlab,funname)
     code=init_code(lang);
@@ -41,21 +48,49 @@ function function_definition(::LangMatlab,funname)
 end
 function function_definition(lang::LangJulia,funname)
     code=init_code(lang);
+    push_code!(code,"using LinearAlgebra");
     push_code!(code,"function $funname(A)");
     return code
 end
-function function_init(lang::LangJulia,T,max_nodes)
+function function_init(lang::LangJulia,T,mem)
     code=init_code(lang);
-    push_code!(code,"i=1im");
+    max_nodes=size(mem.slots,1);
     push_code!(code,"max_memslots=$max_nodes;");
     push_code!(code,"T=promote_type(eltype(A),$T); "*comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
 
 
+    matrix_type=lang.matrix_type;
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)");
     push_code!(code,"n=size(A,1)");
-    push_code!(code,"for i=1:max_memslots");
-    push_code!(code,"    memslots[i]=Matrix{T}(undef,n,n);");
+    start_j=2;
+
+    push_comment!(code,lang,"The first slots are I and A");
+    if (lang.overwrite_input)
+        start_j=3
+    end
+    push_code!(code,"for  j=$start_j:max_memslots");
+
+    push_code!(code,"    memslots[j]=Matrix{T}(undef,n,n);");
     push_code!(code,"end");
+    # Initialize I
+    I_slot_name=get_slot_name(mem,:I);
+    if (!lang.exploit_uniformscaling)
+        push_code!(code,"$I_slot_name=Matrix{T}(I,n,n)")
+    else
+        push_comment!(code,"Uniform scaling is exploited. No I matrix explicitly allocated");
+    end
+
+    # Initialize A
+    A_slot_name=get_slot_name(mem,:A);
+    if (lang.overwrite_input)
+        # Overwrite input A
+        push_code!(code,"$A_slot_name=A "*comment(lang,"overwrite A"))
+    else
+        # Otherwise make a copy
+        push_code!(code,"$A_slot_name[:]=A ")
+    end
+
+
     return code
 end
 
@@ -63,6 +98,9 @@ function init_mem(lang::LangJulia,max_nof_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i));
     alloc_slot!(mem,1,:I);
     alloc_slot!(mem,2,:A);
+    if (lang.exploit_uniformscaling)
+        mem.special_names[:I]="I";
+    end
     return mem;
 end
 function function_end(lang::LangJulia,graph,mem)
@@ -87,7 +125,9 @@ function execute_operation!(lang::LangJulia,
     parent2=graph.parents[node][2]
 
 
-    dealloc_list=deepcopy(dealloc_list); # Don't overwrite
+    # Don't overwrite the list
+    dealloc_list=deepcopy(dealloc_list);
+    setdiff!(dealloc_list,keys(mem.special_names));
     parent1mem= get_slot_name(mem,parent1)
     parent2mem= get_slot_name(mem,parent2)
 
@@ -108,13 +148,13 @@ function execute_operation!(lang::LangJulia,
         push_code!(code,"$nodemem=$parent1mem\\$parent2mem")
 
     elseif op == :lincomb
-        # Use economical memory slots
         coeff_vars=Vector{String}(undef,2);
         (coeff1,coeff1_code)=assign_coeff(lang,graph.coeffs[node][1],1);
         push_code!(code,coeff1_code);
         (coeff2,coeff2_code)=assign_coeff(lang,graph.coeffs[node][2],2);
         push_code!(code,coeff2_code);
 
+        # Use economical memory slots
         if ((parent1 in dealloc_list) || (parent2 in dealloc_list))
             # Smart / inplace: parentX can be used to store newly computed value
 
@@ -178,40 +218,48 @@ function gen_code(fname,graph;
 
     T=eltype(eltype(typeof(graph.coeffs.vals)));
 
-    file=Base.stdout;
-    (order, can_be_deallocated, max_nof_nodes) =
+    if (fname isa String)
+        fname = abspath(fname)
+        file = open(fname, "w+")
+    else
+        file=Base.stdout;
+    end
+
+    (order, can_be_deallocated, max_nof_slots) =
         get_topo_order(graph; priohelp=priohelp);
 
+    # max_nof_slots is the path width which gives
+    # a bound on the number memory slots needed.
 
 
     println(file,join(function_definition(lang,funname),"\n"));
 
-    mem=init_mem(lang,max_nof_nodes+2)
-    orgmem=deepcopy(mem);
+    # We do a double sweep in order to determine exactly
+    # how many memory slots are needed. The first sweep
+    # we carry out all operations but store only the
+    # maximum number of memory slots needed. The
+    # second sweep generates the code.
 
 
-    # Sweep 1: Determine the effective path width
-    path_width=0;
+    mem=init_mem(lang,max_nof_slots+2)
+
+    # Sweep 1: Determine the number of slots needed
+    nof_slots=0;
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
                                      T,graph,node,
                                      can_be_deallocated[i],
                                      mem)
 
-        path_width=max(path_width,findlast(mem.slots .!= :Free))
+        # How many slots needed to reach this point
+        nof_slots=max(nof_slots,findlast(mem.slots .!= :Free))
     end
 
 
     # Sweep 2:
-    println(file,comment(lang,"Path width $path_width"));
+    mem=init_mem(lang,nof_slots)
+    println(file,join(function_init(lang,T,mem),"\n"));
 
-    println(file,join(function_init(lang,T,path_width),"\n"));
-    mem=init_mem(lang,path_width)
-
-    println(file,get_slot_name(mem,:I),"[:]=Matrix(I,n,n)")
-
-    # Overwrite input A
-    println(file,get_slot_name(mem,:A),"=A")
 
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
@@ -221,5 +269,10 @@ function gen_code(fname,graph;
         println(file,join(exec_code,"\n"))
     end
     println(file,join(function_end(lang,graph,mem),"\n"));
+
+    if (fname isa String)
+        close(file)
+    end
+
 
 end

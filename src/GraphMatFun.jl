@@ -12,6 +12,6 @@ include("generators/ps_poly.jl");
 
 # Code generations
 
-include("code_gen.jl")
+include("gen_code.jl")
 
 end
