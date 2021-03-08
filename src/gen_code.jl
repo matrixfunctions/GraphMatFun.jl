@@ -236,6 +236,7 @@ end
 
 function function_init(lang::LangMatlab,T,mem)
     code=init_code(lang);
+    push_code!(code,"n=size(A,1);");
     push_code!(code,"I=eye(n,n);");
     return code;
 end
@@ -246,7 +247,7 @@ function init_mem(lang::LangMatlab,max_nof_nodes)
 end
 function function_end(lang::LangMatlab,graph,mem)
     code=init_code(lang);
-    push_code!(code,"output=$(graph.outputs[end])");
+    push_code!(code,"output=$(graph.outputs[end]);");
     push_code!(code,"end")
     return code
 end
@@ -273,7 +274,7 @@ function execute_operation!(lang::LangMatlab,
         push_code!(code,"$coeff1_code;");
         (coeff2,coeff2_code)=assign_coeff(lang,graph.coeffs[node][2],2);
         push_code!(code,"$coeff2_code;");
-        push_code!(code,"$node= $coeff1*$parent1+$coeff2*parent2;")
+        push_code!(code,"$node= $coeff1*$parent1+$coeff2*$parent2;")
     end
     return (code,"$node");
 end
