@@ -228,8 +228,6 @@ end
 
 
 ### MATLAB
-
-
 function function_definition(lang::LangMatlab,funname)
     code=init_code(lang);
     push_code!(code,"function output=$funname(A)");
@@ -285,9 +283,24 @@ end
 
 
 
+
+## Main code generation function
+"""
+    gen_code(fname,graph; priohelp=Dict{Symbol,Float64}(),
+             lang=LangJulia(),funname="dummy")
+
+Generates the code for the `graph` in the language
+ specified in `lang` and writes it into the file
+`fname`. The string `funname` is the function name.
+Topological order of the nodes is comptued using
+`get_topo_order` and `priohelp` can be used to
+influence the order.
+
+Currently supported language: `LangJulia`, `LangMatlab`, `LangC`.
+
+"""
 function gen_code(fname,graph;
                   priohelp=Dict{Symbol,Float64}(),
-                  mem_mode=:prealloc,
                   lang=LangJulia(),
                   funname="dummy")
 
@@ -297,7 +310,7 @@ function gen_code(fname,graph;
         fname = abspath(fname)
         file = open(fname, "w+")
     else
-        # Lazy: Print out if no filename
+        # Lazy: Print out to stdout if no filename
         file=Base.stdout;
     end
 
