@@ -40,6 +40,8 @@ function gen_general_poly_recursion(x,z;compress_keys=true)
     key=Symbol("T2k$(k+3)");
     crefs_new=add_sum!(graph,key,
                        z,z_nodes,Symbol("T2k"));
+
+
     if (compress_keys)
         # Only take the I and A
         append!(crefs,crefs_new[1:2]);
@@ -52,7 +54,7 @@ function gen_general_poly_recursion(x,z;compress_keys=true)
     empty!(graph.outputs);
     push!(graph.outputs,key);
 
-    return (graph,crefs_new);
+    return (graph,crefs);
 
 end
 function gen_general_poly_recursion(k;T=ComplexF64,compress_keys=true)
