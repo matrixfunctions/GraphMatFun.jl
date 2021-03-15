@@ -16,6 +16,8 @@ export add_output!
 export rename_node!
 export del_node!
 
+export get_all_cref
+export set_coeffs!
 
 # Hash tables representing a computation graph
 struct Compgraph{T}
