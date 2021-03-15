@@ -56,11 +56,12 @@ comment(::LangC,s)="/* $s */";
 
 slotname(::LangJulia,i)="memslots[$i]"
 slotname(::LangMatlab,i)="memslots{$i}"
+slotname(::LangC,i)="memslots+($i-1)*n*n"
 
-# For julia more parsing may be required TODO
+# For Julia more parsing may be required TODO
 assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
 assign_coeff(::LangMatlab,v,i)=("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
-
+assign_coeff(::LangC,v,i)=("coeff$i","coeff$i = "*string(real(v))*";");
 
 
 
@@ -281,7 +282,173 @@ end
 
 
 
+### C
+function function_definition(lang::LangC,funname)
+    code=init_code(lang);
+    push_code!(code,"#include<assert.h>")
+    push_code!(code,"#include<mkl/mkl.h>") # Assuming we use MKL here.
+    push_code!(code,"#include<stdlib.h>")
+    push_code!(code,"#include<string.h>")
+    push_code!(code,"typedef double FPTYPE;")
+    push_code!(code,"void $funname(const FPTYPE *A, const size_t n,
+                                   FPTYPE *output) {");
+    return code
+end
 
+function function_init(lang::LangC,T,mem)
+    code=init_code(lang);
+    max_nodes=size(mem.slots,1);
+
+    # Allocation
+    push_code!(code,"size_t max_memslots=$max_nodes;");
+    push_comment!(code,"Initializations.")
+    push_code!(code,"FPTYPE coeff1, coeff2;");
+    push_code!(code,"lapack_int *ipiv = NULL;")
+    # TODO: The "+1" is used to store LU factorizations. In principle, this
+    # may not be needed, and either way there are smarter (but more complicated)
+    # ways of doing this.
+    push_code!(code,"FPTYPE *memslots =
+                     malloc(n*n*(max_memslots+1)*sizeof(*memslots));");
+    start_j=2;
+
+    # TODO This solution keeps the identity matrix explicitly.
+    push_code!(code,"size_t j;")
+    push_code!(code,"memset(memslots, 0, n*n);")
+    push_code!(code,"for(j=0; j<n*n; j+=n+1)");
+    push_code!(code,"        memslots[j] = 1.;")
+
+    # TODO This solution makes a copy of A.
+    push_comment!(code,"Make a copy of A");
+    push_code!(code,"assert(sizeof(char) == 1);")
+    push_code!(code,"size_t size_FPTYPE = sizeof(FPTYPE);")
+    push_code!(code,"memcpy((FPTYPE*)(memslots+n*n), (FPTYPE*)A,
+                            n*n*size_FPTYPE);")
+
+    return code
+end
+
+function init_mem(lang::LangC,max_nof_nodes;)
+    mem=CodeMem(max_nof_nodes,i->slotname(lang,i));
+    alloc_slot!(mem,1,:I);
+    alloc_slot!(mem,2,:A);
+    return mem;
+end
+
+function function_end(lang::LangC,graph,mem)
+    code=init_code(lang);
+    retval_node=graph.outputs[end];
+    retval=get_slot_name(mem,retval_node);
+
+    push_code!(code,"memcpy((FPTYPE*)output, (FPTYPE*)$retval,
+                            n*n*size_FPTYPE);")
+    push_code!(code,"free(ipiv);")
+    push_code!(code,"free(memslots);")
+    push_code!(code,"}");
+    return code
+end
+
+function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
+    op = graph.operations[node]
+    parent1=graph.parents[node][1]
+    parent2=graph.parents[node][2]
+
+    # Keep deallocation list (used for smart memory management).
+    dealloc_list=deepcopy(dealloc_list);
+    setdiff!(dealloc_list,keys(mem.special_names));
+    parent1mem= get_slot_name(mem,parent1)
+    parent2mem= get_slot_name(mem,parent2)
+
+    code=init_code(lang);
+    push_comment!(code,"Computing $node with operation: $op");
+    if op == :mult
+        (nodemem_i,nodemem)=get_free_slot(mem)
+        alloc_slot!(mem,nodemem_i,node);
+        push_code!(code,"cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+                                     n, n, n,
+                                     1., $parent1mem, n, $parent2mem, n,
+                                     1., $nodemem, n);");
+    elseif op == :ldiv
+        # TODO Try to avoid explicit copies by reusing memory of parent nodes if
+        # they are in the deallocation list. Note that in X = A \ B extra memory
+        # is required for the LU factorization of A as well as for B, which is
+        # overwritten by X.
+        (nodemem_i,nodemem)=get_free_slot(mem)
+        alloc_slot!(mem,nodemem_i,node);
+        ### Using the "simple" MKL driver.
+        # Initialize ipiv on first call.
+        push_code!(code, "if (ipiv == NULL)");
+        push_code!(code, "        ipiv = malloc(n*sizeof(*ipiv));");
+        # As the driver overwrites B in AX = B, we need to copy $parent2mem to
+        # $nodemem first.
+        push_code!(code,"memcpy((FPTYPE*)($nodemem), (FPTYPE*)($parent2mem),
+                                n*n*size_FPTYPE);")
+        # Copy the matrix to be inverted to appropriate memory position.
+        push_code!(code,"memcpy((FPTYPE*)(memslots+max_memslots*n*n),
+                                (FPTYPE*)($parent1mem),
+                                n*n*size_FPTYPE);")
+        push_code!(code,"LAPACKE_dgetrf(LAPACK_COL_MAJOR, n, n,
+                                        memslots+max_memslots*n*n, n, ipiv);");
+        push_code!(code,"LAPACKE_dgetrs(LAPACK_COL_MAJOR, 'N', n, n,
+                                        (memslots+max_memslots*n*n), n, ipiv,
+                                        $nodemem, n);");
+    elseif op == :lincomb
+        coeff_vars=Vector{String}(undef,2);
+
+        # TODO Following lines will change when complex code can be generated.
+        @assert(isreal(graph.coeffs[node][1]) && isreal(graph.coeffs[node][1]));
+        (coeff1,coeff1_code)=assign_coeff(lang,real(graph.coeffs[node][1]),1);
+        push_code!(code,coeff1_code);
+        (coeff2,coeff2_code)=assign_coeff(lang,real(graph.coeffs[node][2]),2);
+        push_code!(code,coeff2_code);
+
+        # Reuse parent in deallocation list for output (saves memcopy).
+        if ((parent1 in dealloc_list) || (parent2 in dealloc_list))
+            # Find parent to recycle.
+            recycle_parent=(parent1 in dealloc_list) ? parent1 : parent2
+            push_comment!(code,"Smart lincomb recycle $recycle_parent");
+
+            # Perform operation.
+            nodemem=get_slot_name(mem,recycle_parent)
+            if (recycle_parent == parent1)
+                push_code!(code,"cblas_daxpby(n*n,
+                                              $coeff2, $parent2mem, 1,
+                                              $coeff1, $nodemem, 1);");
+            else
+                push_code!(code,"cblas_daxpby(n*n,
+                                              $coeff1, $parent1mem, 1,
+                                              $coeff2, $nodemem, 1);");
+            end
+
+            # Remove output from deallocation list.
+            setdiff!(dealloc_list,[recycle_parent]);
+
+            # Update CodeMem.
+            j=get_slot_number(mem,recycle_parent);
+            set_slot_number!(mem,j,node);
+        else
+            # Allocate new slot for result.
+            (nodemem_i,nodemem)=get_free_slot(mem)
+            alloc_slot!(mem,nodemem_i,node);
+            push_code!(code,"memcpy((FPTYPE*)($nodemem), (FPTYPE*)($parent2mem),
+                                n*n*size_FPTYPE);")
+            push_code!(code,"cblas_daxpby(n*n,
+                                          $coeff1, $parent1mem, 1,
+                                          $coeff2, $nodemem, 1);");
+        end
+    else
+        error("Unknown operation");
+    end
+
+    # Deallocate
+    for n=dealloc_list
+        i=get_slot_number(mem,n);
+        push_comment!(code,"Deallocating $n in slot $i");
+        free!(mem,i);
+    end
+
+    nodemem = 0
+    return (code,nodemem)
+end
 
 
 
