@@ -98,6 +98,10 @@ end
 
 # Changes the name of src to dest
 function rename_node!(graph,src,dest,cref=Vector())
+    if src == dest
+        return
+    end
+
     # Parents
     graph.parents[dest]=graph.parents[src];
     delete!(graph.parents,src);

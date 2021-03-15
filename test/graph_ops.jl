@@ -34,6 +34,8 @@ using LinearAlgebra, Polynomials
     del_node!(graph,:D) #Remove rational part
     del_node!(graph,:out)
     add_output!(graph,:N)
+    rename_node!(graph,:N,:N)
+    rename_node!(graph,:N,:N_new)
     A = Polynomial("x")
     E=eval_graph(graph,A);
     Z = (1 + 1/2 *(1 + A/5)^2);
