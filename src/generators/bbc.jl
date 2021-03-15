@@ -21,6 +21,8 @@ a `Vector{Tuple{Vector,Vector}}`, containing the elements
 of each sum. The `z`-vector contains the elements
 to form the output. If `compress_keys=true`, the references
 to `z[3],z[4],...` are not returned.
+If the parameter `k` is supplied instead of the coefficients,
+all coeffs will be set to one.
 
 Reference: The general recursion is mentioned in equation (9) in this paper:
 
