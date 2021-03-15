@@ -366,7 +366,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         push_code!(code,"cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                                      n, n, n,
                                      1., $parent1mem, n, $parent2mem, n,
-                                     1., $nodemem, n);");
+                                     0., $nodemem, n);")
     elseif op == :ldiv
         # TODO Try to avoid explicit copies by reusing memory of parent nodes if
         # they are in the deallocation list. Note that in X = A \ B extra memory
