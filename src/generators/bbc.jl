@@ -2,53 +2,69 @@ export gen_general_poly_recursion
 
 
 """
-    (graph,crefs)=gen_bbc(k;compress_keys=true,T=ComplexF64)
+    (graph,crefs)=gen_general_poly_recursion(k;compress_keys=true,T=ComplexF64)
+    (graph,crefs)=gen_general_poly_recursion(x,z;compress_keys=true)
 
 Corresponds to the general polynomial recursion
 
-  B1=A
-  B2=(x1*I+x2*A)(x3*I+x4*A)
-  B3=(x4*I+x5*A+x6*B2)(x7*I+x8*A+x8*B2)
-   ..
+    B1=A
+    B2=(x *I+x *A)(x *I+x *A)
+    B3=(x *I+x *A+x*B2)(x *I+x *A+x *B2)
+     ..
 
 and
 
-  Out=xk*I+x(k+1)*A1+B2+B3+B4..
+    Out=z*I+z*A1+z*B2+z*B3+z*B4..
 
-If `compress_keys=true`, then cref contains `k+1`
-keys corresponding to `x1`,... `x(k+1)`.
+The `x`-values are given in the argument `x`, which is
+a `Vector{Tuple{Vector,Vector}}`, containing the elements
+of each sum. The `z`-vector contains the elements
+to form the output. If `compress_keys=true`, the references
+to `z[3],z[4],...` are not returned.
 
-
-Reference: The general recursion is described in this paper:
+Reference: The general recursion is mentioned in equation (9) in this paper:
 
 * Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 """
-function gen_general_poly_recursion(k;T=ComplexF64,compress_keys=true)
+function gen_general_poly_recursion(x,z;compress_keys=true)
+    (graph,crefs)=gen_general_poly_recursion_B(x);
 
-    (graph,cref)=gen_general_poly_recursion_B(k,T);
+    k=size(x,1);
 
     # Add the polynomial in the Bk coeffs
-    key=:T2k1
-    add_lincomb!(graph,key,1.0,:I,1.0,:A);
-    push!(cref,(key,1))
-    push!(cref,(key,2))
 
+    z_nodes=[:I; :A];
     for s=2:k+1
-        prevkey=key;
-        key=Symbol("T2k$s");
-        add_lincomb!(graph,key,1.0,prevkey,1.0,Symbol("B$s"));
-        if (!compress_keys)
-            # Corresponds to a free variable in Bk so could
-            # be removed
-            push!(cref,(key,2));
-        end
+        push!(z_nodes,Symbol("B$s"));
+    end
+    key=Symbol("T2k$(k+3)");
+    crefs_new=add_sum!(graph,key,
+                       z,z_nodes,Symbol("T2k"));
+    if (compress_keys)
+        # Only take the I and A
+        append!(crefs,crefs_new[1:2]);
+    else
+        append!(crefs,crefs_new);
     end
 
+
+    # Set the output
     empty!(graph.outputs);
     push!(graph.outputs,key);
 
-    return (graph,cref);
+    return (graph,crefs_new);
 
+end
+function gen_general_poly_recursion(k;T=ComplexF64,compress_keys=true)
+
+    x=Vector{Tuple{Vector{T},Vector{T}}}(undef,k);
+    for i=1:k
+        x[i]=(ones(T,i+1),ones(T,i+1));
+    end
+
+    z=ones(T,k+2)
+
+    gen_general_poly_recursion(x,z;compress_keys=compress_keys)
 end
 
 #

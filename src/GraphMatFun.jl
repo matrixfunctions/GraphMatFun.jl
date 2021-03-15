@@ -8,6 +8,7 @@ include("eval.jl")
 # Generators
 include("generators/denman_beavers_gen.jl");
 include("generators/ps_poly.jl");
+include("generators/bbc.jl");
 
 
 # Code generations

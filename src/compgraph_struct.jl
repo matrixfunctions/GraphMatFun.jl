@@ -135,12 +135,24 @@ function rename_node!(graph,src,dest,cref=Vector())
     end
 end
 
-# Adds a linear combination of more than two nodes
-# The base_name is temporary variables for the summing
-# Returns cref list
+"""
+    crefs=add_sum!(graph,node,c,nodelist,base_name=node)
+
+Adds a linear combination of more than two nodes, given
+in `nodelist::Vector`, with coefficients given in `c`.
+The `base_name` is temporary variables for the summing.
+The sum is stored in `node`.
+
+Returns cref list with references
+
+"""
 function add_sum!(graph,node,c,nodelist,base_name=node)
-    if size(nodelist,1)<=2
-        error("Use lincomb instead")
+    if size(nodelist,1)==1
+        error("Summing one element. Use lincomb instead.")
+    elseif (size(nodelist,1)==2)
+        # Direct call
+        add_lincomb!(graph,node,c[1],nodelist[1],c[2],nodelist[2])
+        return ((node,1),(node,2));
     end
 
     cref=Vector{Tuple{Symbol,Int}}()

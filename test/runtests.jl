@@ -6,4 +6,5 @@ using Test
     include("ps_poly.jl");
     include("graph_ops.jl");
     include("code_gen_test.jl");
+    include("bbc.jl");
 end
