@@ -304,11 +304,8 @@ function function_init(lang::LangC,T,mem)
     push_comment!(code,"Initializations.")
     push_code!(code,"FPTYPE coeff1, coeff2;");
     push_code!(code,"lapack_int *ipiv = NULL;")
-    # TODO: The "+1" is used to store LU factorizations. In principle, this
-    # may not be needed, and either way there are smarter (but more complicated)
-    # ways of doing this.
     push_code!(code,"FPTYPE *memslots =
-                     malloc(n*n*(max_memslots+1)*sizeof(*memslots));");
+                     malloc(n*n*max_memslots*sizeof(*memslots));")
     start_j=2;
 
     # TODO This solution keeps the identity matrix explicitly.
@@ -368,29 +365,53 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                                      1., $parent1mem, n, $parent2mem, n,
                                      0., $nodemem, n);")
     elseif op == :ldiv
-        # TODO Try to avoid explicit copies by reusing memory of parent nodes if
-        # they are in the deallocation list. Note that in X = A \ B extra memory
-        # is required for the LU factorization of A as well as for B, which is
-        # overwritten by X.
-        (nodemem_i,nodemem)=get_free_slot(mem)
-        alloc_slot!(mem,nodemem_i,node);
-        ### Using the "simple" MKL driver.
         # Initialize ipiv on first call.
         push_code!(code, "if (ipiv == NULL)");
-        push_code!(code, "        ipiv = malloc(n*sizeof(*ipiv));");
-        # As the driver overwrites B in AX = B, we need to copy $parent2mem to
-        # $nodemem first.
-        push_code!(code,"memcpy((FPTYPE*)($nodemem), (FPTYPE*)($parent2mem),
-                                n*n*size_FPTYPE);")
-        # Copy the matrix to be inverted to appropriate memory position.
-        push_code!(code,"memcpy((FPTYPE*)(memslots+max_memslots*n*n),
-                                (FPTYPE*)($parent1mem),
-                                n*n*size_FPTYPE);")
+        push_code!(code, "        ipiv = malloc(n*sizeof(*ipiv));")
+
+        # As ?detrs computes the LU decomposition of parent1 in-place, we need
+        # to make a copy of $parent1mem, unless parent1 is on the deallocation
+        # list.
+        if (parent1 in dealloc_list)
+            push_comment!(code,"Reusing memory of $parent1 for LU factors.")
+            lhsmem=parent1mem
+            lhsmem_i=get_slot_number(mem,parent1)
+            # Remove parent 1 from the deallocation list, but only temporarily.
+            setdiff!(dealloc_list,[parent1])
+        else
+            (lhsmem_i,lhsmem)=get_free_slot(mem)
+            alloc_slot!(mem,lhsmem_i,:dummy)
+            push_code!(code,"memcpy((FPTYPE*)($lhsmem),
+                                    (FPTYPE*)($parent1mem),
+                                    n*n*size_FPTYPE);")
+        end
+        # Compute LU decomposition of parent1.
         push_code!(code,"LAPACKE_dgetrf(LAPACK_COL_MAJOR, n, n,
-                                        memslots+max_memslots*n*n, n, ipiv);");
+                                        $lhsmem, n, ipiv);");
+
+        # As ?getrs overwrites B in AX = B, we need to copy $parent2mem to
+        # $nodemem first, unless parent2 is in the deallocation list.
+        if (parent2 in dealloc_list)
+            push_comment!(code,"Reusing memory of $parent2 for solution.")
+            nodemem=get_slot_name(mem,parent2)
+            setdiff!(dealloc_list,[parent2])
+            set_slot_number!(mem,get_slot_number(mem,parent2),node)
+        else
+            (nodemem_i,nodemem)=get_free_slot(mem)
+            alloc_slot!(mem,nodemem_i,node)
+            push_code!(code,"memcpy((FPTYPE*)($nodemem), (FPTYPE*)($parent2mem),
+                                    n*n*size_FPTYPE);")
+        end
+
+        # Solve linear system.
         push_code!(code,"LAPACKE_dgetrs(LAPACK_COL_MAJOR, 'N', n, n,
-                                        (memslots+max_memslots*n*n), n, ipiv,
-                                        $nodemem, n);");
+                                        $lhsmem, n, ipiv,
+                                        $nodemem, n);")
+
+        # Deallocate LU factors.
+        # TODO Wouldn't it make sense to keep them if another system with the
+        # same left-hand side is still in the node?
+        free!(mem,lhsmem_i)
     elseif op == :lincomb
         coeff_vars=Vector{String}(undef,2);
 
