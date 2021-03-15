@@ -10,6 +10,7 @@ include("compress_graph.jl")
 include("generators/denman_beavers_gen.jl");
 include("generators/ps_poly.jl");
 include("generators/bbc.jl");
+include("generators/monomial_poly.jl");
 
 
 # Code generations
