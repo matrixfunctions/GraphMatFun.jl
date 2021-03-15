@@ -60,8 +60,6 @@ function gen_general_poly_recursion_B(k,T)
     return gen_general_poly_recursion_B(x);
 end
 
-
-
 # Normally x::Vector{Tuple{Vector{Number},Vector{Number}}}
 # Containing the coefficients in the recursion
 function gen_general_poly_recursion_B(x)
@@ -76,7 +74,7 @@ function gen_general_poly_recursion_B(x)
     cref=[];
     for s=2:k+1
 
-        #@show useful_syms;
+
         base0="B$s";
         base_a="Ba$s";
         base_b="Bb$s";
@@ -88,6 +86,7 @@ function gen_general_poly_recursion_B(x)
 
         append!(cref,crefs_a);
 
+        # Second poly
         c_b=x[s-1][2]
         crefs_b=add_sum!(graph,Symbol(base_b),c_b,useful_syms,
                          Symbol("$(base_b)_"));
