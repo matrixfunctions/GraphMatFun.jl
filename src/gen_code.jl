@@ -41,7 +41,7 @@ end
 # slotname(::Lang,i) #
 # assign_coeff(::Lang,v,i)
 # function_definition(::Lang,funname)
-# function_init(lang::Lang,T,mem)
+# function_init(lang::Lang,T,mem,graph)
 # init_mem(lang::Lang,max_nof_nodes)
 # function_end(lang::Lang,graph,mem)
 # execute_operation!(lang::Lang,T,graph,node,
@@ -73,7 +73,7 @@ function function_definition(lang::LangJulia,funname)
     push_code!(code,"function $funname(A)");
     return code
 end
-function function_init(lang::LangJulia,T,mem)
+function function_init(lang::LangJulia,T,mem,graph)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
 
@@ -235,7 +235,7 @@ function function_definition(lang::LangMatlab,funname)
     return code
 end
 
-function function_init(lang::LangMatlab,T,mem)
+function function_init(lang::LangMatlab,T,mem,graph)
     code=init_code(lang);
     push_code!(code,"n=size(A,1);");
     push_code!(code,"I=eye(n,n);");
@@ -295,7 +295,7 @@ function function_definition(lang::LangC,funname)
     return code
 end
 
-function function_init(lang::LangC,T,mem)
+function function_init(lang::LangC,T,mem,graph)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
 
@@ -539,7 +539,7 @@ function gen_code(fname,graph;
 
     # Sweep 2:
     mem=init_mem(lang,nof_slots)
-    println(file,to_string(function_init(lang,T,mem)));
+    println(file,to_string(function_init(lang,T,mem,graph)));
 
 
     for (i,node) in enumerate(order)
