@@ -1,6 +1,36 @@
 # Read and write cgs files
 using Dates
+export export_compgraph,import_compgraph;
 
+"""
+    export_compgraph(graph, fname; main_output=nothing,
+                     order=get_computation_order(graph)[1],
+                     fun="", dom="", err="", genby="",
+                     descr="",
+                     user=current user)
+
+Exports the graph to the file `fname` using the computation graph
+format (cgr). These kwargs are strings or values that
+are stored as comments in the file
+
+* `descr` of the graph
+* `fun` function it approximates
+* `dom` domain it approximates
+* `err` error in this domain
+* `genby` script that generated this file
+* `user` a username that created the file
+
+These kwarg influence how the graph is stored:
+
+* `order` specifies an order the graph nodes are stored
+* `main_output` is a `Symbol` specifying what is the output.
+
+CGR format:
+
+Every line corresponds to a node / operation. The syntax is matlab compatible,
+although `gen_code` produces faster matlab code.
+
+    """
 function export_compgraph(graph, fname; main_output=nothing,
                           order=get_computation_order(graph)[1],
                           fun="", dom="", err="", genby="",
@@ -12,7 +42,7 @@ function export_compgraph(graph, fname; main_output=nothing,
 
     nof_written_outputs = 0
     T = eltype(graph)
-    # EJ was here ## -> %#. Works for both julia and matlab
+
     println(file, "%# Representation of a computation graph")
     if !isempty(fun)
         println(file, "%# Function: ", fun)
@@ -78,7 +108,12 @@ function export_compgraph(graph, fname; main_output=nothing,
 end
 
 
-##
+"""
+    graph=import_compgraph(fname)
+
+Reads a graph stored in the computation graph format (cgr) in the file `fname`.
+
+    """
 function import_compgraph(fname)
     fname = abspath(fname)
     file = open(fname,"r")
