@@ -2,6 +2,7 @@
 #
 # Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 #
+export gen_bbc_basic_exp
 
 """
     (graph,cref)=gen_bbc_basic_exp(k)
@@ -113,23 +114,30 @@ function gen_bbc_basic_exp(k)
     elseif (k==6)
 
         # Coefficients unknwn
-
-        println("k=6 for BBC the coefficients are not documented");
+        t0=0.1;
+        println("k=6 for BBC the coefficients are not documented. Setting unknown to t0=$(t0).");
         v1=[0;1;                 0;1.0];
         v2=[0;1;0;               0;0;1.0];
         v3=[0;0;1;0;             0;0;0;1.0];
         v4=[0;0;0;0;1;           0;0;0;0;1.0];
 
+        v1a=[0;1.0];
+        v1b=[0;1.0];
+        v2a=[0; 1.0; 0.0];
+        v2b=[0; 0;   1.0];
+        v3a=[0; 0;     0; 1.0];
+        v3b=[0; 0;     0; 1.0];
+        v4a=[0; 0; 0;     0; 1.0];
+        v4b=[0; 0; 0;     0; 1.0];
 
-        t0=0.1;
 
-        v5=t0*ones(6*2);
-        v6=t0*ones(7*2);
+        v5a=t0*ones(6);
+        v5b=copy(v5a);
+        v6a=t0*ones(7);
+        v6b=copy(v6a);
         y=t0*ones(8);
-        xv=[v1,v2,v3,v4,v5,v6];
-        @show size(xv)
-        error("Not tested");
-        #(graph,cref)=gen_bbc(xv,y);
+        xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b)];
+        (graph,cref)=gen_general_poly_recursion(xv,y);
     else
         error("Incorrect k");
     end
