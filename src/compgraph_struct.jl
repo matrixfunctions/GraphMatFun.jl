@@ -17,6 +17,8 @@ export rename_node!
 export del_node!
 
 export get_all_cref
+
+export get_coeffs
 export set_coeffs!
 
 # Hash tables representing a computation graph
@@ -82,7 +84,6 @@ end
 The operation `α1*p1+α2*p2` is added to the graph.
 The result is stored in node `node`.
     """
-# Compute α1*p1 + α2*p2
 function add_lincomb!(graph,node,α1,p1,α2,p2)
     check_node_name_legality(graph,node)
     graph.operations[node]=:lincomb
@@ -262,13 +263,20 @@ function check_node_name_legality(graph,node)
     end
 end
 
-## Set and get functions
-# Gets a list of nodes in a sorted fashion
+"""
+    v=get_sorted_keys(graph)
+
+Returns a list of all nodes, sorted.
+    """
 function get_sorted_keys(graph)
     return sort(collect(keys(graph.parents)));
 end
 
-# Gets a list of nodes with coefficients in a sorted fashion
+"""
+    v=get_all_cref(graph)
+
+Returns a list with references to all coefficients in the graph. The list is sorted.
+    """
 function get_all_cref(graph)
     k = sort(collect(keys(graph.coeffs)))
     kv = Vector{Tuple{Symbol,Int}}(undef,2*length(k))
@@ -279,7 +287,11 @@ function get_all_cref(graph)
     end
     return kv;
 end
+"""
+    set_coeffs!(graph, x, cref=get_all_cref(graph))
 
+Sets the coefficient values in the coefficients specified in `cref::Vector` to the values in the vector in `x::Vector`.
+    """
 function set_coeffs!(graph, x, cref=get_all_cref(graph))
     if (cref isa Tuple) #Workaround for single coefficient
         cref=[cref]
@@ -302,7 +314,11 @@ function set_coeffs!(graph, x, cref=get_all_cref(graph))
     end
     return nothing
 end
+"""
+    x=get_coeffs(graph, cref=get_all_cref(graph))
 
+Gets the coefficient values for the coefficients specified in `cref::Vector`.
+    """
 function get_coeffs(graph, cref=get_all_cref(graph))
     if (cref isa Tuple) #Workaround for single coefficient
         cref=[cref]
