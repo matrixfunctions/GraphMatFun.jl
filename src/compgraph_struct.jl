@@ -64,14 +64,24 @@ function big(orggraph::Compgraph{T}) where {T}
 end
 
 
-## Defining graph operations
-# Compute p1*p2
+"""
+    add_mult!(graph,node,p1,p2)
+
+Adds a multiplication of node `p1` and `p2` to the
+`graph`. The result is stored in node `node`.
+    """
 function add_mult!(graph,node,p1,p2)
     check_node_name_legality(graph,node)
     graph.operations[node]=:mult
     graph.parents[node]=(p1,p2);
 end
 
+"""
+    add_lincomb!(graph,node,α1,p1,α2,p2)
+
+The operation `α1*p1+α2*p2` is added to the graph.
+The result is stored in node `node`.
+    """
 # Compute α1*p1 + α2*p2
 function add_lincomb!(graph,node,α1,p1,α2,p2)
     check_node_name_legality(graph,node)
@@ -80,14 +90,23 @@ function add_lincomb!(graph,node,α1,p1,α2,p2)
     graph.coeffs[node]=(α1,α2);
 end
 
-# Compute p1\p2
+"""
+    add_ldiv!(graph,node,p1,p2)
+
+The operation `inv(p1)*p2` is added to the graph.
+The result is stored in node `node`.
+    """
 function add_ldiv!(graph,node,p1,p2)
     check_node_name_legality(graph,node)
     graph.operations[node]=:ldiv
     graph.parents[node]=(p1,p2);
 end
 
-# Defines what nodes as output of the algorithm
+"""
+    add_output!(graph,node)
+
+Adds an output `node` to the graph function.
+    """
 function add_output!(graph,node)
     # TODO: Add this?
     # for k = findall(graph.outputs .== node)
@@ -96,7 +115,13 @@ function add_output!(graph,node)
     push!(graph.outputs,node);
 end
 
-# Changes the name of src to dest
+"""
+    rename_node!(graph,src,dest,cref=Vector())
+
+This changes the name of the node `src` to `dest` and updating
+all references to the node including coefficient
+references in `cref`.
+    """
 function rename_node!(graph,src,dest,cref=Vector())
     if src == dest
         return
@@ -149,14 +174,14 @@ in `nodelist::Vector`, with coefficients given in `c`.
 The `base_name` is temporary variables for the summing.
 The sum is stored in `node`.
 
-Returns cref list with references
+Returns cref list with references.
 
 """
 function add_sum!(graph,node,c,nodelist,base_name=node)
     if size(nodelist,1)==1
-        error("Summing one element. Use lincomb instead.")
+        error("Summing one element not allowed.")
     elseif (size(nodelist,1)==2)
-        # Direct call
+        # Direct call to lincomb if we sum two nodes
         add_lincomb!(graph,node,c[1],nodelist[1],c[2],nodelist[2])
         return ((node,1),(node,2));
     end
@@ -181,8 +206,12 @@ function add_sum!(graph,node,c,nodelist,base_name=node)
     return cref;
 end
 
+"""
+    del_node!(graph,node)
 
-# Deletes a node (and all data associated with it)
+Deletes a node from the graph, and all data associated with it, except
+for `graph.outputs`.
+    """
 function del_node!(graph,node)
     delete!(graph.parents,node);
     delete!(graph.operations,node);
