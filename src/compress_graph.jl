@@ -3,6 +3,7 @@
 
 export compress_graph_dangling!
 export compress_graph_zero_coeff!
+export compress_graph_output_cleaning!
 export compress_graph!;
 
 
@@ -118,6 +119,39 @@ function compress_graph_zero_coeff!(graph,cref=[];droptol=0)
         end
     end
 end
+"""
+    compress_graph_output_cleaning!(graph,cref=[])
+
+Checks if the output is computed from the linear combination
+that can be compressed.
+
+    """
+function compress_graph_output_cleaning!(graph,cref=[])
+
+    ismodified=false;
+    while ismodified
+        ismodified=false;
+        for (i,n)=enumerate(graph.outputs)
+            if (graph.operations[n]==:lincomb)
+
+                for s=1:2
+                    other_s=3-s;
+                    if (graph.coeffs[n][s]==1.0
+                        &&
+                        graph.coeffs[n][other_s]==0.0)
+                        # Redirect since it is just a copy of
+                        # another node
+                        graph.outputs[i]=graph.parents[n][s];
+                        ismodified=true;
+                    end
+                end
+            end
+
+        end
+    end
+
+end
+
 
 """
     compress_graph!(graph,cref=[])
@@ -128,6 +162,7 @@ are removed.
 
     """
 function compress_graph!(graph,cref=[])
+    compress_graph_output_cleaning!(graph,cref)
     compress_graph_zero_coeff!(graph,cref)
     compress_graph_dangling!(graph,cref)
 end
