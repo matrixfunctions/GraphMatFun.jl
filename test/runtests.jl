@@ -9,6 +9,6 @@ using Test
     include("graph_ops.jl");
     include("code_gen_test.jl");
     include("bbc.jl");
-    include("bbc_dic_exp.jl");
+    include("bbc_sid_exp.jl");
     include("compress.jl");
 end

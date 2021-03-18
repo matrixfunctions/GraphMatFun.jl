@@ -1,5 +1,5 @@
 using LinearAlgebra
-@testset "bbc dic exp" begin
+@testset "bbc sid exp" begin
 
     α=big(1.1);
 
@@ -32,11 +32,11 @@ using LinearAlgebra
     @test -log(abs(err2/err1))/log(α) > p4bbc+1
 
 
-    p4dic=15; # Order of approx for 4 matrix multiplies
-    (graph,cref)=gen_dic_exp(4);
+    p4sid=15; # Order of approx for 4 matrix multiplies
+    (graph,cref)=gen_sid_exp(4);
     err1=eval_graph(big(graph),big(x))-exp(big(x))
     err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
-    @test -log(abs(err2/err1))/log(α) > p4dic+1
+    @test -log(abs(err2/err1))/log(α) > p4sid+1
 
 
     x=2.3
@@ -48,29 +48,29 @@ using LinearAlgebra
 
 
     x=3.2;
-    p5dic=21 # Order of approx for 5 matrix multiplies
-    (graph,cref)=gen_dic_exp(5);
+    p5sid=21 # Order of approx for 5 matrix multiplies
+    (graph,cref)=gen_sid_exp(5);
     err1=eval_graph(big(graph),big(x))-exp(big(x))
     err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
-    @test -log(abs(err2/err1))/log(α) > p5dic+1
+    @test -log(abs(err2/err1))/log(α) > p5sid+1
 
 
 
 
     x=3.5;
-    p6dic=24 # Order of approx for 6 matrix multiplies
-    (graph,cref)=gen_dic_exp(6);
+    p6sid=24 # Order of approx for 6 matrix multiplies
+    (graph,cref)=gen_sid_exp(6);
     err1=eval_graph(big(graph),big(x))-exp(big(x))
     err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
-    @test -log(abs(err2/err1))/log(α) > p6dic+1
+    @test -log(abs(err2/err1))/log(α) > p6sid+1
 
 
     x=5.2;
-    p7dic=30 # Order of approx for 7 matrix multiplies
-    (graph,cref)=gen_dic_exp(7);
+    p7sid=30 # Order of approx for 7 matrix multiplies
+    (graph,cref)=gen_sid_exp(7);
     err1=eval_graph(big(graph),big(x))-exp(big(x))
     err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
-    @test -log(abs(err2/err1))/log(α) > p7dic+1
+    @test -log(abs(err2/err1))/log(α) > p7sid+1
 
 
 

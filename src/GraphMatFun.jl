@@ -12,7 +12,7 @@ include("generators/denman_beavers_gen.jl");
 include("generators/ps_poly.jl");
 include("generators/bbc.jl");
 include("generators/bbc_exp.jl");
-include("generators/dic.jl");
+include("generators/sid.jl");
 include("generators/monomial_poly.jl");
 
 
