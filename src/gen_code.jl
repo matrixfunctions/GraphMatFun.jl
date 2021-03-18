@@ -321,25 +321,26 @@ function function_definition(lang::LangC,T,funname)
     push_code!(code,"#include<mkl/mkl.h>") # Assuming we use MKL here.
     push_code!(code,"#include<stdlib.h>")
     push_code!(code,"#include<string.h>")
-    push_code!(code,"void $mkl_prefix$funname(const $mkl_type *A, const size_t n,
-                                              $mkl_type *output) {")
+    push_code!(code,"void $mkl_prefix$funname(const $mkl_type *A, "*
+                    "const size_t n, $mkl_type *output) {")
     return code
 end
 
-function function_init(lang::LangC,T,mem)
+function function_init(lang::LangC,T,mem,graph)
     (mkl_type,mkl_prefix)=get_mkl_format(T)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
 
     # Allocation
     push_code!(code,"size_t max_memslots=$max_nodes;");
+    push_code!(code,"");
     push_comment!(code,"Initializations.")
     push_code!(code,"$mkl_type coeff1, coeff2;")
     push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",mkl_type))
     push_code!(code, declare_constant(lang,convert(T,1.),"ONE",mkl_type))
     push_code!(code,"lapack_int *ipiv = NULL;")
-    push_code!(code,"$mkl_type *memslots = malloc(n*n*max_memslots
-                                                  *sizeof(*memslots));")
+    push_code!(code,"$mkl_type *memslots = malloc(n*n*max_memslots"*
+                    "*sizeof(*memslots));")
     start_j=2;
 
     # TODO This solution keeps the identity matrix explicitly.
@@ -367,7 +368,8 @@ function function_end(lang::LangC,graph,mem)
     code=init_code(lang);
     retval_node=graph.outputs[end];
     retval=get_slot_name(mem,retval_node);
-
+    push_code!(code,"");
+    push_comment!(code,"Prepare output.")
     push_code!(code,"memcpy(output, $retval, n*n*sizeof(*output));")
     push_code!(code,"free(ipiv);")
     push_code!(code,"free(memslots);")
@@ -392,16 +394,15 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     rone=reference_constant(lang,T,"ONE")
 
     code=init_code(lang);
+    push_code!(code,"");
     push_comment!(code,"Computing $node with operation: $op");
     if op == :mult
         (nodemem_i,nodemem)=get_free_slot(mem)
         alloc_slot!(mem,nodemem_i,node);
-        push_code!(code,"cblas_$mkl_prefix"*"gemm(CblasColMajor,
-                                                  CblasNoTrans, CblasNoTrans,
-                                                  n, n, n,
-                                                  $rone, $parent1mem, n,
-                                                  $parent2mem, n,
-                                                  $rzero, $nodemem, n);")
+        push_code!(code,"cblas_$mkl_prefix"*"gemm(CblasColMajor, "*
+                        "CblasNoTrans, CblasNoTrans,n, n, n,\n"*
+                        "            $rone, $parent1mem, n, $parent2mem, n,\n"*
+                        "            $rzero, $nodemem, n);")
     elseif op == :ldiv
         # Initialize ipiv on first call.
         push_code!(code, "if (ipiv == NULL)");
@@ -422,8 +423,8 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             push_code!(code,"memcpy($lhsmem, $parent1mem, n*n*sizeof(*memslots));")
         end
         # Compute LU decomposition of parent1.
-        push_code!(code,"LAPACKE_$mkl_prefix"*"getrf(LAPACK_COL_MAJOR, n, n,
-                                                     $lhsmem, n, ipiv);")
+        push_code!(code,"LAPACKE_$mkl_prefix"*"getrf(LAPACK_COL_MAJOR, n, n, "*
+                        "$lhsmem, n, ipiv);")
 
         # As ?getrs overwrites B in AX = B, we need to copy $parent2mem to
         # $nodemem first, unless parent2 is in the deallocation list.
@@ -435,14 +436,15 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         else
             (nodemem_i,nodemem)=get_free_slot(mem)
             alloc_slot!(mem,nodemem_i,node)
-            push_code!(code,"memcpy($nodemem, $parent2mem, n*n*sizeof(*memslots));")
+            push_code!(code,"memcpy($nodemem, $parent2mem, "*
+                            "n*n*sizeof(*memslots));")
         end
 
         # Solve linear system.
-        push_code!(code,"LAPACKE_$mkl_prefix"*"getrs(LAPACK_COL_MAJOR,
-                                                     'N', n, n,
-                                                     $lhsmem, n, ipiv,
-                                                     $nodemem, n);")
+        push_code!(code,"LAPACKE_$mkl_prefix"*"getrs(LAPACK_COL_MAJOR, "*
+                        "'N', n, n,\n"*
+                        "               $lhsmem, n, ipiv,\n"*
+                        "               $nodemem, n);")
 
         # Deallocate LU factors.
         # TODO Wouldn't it make sense to keep them if another system with the
@@ -466,17 +468,13 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Perform operation.
             nodemem=get_slot_name(mem,recycle_parent)
             if (recycle_parent == parent1)
-                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,
-                                              $coeff2,
-                                              $parent2mem, 1,
-                                              $coeff1,
-                                              $nodemem, 1);");
+                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n, "*
+                                "$coeff2, $parent2mem, 1,\n"*
+                                "             $coeff1, $nodemem, 1);");
             else
-                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,
-                                              $coeff1,
-                                              $parent1mem, 1,
-                                              $coeff2,
-                                              $nodemem, 1);");
+                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,"*
+                                "$coeff1, $parent1mem, 1,\n"*
+                                "             $coeff2, $nodemem, 1);");
             end
 
             # Remove output from deallocation list.
@@ -490,11 +488,9 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             (nodemem_i,nodemem)=get_free_slot(mem)
             alloc_slot!(mem,nodemem_i,node);
             push_code!(code,"memcpy($nodemem, $parent2mem, n*n*sizeof(*memslots));")
-            push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,
-                                                       $coeff1,
-                                                       $parent1mem, 1,
-                                                       $coeff2,
-                                                       $nodemem, 1);");
+            push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n, "*
+                            "$coeff1, $parent1mem, 1,\n"*
+                            "             $coeff2, $nodemem, 1);")
         end
     else
         error("Unknown operation");
