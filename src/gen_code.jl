@@ -40,7 +40,7 @@ end
 # comment(::Lang,s)
 # slotname(::Lang,i) #
 # assign_coeff(::Lang,v,i)
-# function_definition(::Lang,funname)
+# function_definition(::Lang,T,funname)
 # function_init(lang::Lang,T,mem,graph)
 # init_mem(lang::Lang,max_nof_nodes)
 # function_end(lang::Lang,graph,mem)
@@ -61,13 +61,30 @@ slotname(::LangC,i)="memslots+($i-1)*n*n"
 # For Julia more parsing may be required TODO
 assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
 assign_coeff(::LangMatlab,v,i)=("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
-assign_coeff(::LangC,v,i)=("coeff$i","coeff$i = "*string(real(v))*";");
-
+function assign_coeff(::LangC,val,i)
+    # In C, complex types are structures and are passed by reference.
+    if (T<:Complex)
+        assignment_string = "coeff$i.real = "*string(real(val))*";\n"*
+                            "coeff$i.imag = "*string(imag(val))*";"
+        variable_string = "&coeff$i"
+    else
+        assignment_string = "coeff$i = $val;";
+        variable_string = "coeff$i"
+    end
+    return (variable_string,assignment_string)
+    # "coeff$i = "*string(real(v))*";"
+end
+declare_constant(::LangC,val,id,type)=(typeof(val)<:Complex) ?
+    "const $type $id = {.real = "*string(real(val))*", "*
+                       ".imag = "*string(imag(val))*"};" :
+    "const $type $id = $val;"
+reference_constant(::LangC,T,id)=(T<:Complex) ?
+    "&$id" : "$id"
 
 
 ### Julia
 
-function function_definition(lang::LangJulia,funname)
+function function_definition(lang::LangJulia,T,funname)
     code=init_code(lang);
     push_code!(code,"using LinearAlgebra");
     push_code!(code,"function $funname(A)");
@@ -229,7 +246,7 @@ end
 
 
 ### MATLAB
-function function_definition(lang::LangMatlab,funname)
+function function_definition(lang::LangMatlab,T,funname)
     code=init_code(lang);
     push_code!(code,"function output=$funname(A)");
     return code
@@ -283,43 +300,58 @@ end
 
 
 ### C
-function function_definition(lang::LangC,funname)
+# Return MKL type and BLAS/LAPACK prefix corresponding to type T.
+function get_mkl_format(T::Type{Float32})
+    return ("float","s")
+end
+function get_mkl_format(T::Type{Float64})
+    return ("double","d")
+end
+function get_mkl_format(T::Type{Complex{Float32}})
+    return ("MKL_Complex8","c")
+end
+function get_mkl_format(T::Type{Complex{Float64}})
+    return ("MKL_Complex16","z")
+end
+
+function function_definition(lang::LangC,T,funname)
+    (mkl_type,mkl_prefix)=get_mkl_format(T)
     code=init_code(lang);
     push_code!(code,"#include<assert.h>")
     push_code!(code,"#include<mkl/mkl.h>") # Assuming we use MKL here.
     push_code!(code,"#include<stdlib.h>")
     push_code!(code,"#include<string.h>")
-    push_code!(code,"typedef double FPTYPE;")
-    push_code!(code,"void $funname(const FPTYPE *A, const size_t n,
-                                   FPTYPE *output) {");
+    push_code!(code,"void $mkl_prefix$funname(const $mkl_type *A, const size_t n,
+                                              $mkl_type *output) {")
     return code
 end
 
-function function_init(lang::LangC,T,mem,graph)
+function function_init(lang::LangC,T,mem)
+    (mkl_type,mkl_prefix)=get_mkl_format(T)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
 
     # Allocation
     push_code!(code,"size_t max_memslots=$max_nodes;");
     push_comment!(code,"Initializations.")
-    push_code!(code,"FPTYPE coeff1, coeff2;");
+    push_code!(code,"$mkl_type coeff1, coeff2;")
+    push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",mkl_type))
+    push_code!(code, declare_constant(lang,convert(T,1.),"ONE",mkl_type))
     push_code!(code,"lapack_int *ipiv = NULL;")
-    push_code!(code,"FPTYPE *memslots =
-                     malloc(n*n*max_memslots*sizeof(*memslots));")
+    push_code!(code,"$mkl_type *memslots = malloc(n*n*max_memslots
+                                                  *sizeof(*memslots));")
     start_j=2;
 
     # TODO This solution keeps the identity matrix explicitly.
     push_code!(code,"size_t j;")
     push_code!(code,"memset(memslots, 0, n*n);")
     push_code!(code,"for(j=0; j<n*n; j+=n+1)");
-    push_code!(code,"        memslots[j] = 1.;")
+    push_code!(code,"        memslots[j] = ONE;")
 
     # TODO This solution makes a copy of A.
     push_comment!(code,"Make a copy of A");
     push_code!(code,"assert(sizeof(char) == 1);")
-    push_code!(code,"size_t size_FPTYPE = sizeof(FPTYPE);")
-    push_code!(code,"memcpy((FPTYPE*)(memslots+n*n), (FPTYPE*)A,
-                            n*n*size_FPTYPE);")
+    push_code!(code,"memcpy(memslots+n*n, A, n*n*sizeof(*memslots));")
 
     return code
 end
@@ -336,8 +368,7 @@ function function_end(lang::LangC,graph,mem)
     retval_node=graph.outputs[end];
     retval=get_slot_name(mem,retval_node);
 
-    push_code!(code,"memcpy((FPTYPE*)output, (FPTYPE*)$retval,
-                            n*n*size_FPTYPE);")
+    push_code!(code,"memcpy(output, $retval, n*n*sizeof(*output));")
     push_code!(code,"free(ipiv);")
     push_code!(code,"free(memslots);")
     push_code!(code,"}");
@@ -345,25 +376,32 @@ function function_end(lang::LangC,graph,mem)
 end
 
 function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
+    (mkl_type,mkl_prefix)=get_mkl_format(T)
+
     op = graph.operations[node]
     parent1=graph.parents[node][1]
     parent2=graph.parents[node][2]
 
     # Keep deallocation list (used for smart memory management).
     dealloc_list=deepcopy(dealloc_list);
-    setdiff!(dealloc_list,keys(mem.special_names));
-    parent1mem= get_slot_name(mem,parent1)
-    parent2mem= get_slot_name(mem,parent2)
+    setdiff!(dealloc_list,keys(mem.special_names))
+    parent1mem=get_slot_name(mem,parent1)
+    parent2mem=get_slot_name(mem,parent2)
+
+    rzero=reference_constant(lang,T,"ZERO")
+    rone=reference_constant(lang,T,"ONE")
 
     code=init_code(lang);
     push_comment!(code,"Computing $node with operation: $op");
     if op == :mult
         (nodemem_i,nodemem)=get_free_slot(mem)
         alloc_slot!(mem,nodemem_i,node);
-        push_code!(code,"cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
-                                     n, n, n,
-                                     1., $parent1mem, n, $parent2mem, n,
-                                     0., $nodemem, n);")
+        push_code!(code,"cblas_$mkl_prefix"*"gemm(CblasColMajor,
+                                                  CblasNoTrans, CblasNoTrans,
+                                                  n, n, n,
+                                                  $rone, $parent1mem, n,
+                                                  $parent2mem, n,
+                                                  $rzero, $nodemem, n);")
     elseif op == :ldiv
         # Initialize ipiv on first call.
         push_code!(code, "if (ipiv == NULL)");
@@ -381,13 +419,11 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         else
             (lhsmem_i,lhsmem)=get_free_slot(mem)
             alloc_slot!(mem,lhsmem_i,:dummy)
-            push_code!(code,"memcpy((FPTYPE*)($lhsmem),
-                                    (FPTYPE*)($parent1mem),
-                                    n*n*size_FPTYPE);")
+            push_code!(code,"memcpy($lhsmem, $parent1mem, n*n*sizeof(*memslots));")
         end
         # Compute LU decomposition of parent1.
-        push_code!(code,"LAPACKE_dgetrf(LAPACK_COL_MAJOR, n, n,
-                                        $lhsmem, n, ipiv);");
+        push_code!(code,"LAPACKE_$mkl_prefix"*"getrf(LAPACK_COL_MAJOR, n, n,
+                                                     $lhsmem, n, ipiv);")
 
         # As ?getrs overwrites B in AX = B, we need to copy $parent2mem to
         # $nodemem first, unless parent2 is in the deallocation list.
@@ -399,14 +435,14 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         else
             (nodemem_i,nodemem)=get_free_slot(mem)
             alloc_slot!(mem,nodemem_i,node)
-            push_code!(code,"memcpy((FPTYPE*)($nodemem), (FPTYPE*)($parent2mem),
-                                    n*n*size_FPTYPE);")
+            push_code!(code,"memcpy($nodemem, $parent2mem, n*n*sizeof(*memslots));")
         end
 
         # Solve linear system.
-        push_code!(code,"LAPACKE_dgetrs(LAPACK_COL_MAJOR, 'N', n, n,
-                                        $lhsmem, n, ipiv,
-                                        $nodemem, n);")
+        push_code!(code,"LAPACKE_$mkl_prefix"*"getrs(LAPACK_COL_MAJOR,
+                                                     'N', n, n,
+                                                     $lhsmem, n, ipiv,
+                                                     $nodemem, n);")
 
         # Deallocate LU factors.
         # TODO Wouldn't it make sense to keep them if another system with the
@@ -415,11 +451,10 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     elseif op == :lincomb
         coeff_vars=Vector{String}(undef,2);
 
-        # TODO Following lines will change when complex code can be generated.
-        @assert(isreal(graph.coeffs[node][1]) && isreal(graph.coeffs[node][1]));
-        (coeff1,coeff1_code)=assign_coeff(lang,real(graph.coeffs[node][1]),1);
+        # Coefficients of graph should have type T.
+        (coeff1,coeff1_code)=assign_coeff(lang,graph.coeffs[node][1],1);
         push_code!(code,coeff1_code);
-        (coeff2,coeff2_code)=assign_coeff(lang,real(graph.coeffs[node][2]),2);
+        (coeff2,coeff2_code)=assign_coeff(lang,graph.coeffs[node][2],2);
         push_code!(code,coeff2_code);
 
         # Reuse parent in deallocation list for output (saves memcopy).
@@ -431,13 +466,17 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Perform operation.
             nodemem=get_slot_name(mem,recycle_parent)
             if (recycle_parent == parent1)
-                push_code!(code,"cblas_daxpby(n*n,
-                                              $coeff2, $parent2mem, 1,
-                                              $coeff1, $nodemem, 1);");
+                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,
+                                              $coeff2,
+                                              $parent2mem, 1,
+                                              $coeff1,
+                                              $nodemem, 1);");
             else
-                push_code!(code,"cblas_daxpby(n*n,
-                                              $coeff1, $parent1mem, 1,
-                                              $coeff2, $nodemem, 1);");
+                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,
+                                              $coeff1,
+                                              $parent1mem, 1,
+                                              $coeff2,
+                                              $nodemem, 1);");
             end
 
             # Remove output from deallocation list.
@@ -450,11 +489,12 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Allocate new slot for result.
             (nodemem_i,nodemem)=get_free_slot(mem)
             alloc_slot!(mem,nodemem_i,node);
-            push_code!(code,"memcpy((FPTYPE*)($nodemem), (FPTYPE*)($parent2mem),
-                                n*n*size_FPTYPE);")
-            push_code!(code,"cblas_daxpby(n*n,
-                                          $coeff1, $parent1mem, 1,
-                                          $coeff2, $nodemem, 1);");
+            push_code!(code,"memcpy($nodemem, $parent2mem, n*n*sizeof(*memslots));")
+            push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,
+                                                       $coeff1,
+                                                       $parent1mem, 1,
+                                                       $coeff2,
+                                                       $nodemem, 1);");
         end
     else
         error("Unknown operation");
@@ -510,7 +550,7 @@ function gen_code(fname,graph;
     # a bound on the number memory slots needed.
 
 
-    println(file,to_string(function_definition(lang,funname)));
+    println(file,to_string(function_definition(lang,T,funname)));
 
     # We do a double sweep in order to determine exactly
     # how many memory slots are needed. The first sweep
