@@ -142,6 +142,7 @@ function gen_dic_exp(k;T=Float64)
 
 
     elseif (k==6)
+        # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
         c=[1.172460202011541e-08
            9.379681616092325e-08
            1.406952242413849e-06
@@ -216,6 +217,7 @@ function gen_dic_exp(k;T=Float64)
 
 
     elseif (k==7)
+        # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
         c=[1.556371639324141e-11
            1.556371639324141e-10
            2.957106114715868e-09
@@ -248,7 +250,54 @@ function gen_dic_exp(k;T=Float64)
            1
            1];
 
+        c=convert.(T,c);
 
+        # B2= A^2
+        v1a=[0;1.0];
+        v1b=[0;1.0];
+
+        # B3= A^3
+        v2a=[0;1.0;0];
+        v2b=[0;0;1.0];
+
+        # B4= A^4
+        v3a=[0;0;1.0;0];
+        v3b=[0;0;1.0;0];
+
+        # B5= A^5
+        v4a=[0;1.0;0.0;0;0];
+        v4b=[0;0;  0.0;0;1.0];
+
+
+        # B6=y05=
+        #   A^5*(c5*A+c4*A^2+c3*A^3+c2*A^4+c1*A^5)
+        v5a=[0;0.0; 0.0; 0;  0;    1];
+        v5b=[0;c[5];c[4];c[3];c[2];c[1]];
+
+        # B7=first term in y15
+        #   =(c10*A+c9*A^2+c8*A^3+c7*A^4+c6*A^5+y05)*
+        #         (c14*A^2+c13*A^3+c12*A^4+c11*A^5+y05)
+        v6a=[0;c[10];c[9] ;c[8] ;c[7]; c[6];1]
+        v6b=[0;0    ;c[14];c[13];c[12];c[11];1]
+
+        y15=[0;c[20];c[19];c[18];c[17];c[16];c[15];1];
+
+        # B8=first term in T30
+        #   =y15*(c[25]*A+c[24]*A^2+c[23]*A^3+c[22]*A^4+c[21]*A^5+y05)
+        v7a=y15;
+        v7b=[0;c[25];c[24];c[23];c[22];c[21];1;0];
+
+        # Output
+        y=[1;1;c[29];c[28];c[27];c[26];0;0;1];
+
+
+        xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b); (v7a,v7b)];
+
+        # Force convert to type
+        xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
+        y = convert.(T,y);
+
+        (graph,cref)=gen_general_poly_recursion(xv,y);
     else
         error("Not implemented for k=$k");
     end

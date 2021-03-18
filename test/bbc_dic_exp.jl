@@ -65,5 +65,13 @@ using LinearAlgebra
     @test -log(abs(err2/err1))/log(α) > p6dic+1
 
 
+    x=5.2;
+    p7dic=30 # Order of approx for 7 matrix multiplies
+    (graph,cref)=gen_dic_exp(7);
+    err1=eval_graph(big(graph),big(x))-exp(big(x))
+    err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
+    @test -log(abs(err2/err1))/log(α) > p7dic+1
+
+
 
 end
