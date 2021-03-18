@@ -54,4 +54,16 @@ using LinearAlgebra
     err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
     @test -log(abs(err2/err1))/log(α) > p5dic+1
 
+
+
+
+    x=3.5;
+    p6dic=24 # Order of approx for 6 matrix multiplies
+    (graph,cref)=gen_dic_exp(6);
+    err1=eval_graph(big(graph),big(x))-exp(big(x))
+    err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
+    @test -log(abs(err2/err1))/log(α) > p6dic+1
+
+
+
 end
