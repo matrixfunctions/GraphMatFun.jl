@@ -16,20 +16,46 @@ Reference:
 * Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 
     """
-function gen_bbc_basic_exp(k)
+function gen_bbc_basic_exp(k;T=Float64)
 
-    if (k==3)
+    if (k==2)
+
+        c=[1;1;1/2;1/6;1/25]; # Taylor coeffs
+        c=convert.(T,c);
+
+        # PS rule for degree 4.
+
+        ## Notation in Fasi paper: kk=4,s=2,nu=2
+
+        # A2=A^2
+        v1a=[0;1.0];
+        v1b=[0;1.0];
+
+        # A4=A^2*(c[3]+c[4]*A+c[5]*A^2)
+        v2a=[0;0;1.0]; # A^2
+        v2b=[c[3];c[4];c[5]]; # tildeP1
+
+        y=[c[1];c[2];0;1.0];
+        xv=[(v1a,v1b); (v2a,v2b)];
+        # Force convert to type
+        xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
+        y = convert.(T,y);
+        (graph,cref)=gen_general_poly_recursion(xv,y);
+
+
+    elseif (k==3)
         # Equation 13
+        value177=convert(T,177); # Lessen roundoff errors
         y0=1
         y1=1
-        y2=(857-58*sqrt(177))/630;
+        y2=(857-58*sqrt(value177))/630;
         x3=2/3
-        x1=x3*(1+sqrt(177))/88;
-        x2=x3*(1+sqrt(177))/352
-        x4=(-271+29*sqrt(177))/(315*x3);
-        x5=11*(-1+sqrt(177))/(1260*x3);
-        x6=11*(-9+sqrt(177))/(5040*x3);
-        x7=(89-sqrt(177))/(5040*x3^2);
+        x1=x3*(1+sqrt(value177))/88;
+        x2=x3*(1+sqrt(value177))/352
+        x4=(-271+29*sqrt(value177))/(315*x3);
+        x5=11*(-1+sqrt(value177))/(1260*x3);
+        x6=11*(-9+sqrt(value177))/(5040*x3);
+        x7=(89-sqrt(value177))/(5040*x3^2);
 
         # A2=A^2
         v1a=[0 ;1.0];
