@@ -5,13 +5,19 @@ using LinearAlgebra
     A=[3 4.0; 5.5 0.1];
 
     # Test julia code generation
-    lang=LangJulia(false,false);
-    fname=tempname()*".jl";
-    gen_code(fname,graph,lang=lang)
-    # and execution
-    include(fname);
-    @test eval_graph(graph,A)≈dummy(A)
-    rm(fname);
+    for t1 in (true,false)
+        for t2 in (true,false)
+            lang=LangJulia(t1,t2);
+            fname=tempname()*".jl";
+            gen_code(fname,graph,lang=lang)
+            # and execution
+            include(fname);
+            @test eval_graph(graph,A)≈dummy(A)
+            rm(fname);
+
+        end
+    end
+
 
     # Test Matlab code generation (not execution)
     fname=tempname()*".m";
