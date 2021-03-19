@@ -63,6 +63,7 @@ assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
 assign_coeff(::LangMatlab,v,i)=("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
 function assign_coeff(::LangC,val,i)
     # In C, complex types are structures and are passed by reference.
+    T=Float64;
     if (T<:Complex)
         assignment_string = "coeff$i.real = "*string(real(val))*";\n"*
                             "coeff$i.imag = "*string(imag(val))*";"
@@ -204,11 +205,20 @@ function execute_operation!(lang::LangJulia,
 
             nodemem=get_slot_name(mem,recycle_parent)
 
-            if (recycle_parent == parent1)
-                push_code!(code,"BLAS.axpby!($coeff2,$parent2mem,$coeff1,$nodemem);");
+            if (lang.exploit_uniformscaling &&  (parent1 == :I || parent2 == :I))
+                # BLAS does not work with unform scaling
+                # Do inplace instead
+                push_code!(code,"$(nodemem)[:]=$coeff1*$parent1mem+$coeff2*$parent2mem");
+
             else
-                push_code!(code,"BLAS.axpby!($coeff1,$parent1mem,$coeff2,$nodemem);");
+
+                if (recycle_parent == parent1)
+                    push_code!(code,"BLAS.axpby!($coeff2,$parent2mem,$coeff1,$nodemem);");
+                else
+                    push_code!(code,"BLAS.axpby!($coeff1,$parent1mem,$coeff2,$nodemem);");
+                end
             end
+
 
             # Avoid deallocated
             setdiff!(dealloc_list,[recycle_parent]);
