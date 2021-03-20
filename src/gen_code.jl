@@ -355,7 +355,7 @@ function function_init(lang::LangC,T,mem,graph)
 
     # TODO This solution keeps the identity matrix explicitly.
     push_code!(code,"size_t j;")
-    push_code!(code,"memset(memslots, 0, n*n);")
+    push_code!(code,"memset(memslots, 0, n*n*sizeof(*memslots));")
     push_code!(code,"for(j=0; j<n*n; j+=n+1)");
     push_code!(code,"        memslots[j] = ONE;")
 
