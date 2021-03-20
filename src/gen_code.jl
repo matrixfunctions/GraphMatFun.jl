@@ -7,8 +7,9 @@ struct LangJulia
     overwrite_input # Overwrite input
     exploit_uniformscaling  # I=UniformScaling. Should it be exploited?
 end;
-struct LangC end;
-
+struct LangC_MKL end
+struct LangC_OpenBLAS end
+LangC=Union{LangC_MKL,LangC_OpenBLAS}
 
 function LangJulia()
     return LangJulia(true,true);
@@ -47,40 +48,55 @@ end
 # execute_operation!(lang::Lang,T,graph,node,
 #                    dealloc_list,   mem)
 
-
 # Language specific comment operations
 comment(::LangMatlab,s)="% $s";
 comment(::LangJulia,s)="# $s";
 comment(::LangC,s)="/* $s */";
 
-
+# Language specific memory operations
 slotname(::LangJulia,i)="memslots[$i]"
 slotname(::LangMatlab,i)="memslots{$i}"
 slotname(::LangC,i)="memslots+($i-1)*n*n"
 
+# Language specific variable declaration, initialization, and assignment
 # For Julia more parsing may be required TODO
 assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
 assign_coeff(::LangMatlab,v,i)=("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
-function assign_coeff(::LangC,val,i)
-    # In C, complex types are structures and are passed by reference.
-    T=Float64;
-    if (T<:Complex)
-        assignment_string = "coeff$i.real = "*string(real(val))*";\n"*
-                            "coeff$i.imag = "*string(imag(val))*";"
-        variable_string = "&coeff$i"
-    else
-        assignment_string = "coeff$i = $val;";
-        variable_string = "coeff$i"
-    end
+# In C, complex types are structures and are passed by reference.
+function assign_coeff(::LangC_MKL,val::T,i) where T<:Complex
+    assignment_string = "coeff$i.real = "*string(real(val))*";\n"*
+                        "coeff$i.imag = "*string(imag(val))*";"
+    variable_string = "&coeff$i"
     return (variable_string,assignment_string)
-    # "coeff$i = "*string(real(v))*";"
 end
-declare_constant(::LangC,val,id,type)=(typeof(val)<:Complex) ?
-    "const $type $id = {.real = "*string(real(val))*", "*
-                       ".imag = "*string(imag(val))*"};" :
-    "const $type $id = $val;"
-reference_constant(::LangC,T,id)=(T<:Complex) ?
-    "&$id" : "$id"
+function assign_coeff(::LangC_OpenBLAS,val::T,i) where T<:Complex
+    assignment_string = "coeff$i = "*string(real(val))*" + "*
+                                     string(imag(val))*"*I;"
+    variable_string = "&coeff$i"
+    return (variable_string,assignment_string)
+end
+function assign_coeff(::LangC,val::T,i) where T<:Real
+    assignment_string = "coeff$i = $val;";
+    variable_string = "coeff$i"
+    return (variable_string,assignment_string)
+end
+
+# Language specific constant declaration and reference
+function declare_constant(::LangC_MKL,val::T,id,type) where T<:Complex
+    return "const $type $id = {.real = "*string(real(val))*", "*
+                              ".imag = "*string(imag(val))*"};"
+end
+function declare_constant(::LangC_OpenBLAS,val::T,id,type) where T<:Complex
+    return "const $type $id = "*string(real(val))*" + "*
+                                string(imag(val))*"*I;"
+end
+function declare_constant(::LangC,val::T,id,type) where T<:Complex
+    return "const $type $id = $val;"
+end
+reference_constant(::LangC,T,id)=(T<:Complex) ? "&$id" : "$id"
+
+
+
 
 
 ### Julia
@@ -255,6 +271,8 @@ end
 
 
 
+
+
 ### MATLAB
 function function_definition(lang::LangMatlab,T,funname)
     code=init_code(lang);
@@ -309,35 +327,52 @@ end
 
 
 
+
+
 ### C
-# Return MKL type and BLAS/LAPACK prefix corresponding to type T.
-function get_mkl_format(T::Type{Float32})
+
+# Return MKL/OpenBLAS-specific includes.
+function get_blas_includes(::LangC_MKL)
+    return "#include<mkl/mkl.h>"
+end
+function get_blas_includes(::LangC_OpenBLAS)
+    return "#include<cblas.h>\n#include<lapacke.h>"
+end
+
+# Return type and BLAS/LAPACK prefix corresponding to type T.
+function get_blas_type(::LangC,T::Type{Float32})
     return ("float","s")
 end
-function get_mkl_format(T::Type{Float64})
+function get_blas_type(::LangC,T::Type{Float64})
     return ("double","d")
 end
-function get_mkl_format(T::Type{Complex{Float32}})
+function get_blas_type(::LangC_MKL,T::Type{Complex{Float32}})
     return ("MKL_Complex8","c")
 end
-function get_mkl_format(T::Type{Complex{Float64}})
+function get_blas_type(::LangC_MKL,T::Type{Complex{Float64}})
     return ("MKL_Complex16","z")
+end
+function get_blas_type(::LangC_OpenBLAS,T::Type{Complex{Float32}})
+    return ("openblas_complex_float","c")
+end
+function get_blas_type(::LangC_OpenBLAS,T::Type{Complex{Float64}})
+    return ("openblas_complex_double","z")
 end
 
 function function_definition(lang::LangC,T,funname)
-    (mkl_type,mkl_prefix)=get_mkl_format(T)
+    (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
+    push_code!(code,get_blas_includes(lang))
     push_code!(code,"#include<assert.h>")
-    push_code!(code,"#include<mkl/mkl.h>") # Assuming we use MKL here.
     push_code!(code,"#include<stdlib.h>")
     push_code!(code,"#include<string.h>")
-    push_code!(code,"void $mkl_prefix$funname(const $mkl_type *A, "*
-                    "const size_t n, $mkl_type *output) {")
+    push_code!(code,"void $blas_prefix$funname(const $blas_type *A, "*
+                    "const size_t n, $blas_type *output) {")
     return code
 end
 
 function function_init(lang::LangC,T,mem,graph)
-    (mkl_type,mkl_prefix)=get_mkl_format(T)
+    (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
 
@@ -345,11 +380,11 @@ function function_init(lang::LangC,T,mem,graph)
     push_code!(code,"size_t max_memslots=$max_nodes;");
     push_code!(code,"");
     push_comment!(code,"Initializations.")
-    push_code!(code,"$mkl_type coeff1, coeff2;")
-    push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",mkl_type))
-    push_code!(code, declare_constant(lang,convert(T,1.),"ONE",mkl_type))
+    push_code!(code,"$blas_type coeff1, coeff2;")
+    push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",blas_type))
+    push_code!(code, declare_constant(lang,convert(T,1.),"ONE",blas_type))
     push_code!(code,"lapack_int *ipiv = NULL;")
-    push_code!(code,"$mkl_type *memslots = malloc(n*n*max_memslots"*
+    push_code!(code,"$blas_type *memslots = malloc(n*n*max_memslots"*
                     "*sizeof(*memslots));")
     start_j=2;
 
@@ -388,7 +423,7 @@ function function_end(lang::LangC,graph,mem)
 end
 
 function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
-    (mkl_type,mkl_prefix)=get_mkl_format(T)
+    (blas_type,blas_prefix)=get_blas_type(lang,T)
 
     op = graph.operations[node]
     parent1=graph.parents[node][1]
@@ -409,7 +444,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     if op == :mult
         (nodemem_i,nodemem)=get_free_slot(mem)
         alloc_slot!(mem,nodemem_i,node);
-        push_code!(code,"cblas_$mkl_prefix"*"gemm(CblasColMajor, "*
+        push_code!(code,"cblas_$blas_prefix"*"gemm(CblasColMajor, "*
                         "CblasNoTrans, CblasNoTrans,n, n, n,\n"*
                         "            $rone, $parent1mem, n, $parent2mem, n,\n"*
                         "            $rzero, $nodemem, n);")
@@ -433,7 +468,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             push_code!(code,"memcpy($lhsmem, $parent1mem, n*n*sizeof(*memslots));")
         end
         # Compute LU decomposition of parent1.
-        push_code!(code,"LAPACKE_$mkl_prefix"*"getrf(LAPACK_COL_MAJOR, n, n, "*
+        push_code!(code,"LAPACKE_$blas_prefix"*"getrf(LAPACK_COL_MAJOR, n, n, "*
                         "$lhsmem, n, ipiv);")
 
         # As ?getrs overwrites B in AX = B, we need to copy $parent2mem to
@@ -451,7 +486,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         end
 
         # Solve linear system.
-        push_code!(code,"LAPACKE_$mkl_prefix"*"getrs(LAPACK_COL_MAJOR, "*
+        push_code!(code,"LAPACKE_$blas_prefix"*"getrs(LAPACK_COL_MAJOR, "*
                         "'N', n, n,\n"*
                         "               $lhsmem, n, ipiv,\n"*
                         "               $nodemem, n);")
@@ -478,11 +513,11 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Perform operation.
             nodemem=get_slot_name(mem,recycle_parent)
             if (recycle_parent == parent1)
-                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n, "*
+                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
                                 "$coeff2, $parent2mem, 1,\n"*
                                 "             $coeff1, $nodemem, 1);");
             else
-                push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n,"*
+                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
                                 "$coeff1, $parent1mem, 1,\n"*
                                 "             $coeff2, $nodemem, 1);");
             end
@@ -498,7 +533,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             (nodemem_i,nodemem)=get_free_slot(mem)
             alloc_slot!(mem,nodemem_i,node);
             push_code!(code,"memcpy($nodemem, $parent2mem, n*n*sizeof(*memslots));")
-            push_code!(code,"cblas_$mkl_prefix"*"axpby(n*n, "*
+            push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
                             "$coeff1, $parent1mem, 1,\n"*
                             "             $coeff2, $nodemem, 1);")
         end
@@ -531,7 +566,8 @@ Topological order of the nodes is comptued using
 `get_topo_order` and `priohelp` can be used to
 influence the order.
 
-Currently supported language: `LangJulia`, `LangMatlab`, `LangC`.
+Currently supported language: `LangJulia`, `LangMatlab`,
+ `LangC_MKL`, `LangC_OpenBLAS`.
 
 """
 function gen_code(fname,graph;
