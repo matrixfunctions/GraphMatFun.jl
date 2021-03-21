@@ -38,4 +38,26 @@ using LinearAlgebra
     # Check that we actually removed something
     @test size(get_all_cref(graph2),1) < size(get_all_cref(graph1),1)
 
+
+
+    ## Test trivial node removal
+    graph=Compgraph();
+    add_mult!(graph,:I2,:I,:I); # This node is trivial
+    add_mult!(graph,:AI,:A,:I2); # This node is trivial
+    add_mult!(graph,:IA,:I2,:AI); # This node is trivial
+    add_ldiv!(graph,:P0,:I,:IA); # This node is trivial
+    add_output!(graph,:P0);
+
+    graph1=graph;
+    graph2=deepcopy(graph);
+    compress_graph_trivial!(graph2);
+    @test eval_graph(graph1,A) == eval_graph(graph2,A)
+
+    # Check that all trivial nodes were removed
+    @test isempty(graph2.operations)
+    @test isempty(graph2.parents)
+    @test isempty(graph2.coeffs)
+    @test graph2.outputs == [:A]
+
+
 end

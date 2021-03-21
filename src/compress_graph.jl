@@ -4,6 +4,7 @@
 export compress_graph_dangling!
 export compress_graph_zero_coeff!
 export compress_graph_output_cleaning!
+export comprrss_graph_trivial_nodes!
 export compress_graph!;
 
 
@@ -152,7 +153,54 @@ function compress_graph_output_cleaning!(graph,cref=[])
 
 end
 
+### Remove trivial nodes:
+# 1) :mult with identity parent;
+# 2) :ldiv with identity as first (left) parent.
 
+# Update children of olparent to point to newparent.
+function updated_children_deleted_node!(graph,oldparent,newparent)
+    for child in get_children(graph,oldparent)
+        graph.parents[child] = map(x->(x==oldparent ? newparent : x),
+                                   graph.parents[child])
+    end
+end
+"""
+    compress_graph_trivial!(graph,cref=[])
+
+Removes from the graph trivial nodes such as multiplication by the identity of
+linear systems whose coefficient is the identity matrix.
+
+    """
+function compress_graph_trivial!(graph)
+    ismodified=true
+    while ismodified
+        ismodified=false
+        for (key,parents) in graph.parents
+            delete_node=false
+            if (graph.parents[key][1] == :I &&
+                (graph.operations[key] == :mult ||
+                 graph.operations[key] == :ldiv))
+                newparent=graph.parents[key][2]
+                delete_node=true
+            elseif (graph.parents[key][2] == :I &&
+                    graph.operations[key] == :mult)
+                newparent=graph.parents[key][1]
+                delete_node=true
+            end
+            if (delete_node)
+                println("Replace node ",key," by ",newparent);
+                # Make newparent output node if current node was.
+                if (key in graph.outputs)
+                    deleteat!(graph.outputs,graph.outputs .== key)
+                    add_output!(graph,newparent)
+                end
+                update_children_deleted_node!(graph,key,newparent)
+                del_node!(graph,key)
+                ismodified=true
+            end
+        end
+    end
+end
 """
     compress_graph!(graph,cref=[])
 
@@ -165,4 +213,5 @@ function compress_graph!(graph,cref=[])
     compress_graph_output_cleaning!(graph,cref)
     compress_graph_zero_coeff!(graph,cref)
     compress_graph_dangling!(graph,cref)
+    compress_graph_trivial!(graph)
 end
