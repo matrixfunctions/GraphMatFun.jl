@@ -40,7 +40,22 @@ using LinearAlgebra
 
 
 
-    ## Test trivial node removal
+    ## Test trivial node detection and removal
+    graph=Compgraph();
+    add_mult!(graph,:AI,:A,:I);
+    add_output!(graph,:AI)
+    @test has_trivial_nodes(graph) == true
+
+    graph=Compgraph();
+    add_mult!(graph,:IA,:I,:A);
+    add_output!(graph,:IA)
+    @test has_trivial_nodes(graph) == true
+
+    graph=Compgraph();
+    add_ldiv!(graph,:IinvA,:I,:A);
+    add_output!(graph,:IinvA)
+    @test has_trivial_nodes(graph) == true
+
     graph=Compgraph();
     add_mult!(graph,:I2,:I,:I); # This node is trivial
     add_mult!(graph,:AI,:A,:I2); # This node is trivial
@@ -50,6 +65,7 @@ using LinearAlgebra
 
     graph1=graph;
     graph2=deepcopy(graph);
+    @test has_trivial_nodes(graph1) == true
     compress_graph_trivial!(graph2);
     @test eval_graph(graph1,A) == eval_graph(graph2,A)
 

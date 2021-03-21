@@ -157,7 +157,13 @@ end
 # 1) :mult with identity parent;
 # 2) :ldiv with identity as first (left) parent.
 
-# Update children of olparent to point to newparent.
+# Trivial node with identity on the left (:mult or :ldiv).
+is_trivial_left(graph,node)=(graph.parents[node][1] == :I &&
+    (graph.operations[node] == :mult || graph.operations[node] == :ldiv))
+# Trivial node with identity on the right (:mult).
+is_trivial_right(graph,node)=(graph.parents[node][2] == :I &&
+    graph.operations[node] == :mult)
+# Update children of oldparent to point to newparent.
 function updated_children_deleted_node!(graph,oldparent,newparent)
     for child in get_children(graph,oldparent)
         graph.parents[child] = map(x->(x==oldparent ? newparent : x),
@@ -165,10 +171,27 @@ function updated_children_deleted_node!(graph,oldparent,newparent)
     end
 end
 """
+    has_trivial_node(graph)
+
+Checks whether the graph has trivial nodes, that is, multiplications by the
+identity or linear systems whose coefficient is the identity matrix.
+
+    """
+function has_trivial_nodes(graph)
+    has_trivial_nodes=false
+    for (key,parents) in graph.parents
+        if is_trivial_left(graph,key) || is_trivial_right(graph,key)
+            has_trivial_nodes=true
+            break
+        end
+    end
+    return has_trivial_nodes
+end
+"""
     compress_graph_trivial!(graph,cref=[])
 
-Removes from the graph trivial nodes such as multiplication by the identity of
-linear systems whose coefficient is the identity matrix.
+Removes from the graph trivial nodes, that is, multiplications by the identity
+or linear systems whose coefficient is the identity matrix.
 
     """
 function compress_graph_trivial!(graph)
@@ -177,19 +200,16 @@ function compress_graph_trivial!(graph)
         ismodified=false
         for (key,parents) in graph.parents
             delete_node=false
-            if (graph.parents[key][1] == :I &&
-                (graph.operations[key] == :mult ||
-                 graph.operations[key] == :ldiv))
+            if is_trivial_left(graph,key)
                 newparent=graph.parents[key][2]
                 delete_node=true
-            elseif (graph.parents[key][2] == :I &&
-                    graph.operations[key] == :mult)
+            elseif is_trivial_right(graph,key)
                 newparent=graph.parents[key][1]
                 delete_node=true
             end
             if (delete_node)
                 println("Replace node ",key," by ",newparent);
-                # Make newparent output node if current node was.
+                # Make newparent an output node if current node was.
                 if (key in graph.outputs)
                     deleteat!(graph.outputs,graph.outputs .== key)
                     add_output!(graph,newparent)
