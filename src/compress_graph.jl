@@ -85,7 +85,7 @@ function compress_graph_zero_coeff!(graph,cref=[];droptol=0)
                         for (pkey,op) in graph.operations
                             pp=[graph.parents[pkey]...]
                             if (op==:lincomb &&
-                                (pp[1]==key ||  pp[2]==key))
+                                (pp[1]==key || pp[2]==key))
                                 # It can be merged
 
                                 println("Delete connection:",key,"->",pkey)
@@ -157,19 +157,42 @@ end
 # 1) :mult with identity parent;
 # 2) :ldiv with identity as first (left) parent.
 
-# Trivial node with identity on the left (:mult or :ldiv).
-is_trivial_left(graph,node)=(graph.parents[node][1] == :I &&
-    (graph.operations[node] == :mult || graph.operations[node] == :ldiv))
-# Trivial node with identity on the right (:mult).
-is_trivial_right(graph,node)=(graph.parents[node][2] == :I &&
-    graph.operations[node] == :mult)
-# Update children of oldparent to point to newparent.
-function updated_children_deleted_node!(graph,oldparent,newparent)
-    for child in get_children(graph,oldparent)
-        graph.parents[child] = map(x->(x==oldparent ? newparent : x),
-                                   graph.parents[child])
+# Check if node is trivial because of an identity on the left (:mult or :ldiv).
+is_trivial_left(graph,node)=(graph.parents[node][1]==:I &&
+    (graph.operations[node]==:mult || graph.operations[node]==:ldiv))
+
+# Check if node is trivial because of an identity on the right (:mult).
+is_trivial_right(graph,node)=(graph.parents[node][2]==:I &&
+    graph.operations[node]==:mult)
+
+# Return a parent that can replace a node.
+# The empty array Any[] is returned if the node is not trivial.
+function find_replacement_node(graph,node)
+    if is_trivial_left(graph,node)
+        return graph.parents[node][2]
+    elseif is_trivial_right(graph,node)
+        return graph.parents[node][1]
+    else
+        return []
     end
 end
+
+# Replace node with its parent.
+function replace_node!(graph,node,replacement)
+    # Make replacement an output node if current node was.
+    if (node in graph.outputs)
+        deleteat!(graph.outputs,graph.outputs.==node)
+        add_output!(graph,replacement)
+    end
+    # Update children of node to point to replacement.
+    for child in get_children(graph,node)
+        graph.parents[child] = map(x->(x==node ? replacement : x),
+                                   graph.parents[child])
+    end
+    # Delete node from graph.
+    del_node!(graph,node)
+end
+
 """
     has_identity_lincomb(graph)
 
@@ -187,6 +210,7 @@ function has_identity_lincomb(graph)
     end
     return has_identity_lincomb
 end
+
 """
     has_trivial_node(graph)
 
@@ -204,6 +228,7 @@ function has_trivial_nodes(graph)
     end
     return has_trivial_nodes
 end
+
 """
     compress_graph_trivial!(graph,cref=[])
 
@@ -216,28 +241,16 @@ function compress_graph_trivial!(graph)
     while ismodified
         ismodified=false
         for (key,parents) in graph.parents
-            delete_node=false
-            if is_trivial_left(graph,key)
-                newparent=graph.parents[key][2]
-                delete_node=true
-            elseif is_trivial_right(graph,key)
-                newparent=graph.parents[key][1]
-                delete_node=true
-            end
-            if (delete_node)
-                println("Replace node ",key," by ",newparent);
-                # Make newparent an output node if current node was.
-                if (key in graph.outputs)
-                    deleteat!(graph.outputs,graph.outputs .== key)
-                    add_output!(graph,newparent)
-                end
-                update_children_deleted_node!(graph,key,newparent)
-                del_node!(graph,key)
+            replacement=find_replacement_node(graph,key)
+            if replacement!=[]
+                println("Replace node ",key," by ",replacement);
+                replace_node!(graph,key,replacement)
                 ismodified=true
             end
         end
     end
 end
+
 """
     compress_graph!(graph,cref=[])
 
