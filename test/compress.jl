@@ -40,6 +40,13 @@ using LinearAlgebra
 
 
 
+    ## Test function to detect if graph has linear combination of identities
+    graph=Compgraph();
+    add_lincomb!(graph,:P1,1.0,:A,1.0,:I);
+    add_lincomb!(graph,:P2,1.0,:I,1.0,:I);
+    add_mult!(graph,:P0,:P1,:P2);
+    @test has_identity_lincomb(graph) == true
+
     ## Test trivial node detection and removal
     graph=Compgraph();
     add_mult!(graph,:AI,:A,:I);
