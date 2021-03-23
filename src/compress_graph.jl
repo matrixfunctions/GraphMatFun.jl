@@ -236,7 +236,8 @@ Removes from the graph trivial nodes, that is, multiplications by the identity
 or linear systems whose coefficient is the identity matrix.
 
     """
-function compress_graph_trivial!(graph)
+function compress_graph_trivial!(graph,cref=[])
+    # cref is not used as this function does not remove lincomb nodes.
     ismodified=true
     while ismodified
         ismodified=false
@@ -262,6 +263,6 @@ are removed.
 function compress_graph!(graph,cref=[])
     compress_graph_output_cleaning!(graph,cref)
     compress_graph_zero_coeff!(graph,cref)
+    compress_graph_trivial!(graph,cref)
     compress_graph_dangling!(graph,cref)
-    compress_graph_trivial!(graph)
 end

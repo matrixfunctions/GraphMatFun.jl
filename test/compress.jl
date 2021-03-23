@@ -50,17 +50,17 @@ using LinearAlgebra
     ## Test trivial node detection and removal
     graph=Compgraph();
     add_mult!(graph,:AI,:A,:I);
-    add_output!(graph,:AI)
+    add_output!(graph,:AI);
     @test has_trivial_nodes(graph) == true
 
     graph=Compgraph();
     add_mult!(graph,:IA,:I,:A);
-    add_output!(graph,:IA)
+    add_output!(graph,:IA);
     @test has_trivial_nodes(graph) == true
 
     graph=Compgraph();
     add_ldiv!(graph,:IinvA,:I,:A);
-    add_output!(graph,:IinvA)
+    add_output!(graph,:IinvA);
     @test has_trivial_nodes(graph) == true
 
     graph=Compgraph();
@@ -69,18 +69,33 @@ using LinearAlgebra
     add_mult!(graph,:IA,:I2,:AI); # This node is trivial
     add_ldiv!(graph,:P0,:I,:IA); # This node is trivial
     add_output!(graph,:P0);
-
     graph1=graph;
     graph2=deepcopy(graph);
     @test has_trivial_nodes(graph1) == true
-    compress_graph_trivial!(graph2);
+    cref=get_all_cref(graph) # Empty as graph has no linear combination nodes.
+    compress_graph_trivial!(graph2,cref);
+    @test isempty(cref)
     @test eval_graph(graph1,A) == eval_graph(graph2,A)
-
-    # Check that all trivial nodes were removed
     @test isempty(graph2.operations)
     @test isempty(graph2.parents)
     @test isempty(graph2.coeffs)
     @test graph2.outputs == [:A]
 
+    graph=Compgraph();
+    add_lincomb!(graph,:P1,1.0,:A,2.0,:I);
+    add_mult!(graph,:P2a,:A,:I);
+    add_mult!(graph,:P2b,:I,:A);
+    add_mult!(graph,:P2,:P2a,:P2b);
+    add_mult!(graph,:P0,:P1,:P2);
+    add_output!(graph,:P0);
+    graph1=graph;
+    graph2=deepcopy(graph);
+    @test has_trivial_nodes(graph1) == true
+    cref=get_all_cref(graph) # Empty as graph has no linear combination nodes.
+    compress_graph_trivial!(graph2,cref);
+    @test cref == [(:P1, 1), (:P1, 2)]
+    @test graph2.operations == Dict(:P0=>:mult,:P1=>:lincomb,:P2=>:mult)
+    @test graph2.parents == Dict(:P0=>(:P1,:P2),:P1=>(:A,:I),:P2=>(:A,:A))
+    @test graph2.outputs == [:P0]
 
 end
