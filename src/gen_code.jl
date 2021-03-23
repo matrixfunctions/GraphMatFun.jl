@@ -90,7 +90,7 @@ function declare_constant(::LangC_OpenBLAS,val::T,id,type) where T<:Complex
     return "const $type $id = "*string(real(val))*" + "*
                                 string(imag(val))*"*I;"
 end
-function declare_constant(::LangC,val::T,id,type) where T<:Complex
+function declare_constant(::LangC,val::T,id,type) where T<:Real
     return "const $type $id = $val;"
 end
 reference_constant(::LangC,T,id)=(T<:Complex) ? "&$id" : "$id"
