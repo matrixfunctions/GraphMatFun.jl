@@ -182,8 +182,8 @@ function execute_operation!(lang::LangJulia,
     # Don't overwrite the list
     dealloc_list=deepcopy(dealloc_list);
     setdiff!(dealloc_list,keys(mem.special_names));
-    parent1mem= get_slot_name(mem,parent1)
-    parent2mem= get_slot_name(mem,parent2)
+    parent1mem=get_slot_name(mem,parent1)
+    parent2mem=get_slot_name(mem,parent2)
 
     code=init_code(lang);
     push_comment!(code,"Computing $node with operation: $op");
@@ -371,13 +371,18 @@ function function_definition(lang::LangC,T,funname)
     return code
 end
 
+function init_mem(lang::LangC,max_nof_nodes;)
+    mem=CodeMem(max_nof_nodes,i->slotname(lang,i));
+    return mem;
+end
+
 function function_init(lang::LangC,T,mem,graph)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
     max_nodes=size(mem.slots,1);
 
     # Allocation
-    push_code!(code,"size_t max_memslots=$max_nodes;");
+    push_code!(code,"size_t max_memslots = $max_nodes;");
     push_code!(code,"");
     push_comment!(code,"Initializations.")
     push_code!(code,"$blas_type coeff1, coeff2;")
@@ -386,27 +391,25 @@ function function_init(lang::LangC,T,mem,graph)
     push_code!(code,"lapack_int *ipiv = NULL;")
     push_code!(code,"$blas_type *memslots = malloc(n*n*max_memslots"*
                     "*sizeof(*memslots));")
-    start_j=2;
 
-    # TODO This solution keeps the identity matrix explicitly.
-    push_code!(code,"size_t j;")
-    push_code!(code,"memset(memslots, 0, n*n*sizeof(*memslots));")
-    push_code!(code,"for(j=0; j<n*n; j+=n+1)");
-    push_code!(code,"        memslots[j] = ONE;")
+    # Store identity explicitly only if graph has a linear combination of I.
+    if has_identity_lincomb(graph)
+        (nodemem_i,nodemem)=get_free_slot(mem)
+        alloc_slot!(mem,nodemem_i,:I);
+        push_code!(code,"size_t j;")
+        push_code!(code,"memset($nodemem, 0, n*n*sizeof(*memslots));")
+        push_code!(code,"for(j=0; j<n*n; j+=n+1)");
+        push_code!(code,"        memslots[j] = ONE;")
+    end
 
     # TODO This solution makes a copy of A.
+    (nodemem_i,nodemem)=get_free_slot(mem)
+    alloc_slot!(mem,nodemem_i,:A);
     push_comment!(code,"Make a copy of A");
     push_code!(code,"assert(sizeof(char) == 1);")
-    push_code!(code,"memcpy(memslots+n*n, A, n*n*sizeof(*memslots));")
+    push_code!(code,"memcpy($nodemem, A, n*n*sizeof(*memslots));")
 
     return code
-end
-
-function init_mem(lang::LangC,max_nof_nodes;)
-    mem=CodeMem(max_nof_nodes,i->slotname(lang,i));
-    alloc_slot!(mem,1,:I);
-    alloc_slot!(mem,2,:A);
-    return mem;
 end
 
 function function_end(lang::LangC,graph,mem)
@@ -432,8 +435,23 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     # Keep deallocation list (used for smart memory management).
     dealloc_list=deepcopy(dealloc_list);
     setdiff!(dealloc_list,keys(mem.special_names))
-    parent1mem=get_slot_name(mem,parent1)
-    parent2mem=get_slot_name(mem,parent2)
+
+    # Check if parents have a memory slot.
+    if has_identity_lincomb(graph) # Linear combination of I.
+        p1_is_identity = p2_is_identity = false
+    else
+        p1_is_identity = parent1==:I
+        p2_is_identity = parent2==:I
+        setdiff!(dealloc_list,[:I])
+    end
+
+    # Get memory slots of parents.
+    if !p1_is_identity
+        parent1mem=get_slot_name(mem,parent1)
+    end
+    if !p2_is_identity
+        parent2mem=get_slot_name(mem,parent2)
+    end
 
     rzero=reference_constant(lang,T,"ZERO")
     rone=reference_constant(lang,T,"ONE")
@@ -445,7 +463,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         (nodemem_i,nodemem)=get_free_slot(mem)
         alloc_slot!(mem,nodemem_i,node);
         push_code!(code,"cblas_$blas_prefix"*"gemm(CblasColMajor, "*
-                        "CblasNoTrans, CblasNoTrans,n, n, n,\n"*
+                        "CblasNoTrans, CblasNoTrans, n, n, n,\n"*
                         "            $rone, $parent1mem, n, $parent2mem, n,\n"*
                         "            $rzero, $nodemem, n);")
     elseif op == :ldiv
@@ -465,7 +483,8 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         else
             (lhsmem_i,lhsmem)=get_free_slot(mem)
             alloc_slot!(mem,lhsmem_i,:dummy)
-            push_code!(code,"memcpy($lhsmem, $parent1mem, n*n*sizeof(*memslots));")
+            push_code!(code,"memcpy($lhsmem, $parent1mem, "*
+                            "n*n*sizeof(*memslots));")
         end
         # Compute LU decomposition of parent1.
         push_code!(code,"LAPACKE_$blas_prefix"*"getrf(LAPACK_COL_MAJOR, n, n, "*
@@ -492,8 +511,8 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                         "               $nodemem, n);")
 
         # Deallocate LU factors.
-        # TODO Wouldn't it make sense to keep them if another system with the
-        # same left-hand side is still in the node?
+        # TODO It might make sense to keep them if another system with the
+        # same left-hand side is still in the graph.
         free!(mem,lhsmem_i)
     elseif op == :lincomb
         coeff_vars=Vector{String}(undef,2);
@@ -506,20 +525,36 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
 
         # Reuse parent in deallocation list for output (saves memcopy).
         if ((parent1 in dealloc_list) || (parent2 in dealloc_list))
-            # Find parent to recycle.
+
             recycle_parent=(parent1 in dealloc_list) ? parent1 : parent2
             push_comment!(code,"Smart lincomb recycle $recycle_parent");
 
             # Perform operation.
             nodemem=get_slot_name(mem,recycle_parent)
             if (recycle_parent == parent1)
-                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
-                                "$coeff2, $parent2mem, 1,\n"*
-                                "             $coeff1, $nodemem, 1);");
+                if p2_is_identity
+                    push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
+                                    "$nodemem, 1);")
+                    push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                    "$coeff2, &ONE, 0,\n"*
+                                    "             $rone, $nodemem, n+1);");
+                else
+                    push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                    "$coeff2, $parent2mem, 1,\n"*
+                                    "             $coeff1, $nodemem, 1);");
+                end
             else
-                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
-                                "$coeff1, $parent1mem, 1,\n"*
-                                "             $coeff2, $nodemem, 1);");
+                if p1_is_identity
+                    push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff2, "*
+                                    "$nodemem, 1);")
+                    push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                    "$coeff1, &ONE, 0,\n"*
+                                    "             $rone, $nodemem, n+1);");
+                else
+                    push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                    "$coeff1, $parent1mem, 1,\n"*
+                                    "             $coeff2, $nodemem, 1);");
+                end
             end
 
             # Remove output from deallocation list.
@@ -532,10 +567,31 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Allocate new slot for result.
             (nodemem_i,nodemem)=get_free_slot(mem)
             alloc_slot!(mem,nodemem_i,node);
-            push_code!(code,"memcpy($nodemem, $parent2mem, n*n*sizeof(*memslots));")
-            push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
-                            "$coeff1, $parent1mem, 1,\n"*
-                            "             $coeff2, $nodemem, 1);")
+
+            # Compute linear combination.
+            if p1_is_identity
+                push_code!(code,"memcpy($nodemem, $parent2mem, "*
+                                "n*n*sizeof(*memslots));")
+                push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff2, "*
+                                    "$nodemem, 1);")
+                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                    "$coeff1, &ONE, 0,\n"*
+                                    "             $rone, $nodemem, n+1);");
+            elseif p2_is_identity
+                push_code!(code,"memcpy($nodemem, $parent1mem, "*
+                                "n*n*sizeof(*memslots));")
+                push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
+                                "$nodemem, 1);")
+                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                    "$coeff2, &ONE, 0,\n"*
+                                    "             $rone, $nodemem, n+1);");
+            else
+                push_code!(code,"memcpy($nodemem, $parent2mem, "*
+                                "n*n*sizeof(*memslots));")
+                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                                "$coeff1, $parent1mem, 1,\n"*
+                                "             $coeff2, $nodemem, 1);")
+            end
         end
     else
         error("Unknown operation");
@@ -601,7 +657,8 @@ function gen_code(fname,graph;
     # second sweep generates the code.
 
 
-    mem=init_mem(lang,max_nof_slots+2)
+    mem=init_mem(lang,max_nof_slots+3)
+    function_init(lang,T,mem,graph)
 
     # Sweep 1: Determine exactly the number of slots needed
     nof_slots=0;
