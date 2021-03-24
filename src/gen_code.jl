@@ -359,6 +359,11 @@ function get_blas_type(::LangC_OpenBLAS,T::Type{Complex{Float64}})
     return ("openblas_complex_double","z")
 end
 
+# Memory management functions.
+function langc_get_slot_name(mem,key)
+    return key==:A ? "A" : get_slot_name(mem,key)
+end
+
 function function_definition(lang::LangC,T,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
@@ -378,12 +383,12 @@ end
 
 function function_init(lang::LangC,T,mem,graph)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
-    code=init_code(lang);
-    max_nodes=size(mem.slots,1);
+    code=init_code(lang)
+    max_nodes=size(mem.slots,1)
 
-    # Allocation
-    push_code!(code,"size_t max_memslots = $max_nodes;");
-    push_code!(code,"");
+    # Allocate variables and constants.
+    push_code!(code,"size_t max_memslots = $max_nodes;")
+    push_code!(code,"")
     push_comment!(code,"Initializations.")
     push_code!(code,"$blas_type coeff1, coeff2;")
     push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",blas_type))
@@ -402,20 +407,13 @@ function function_init(lang::LangC,T,mem,graph)
         push_code!(code,"        memslots[j] = ONE;")
     end
 
-    # TODO This solution makes a copy of A.
-    (nodemem_i,nodemem)=get_free_slot(mem)
-    alloc_slot!(mem,nodemem_i,:A);
-    push_comment!(code,"Make a copy of A");
-    push_code!(code,"assert(sizeof(char) == 1);")
-    push_code!(code,"memcpy($nodemem, A, n*n*sizeof(*memslots));")
-
     return code
 end
 
 function function_end(lang::LangC,graph,mem)
     code=init_code(lang);
     retval_node=graph.outputs[end];
-    retval=get_slot_name(mem,retval_node);
+    retval=langc_get_slot_name(mem,retval_node);
     push_code!(code,"");
     push_comment!(code,"Prepare output.")
     push_code!(code,"memcpy(output, $retval, n*n*sizeof(*output));")
@@ -433,24 +431,25 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     parent2=graph.parents[node][2]
 
     # Keep deallocation list (used for smart memory management).
-    dealloc_list=deepcopy(dealloc_list);
+    dealloc_list=deepcopy(dealloc_list)
+    setdiff!(dealloc_list,[:A]) # A is not stored explicitly.
     setdiff!(dealloc_list,keys(mem.special_names))
 
     # Check if parents have a memory slot.
     if has_identity_lincomb(graph) # Linear combination of I.
-        p1_is_identity = p2_is_identity = false
+        p1_is_identity=p2_is_identity=false
     else
-        p1_is_identity = parent1==:I
-        p2_is_identity = parent2==:I
+        p1_is_identity=parent1==:I
+        p2_is_identity=parent2==:I
         setdiff!(dealloc_list,[:I])
     end
 
     # Get memory slots of parents.
     if !p1_is_identity
-        parent1mem=get_slot_name(mem,parent1)
+        parent1mem=langc_get_slot_name(mem,parent1)
     end
     if !p2_is_identity
-        parent2mem=get_slot_name(mem,parent2)
+        parent2mem=langc_get_slot_name(mem,parent2)
     end
 
     rzero=reference_constant(lang,T,"ZERO")
@@ -494,7 +493,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         # $nodemem first, unless parent2 is in the deallocation list.
         if (parent2 in dealloc_list)
             push_comment!(code,"Reusing memory of $parent2 for solution.")
-            nodemem=get_slot_name(mem,parent2)
+            nodemem=langc_get_slot_name(mem,parent2)
             setdiff!(dealloc_list,[parent2])
             set_slot_number!(mem,get_slot_number(mem,parent2),node)
         else
@@ -530,7 +529,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             push_comment!(code,"Smart lincomb recycle $recycle_parent");
 
             # Perform operation.
-            nodemem=get_slot_name(mem,recycle_parent)
+            nodemem=langc_get_slot_name(mem,recycle_parent)
             if (recycle_parent == parent1)
                 if p2_is_identity
                     push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
