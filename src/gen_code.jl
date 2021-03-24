@@ -386,16 +386,30 @@ function function_init(lang::LangC,T,mem,graph)
     code=init_code(lang)
     max_nodes=size(mem.slots,1)
 
-    # Allocate variables and constants.
+    # Initialization.
+    graph_ops=values(graph.operations)
     push_code!(code,"size_t max_memslots = $max_nodes;")
     push_code!(code,"")
     push_comment!(code,"Initializations.")
-    push_code!(code,"$blas_type coeff1, coeff2;")
-    push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",blas_type))
-    push_code!(code, declare_constant(lang,convert(T,1.),"ONE",blas_type))
-    push_code!(code,"lapack_int *ipiv = NULL;")
-    push_code!(code,"$blas_type *memslots = malloc(n*n*max_memslots"*
-                    "*sizeof(*memslots));")
+    # Allocate coefficients for linear combinations, if needed.
+    if :lincomb ∈ graph_ops
+        push_code!(code,"$blas_type coeff1, coeff2;")
+    end
+    # Declare constants ZERO and ONE, if needed.
+    if :mult ∈ graph_ops
+        push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",blas_type))
+    end
+    if :lincomb ∈ graph_ops || :mult ∈ graph_ops
+        push_code!(code, declare_constant(lang,convert(T,1.),"ONE",blas_type))
+    end
+    # Array ipiv for pivots of GEPP (needed only if graph has linear systems).
+    if :ldiv ∈ graph_ops
+        push_code!(code, "lapack_int *ipiv = malloc(n*sizeof(*ipiv));")
+    end
+    if max_nodes > 0
+        push_code!(code,"$blas_type *memslots = malloc(n*n*max_memslots"*
+                        "*sizeof(*memslots));")
+    end
 
     # Store identity explicitly only if graph has a linear combination of I.
     if has_identity_lincomb(graph)
@@ -417,8 +431,12 @@ function function_end(lang::LangC,graph,mem)
     push_code!(code,"");
     push_comment!(code,"Prepare output.")
     push_code!(code,"memcpy(output, $retval, n*n*sizeof(*output));")
-    push_code!(code,"free(ipiv);")
-    push_code!(code,"free(memslots);")
+    if :ldiv ∈ values(graph.operations)
+        push_code!(code,"free(ipiv);")
+    end
+    if size(mem.slots,1) > 0
+        push_code!(code,"free(memslots);")
+    end
     push_code!(code,"}");
     return code
 end
@@ -426,7 +444,7 @@ end
 function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
 
-    op = graph.operations[node]
+    op=graph.operations[node]
     parent1=graph.parents[node][1]
     parent2=graph.parents[node][2]
 
@@ -466,10 +484,6 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                         "            $rone, $parent1mem, n, $parent2mem, n,\n"*
                         "            $rzero, $nodemem, n);")
     elseif op == :ldiv
-        # Initialize ipiv on first call.
-        push_code!(code, "if (ipiv == NULL)");
-        push_code!(code, "        ipiv = malloc(n*sizeof(*ipiv));")
-
         # As ?detrs computes the LU decomposition of parent1 in-place, we need
         # to make a copy of $parent1mem, unless parent1 is on the deallocation
         # list.
@@ -485,6 +499,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             push_code!(code,"memcpy($lhsmem, $parent1mem, "*
                             "n*n*sizeof(*memslots));")
         end
+
         # Compute LU decomposition of parent1.
         push_code!(code,"LAPACKE_$blas_prefix"*"getrf(LAPACK_COL_MAJOR, n, n, "*
                         "$lhsmem, n, ipiv);")
