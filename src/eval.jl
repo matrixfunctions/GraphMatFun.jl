@@ -223,27 +223,29 @@ end
 
 
 """
-    adjust_for_errtype!(JR, pts, f, errtype)
+    adjust_for_errtype!(Jac, Res, objfun_vals, errtype)
 
 Adjusts the jacobian and residuals to `errtype`.
-`JR` can be Jacobian or vector of residuals,
-and  `f` is the objective function.
-The kwarg `errtype` can be `:abserr` or `:relerr`.
-"""
-function adjust_for_errtype!(JR, pts, f, errtype)
+`Jac` is the Jacobian,
+`res` is a vector of residuals,
+`objfun_vals` is a vector of objective function values,
+`errtype` can be `:abserr` or `:relerr`.
+     """
+function adjust_for_errtype!(Jac, res, objfun_vals, errtype)
     # Assumes a Jacobian and residual-vector that is computed in absolute error.
     # Adjusts Jacobian and residual-vector from absolute, to relative error, i.e.,
     # objective function 1/2 sum_i (Z(x_i)-f(x_i))^2 / f(x_i)^2 and
     if (errtype==:abserr)
         # Do nothing
     elseif (errtype==:relerr)
-        F = f.(pts)
-        F[F.==0] .= eps()*100 # Hack to avoid division by zero
-        JR[:] = Diagonal(1 ./ F)*JR
+        objfun_vals[objfun_vals.==0] .= eps()*100 # Hack to avoid division by zero
+        D = Diagonal(1 ./ objfun_vals)
+        Jac[:] =D*Jac
+        res[:] =D*res
     else
         error("Unknown errtype '", errtype, "'.")
     end
-    return JR
+    return (Jac, res)
 end
 
 ## Compute running error
