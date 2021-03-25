@@ -5,6 +5,7 @@ using LinearAlgebra
 
 import Base.eltype
 import Base.big
+import Base.complex
 
 export Compgraph
 export get_topo_order
@@ -60,9 +61,12 @@ function Compgraph(T,orggraph::Compgraph)
                      orggraph.outputs
                      );
 end
-# Convenience helper
+# Convenience helpers
 function big(orggraph::Compgraph{T}) where {T}
     return Compgraph(big(T),orggraph)
+end
+function complex(orggraph::Compgraph{T}) where {T}
+    return Compgraph(complex(T),orggraph)
 end
 
 
