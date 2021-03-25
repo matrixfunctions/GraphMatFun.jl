@@ -6,6 +6,7 @@ include("eval.jl")
 include("compress_graph.jl")
 include("merge.jl")
 
+include("optimization/gaussnewton.jl")
 
 # Generators
 include("generators/denman_beavers_gen.jl");
