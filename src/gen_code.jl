@@ -392,18 +392,18 @@ function function_init(lang::LangC,T,mem,graph)
     push_code!(code,"")
     push_comment!(code,"Initializations.")
     # Allocate coefficients for linear combinations, if needed.
-    if :lincomb ∈ graph_ops
+    if :lincomb in graph_ops
         push_code!(code,"$blas_type coeff1, coeff2;")
     end
     # Declare constants ZERO and ONE, if needed.
-    if :mult ∈ graph_ops
+    if :mult in graph_ops
         push_code!(code, declare_constant(lang,convert(T,0.),"ZERO",blas_type))
     end
-    if :lincomb ∈ graph_ops || :mult ∈ graph_ops
+    if :lincomb in graph_ops || :mult in graph_ops
         push_code!(code, declare_constant(lang,convert(T,1.),"ONE",blas_type))
     end
     # Array ipiv for pivots of GEPP (needed only if graph has linear systems).
-    if :ldiv ∈ graph_ops
+    if :ldiv in graph_ops
         push_code!(code, "lapack_int *ipiv = malloc(n*sizeof(*ipiv));")
     end
     if max_nodes > 0
@@ -431,7 +431,7 @@ function function_end(lang::LangC,graph,mem)
     push_code!(code,"");
     push_comment!(code,"Prepare output.")
     push_code!(code,"memcpy(output, $retval, n*n*sizeof(*output));")
-    if :ldiv ∈ values(graph.operations)
+    if :ldiv in values(graph.operations)
         push_code!(code,"free(ipiv);")
     end
     if size(mem.slots,1) > 0
@@ -462,7 +462,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         setdiff!(dealloc_list,[:I])
     end
 
-    # Get memory slots of parents.
+    # Get memory slots of parents, if explicitly stored.
     if !p1_is_identity
         parent1mem=langc_get_slot_name(mem,parent1)
     end
@@ -484,6 +484,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                         "            $rone, $parent1mem, n, $parent2mem, n,\n"*
                         "            $rzero, $nodemem, n);")
     elseif op == :ldiv
+        # Find a memory slot for the LU factors.
         # As ?detrs computes the LU decomposition of parent1 in-place, we need
         # to make a copy of $parent1mem, unless parent1 is on the deallocation
         # list.
@@ -492,6 +493,8 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             lhsmem=parent1mem
             lhsmem_i=get_slot_number(mem,parent1)
             # Remove parent 1 from the deallocation list, but only temporarily.
+            # This is to make sure that the LU factors do not get overwritten by
+            # the result of the sytem solve.
             setdiff!(dealloc_list,[parent1])
         else
             (lhsmem_i,lhsmem)=get_free_slot(mem)
@@ -504,30 +507,49 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
         push_code!(code,"LAPACKE_$blas_prefix"*"getrf(LAPACK_COL_MAJOR, n, n, "*
                         "$lhsmem, n, ipiv);")
 
-        # As ?getrs overwrites B in AX = B, we need to copy $parent2mem to
-        # $nodemem first, unless parent2 is in the deallocation list.
-        if (parent2 in dealloc_list)
-            push_comment!(code,"Reusing memory of $parent2 for solution.")
-            nodemem=langc_get_slot_name(mem,parent2)
-            setdiff!(dealloc_list,[parent2])
-            set_slot_number!(mem,get_slot_number(mem,parent2),node)
+        # Solve the linear systems. We have two cases:
+        if parent2 == :I
+            # 1. If parent2 is the identity, we use the function ?getri, which
+            # overwrites the LU factors with the matrix inverse.
+
+            # Compute matrix inverse.
+            push_code!(code,"LAPACKE_$blas_prefix"*"getri(LAPACK_COL_MAJOR, "*
+                        "n, $lhsmem, n, ipiv);")
+
+            # The LU factors should not be deallocated in this case, but we have
+            # to point the slot lhsmem to the current node.
+            alloc_slot!(mem,lhsmem_i,node);
         else
-            (nodemem_i,nodemem)=get_free_slot(mem)
-            alloc_slot!(mem,nodemem_i,node)
-            push_code!(code,"memcpy($nodemem, $parent2mem, "*
-                            "n*n*sizeof(*memslots));")
+            # 2. If parent2 is not the identity, we use the function ?getrs,
+            # which # overwrites B in AX = B. In this case, we need to copy
+            # $parent2mem to # $nodemem first, unless parent2 is in the
+            # deallocation list.
+
+            # Allocate slot for result.
+            if (parent2 in dealloc_list)
+                push_comment!(code,"Reusing memory of $parent2 for solution.")
+                nodemem=langc_get_slot_name(mem,parent2)
+                setdiff!(dealloc_list,[parent2])
+                set_slot_number!(mem,get_slot_number(mem,parent2),node)
+            else
+                (nodemem_i,nodemem)=get_free_slot(mem)
+                alloc_slot!(mem,nodemem_i,node)
+                push_code!(code,"memcpy($nodemem, $parent2mem, "*
+                "n*n*sizeof(*memslots));")
+            end
+
+            # Solve linear system.
+            push_code!(code,"LAPACKE_$blas_prefix"*"getrs(LAPACK_COL_MAJOR, "*
+                            "'N', n, n,\n"*
+                            "               $lhsmem, n, ipiv,\n"*
+                            "               $nodemem, n);")
+
+            # Deallocate LU factors.
+            # TODO It might make sense to keep them if another system with the
+            # same left-hand side is still in the graph.
+            free!(mem,lhsmem_i)
         end
 
-        # Solve linear system.
-        push_code!(code,"LAPACKE_$blas_prefix"*"getrs(LAPACK_COL_MAJOR, "*
-                        "'N', n, n,\n"*
-                        "               $lhsmem, n, ipiv,\n"*
-                        "               $nodemem, n);")
-
-        # Deallocate LU factors.
-        # TODO It might make sense to keep them if another system with the
-        # same left-hand side is still in the graph.
-        free!(mem,lhsmem_i)
     elseif op == :lincomb
         coeff_vars=Vector{String}(undef,2);
 
@@ -645,6 +667,9 @@ function gen_code(fname,graph;
                   lang=LangJulia(),
                   funname="dummy")
 
+    if has_trivial_nodes(graph)
+        error("Please run compress_graph!() on the graph first.")
+    end
     T=eltype(eltype(typeof(graph.coeffs.vals)));
 
     if (fname isa String)
