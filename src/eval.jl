@@ -159,7 +159,7 @@ function eval_jac(graph, x, cref; vals=nothing, output=size(graph.outputs,1))
     end
 
     # T = promote_type(eltype(x),eltype(graph))
-    comporder = get_computation_order(graph)[1]
+    comporder = get_topo_order(graph)[1]
     if vals==nothing
         vals = init_vals_eval_graph!(graph, x, vals)
         eval_graph(graph, x, vals=vals, output=output, comporder=comporder)
@@ -270,7 +270,7 @@ function eval_runerr(graph, x; vals=nothing, relerrs=nothing,
                     mode=:bounds, # Can be :bounds, :rand, :estimate
                     add_relerr=eps())
     T = promote_type(eltype(x),eltype(graph))
-    comporder = get_computation_order(graph)[1]
+    comporder = get_topo_order(graph)[1]
     if vals==nothing
         vals = init_vals_eval_graph!(graph, x, vals)
         eval_graph(graph, x, vals=vals, output=output, comporder=comporder)
