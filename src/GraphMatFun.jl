@@ -6,6 +6,8 @@ include("eval.jl")
 include("compress_graph.jl")
 include("merge.jl")
 
+# Optimization routines
+include("optimization/opt_common.jl")
 include("optimization/gaussnewton.jl")
 
 # Generators
@@ -18,7 +20,6 @@ include("generators/monomial_poly.jl");
 
 
 # Code generations
-
 include("gen_code.jl")
 
 end

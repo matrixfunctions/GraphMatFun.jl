@@ -16,15 +16,13 @@ norm `resnorm`.
 The kwargs are as follows:
 `maxit` determines the maximum number of iterations.
 If `logger` has a value >0, then the intermediate results are printed.
-`errtype` determines the error type measured, see `adjust_for_errtype()`, and
+`errtype` determines the error type measured, see `adjust_for_errtype!`.
 `stoptol` is the corresponding stopping tolerence.
 `cref` is a `Vector{Tuple{Symbol,Int}}` that determines which coefficients of `graph`
 that are considered free variables and optimized.
 The stepsize can be scaled with `γ0`.
-`linlsqr` determines how the inner linear least squares problem is solved.
-It can be `:backslash`, `:nrmeq`, or `:svd`, and for the latter
-singular values below `droptol` are disregarded.
-
+`linlsqr` and `droptol` determines how the inner linear least squares problem is
+solved; see `solve_linlsqr`.
 
     """
 function opt_gaussnewton!(graph, objfun, discr;
@@ -60,33 +58,8 @@ function opt_gaussnewton!(graph, objfun, discr;
 
         d = solve_linlsqr(Jac, res, linlsqr, droptol)
         x = get_coeffs(graph, cref)
-        x += γ0*d
+        x -= γ0*d
         set_coeffs!(graph, x, cref)
     end
     return (iter,resnorm)
-end
-
-
-#Internal to sovle the linear least squares problem in GN
-function solve_linlsqr(Jac, res, linlsqr, droptol)
-    if (linlsqr == :backslash)
-        d = -Jac\res
-    elseif (linlsqr == :nrmeq)
-        d = -(Jac'*Jac)\(Jac'*res)
-    elseif (linlsqr == :svd)
-        if (eltype(Jac) == BigFloat || eltype(Jac) == Complex{BigFloat})
-            # You must use include "using GenericSVD"
-            Sfact=svd!(Jac; full=false, alg=nothing)
-        else
-            Sfact=svd(Jac)
-        end
-        d=Sfact.S
-        # Use pseudoinverse if droptol>0
-        II = (d/d[1]) .< droptol
-        dinv = 1 ./ d
-        dinv[II] .= 0
-        # No explicit construction, only multiplication
-        # JJ0=Sfact.U*Diagonal(d)*Sfact.Vt
-        d=-Sfact.V*((Diagonal(dinv))*(Sfact.U'*res));
-    end
 end

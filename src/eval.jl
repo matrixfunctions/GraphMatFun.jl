@@ -1,5 +1,5 @@
 
-export eval_graph,eval_jac,eval_runerr,adjust_for_errtype!
+export eval_graph,eval_jac,eval_runerr
 
 
 # init_vals_eval_graph!()
@@ -221,32 +221,6 @@ function der_prop!(graph, der, vals, node, curr_parent, other_parent, i)
     return nothing
 end
 
-
-"""
-    adjust_for_errtype!(Jac, Res, objfun_vals, errtype)
-
-Adjusts the jacobian and residuals to `errtype`.
-`Jac` is the Jacobian,
-`res` is a vector of residuals,
-`objfun_vals` is a vector of objective function values,
-`errtype` can be `:abserr` or `:relerr`.
-     """
-function adjust_for_errtype!(Jac, res, objfun_vals, errtype)
-    # Assumes a Jacobian and residual-vector that is computed in absolute error.
-    # Adjusts Jacobian and residual-vector from absolute, to relative error, i.e.,
-    # objective function 1/2 sum_i (Z(x_i)-f(x_i))^2 / f(x_i)^2 and
-    if (errtype==:abserr)
-        # Do nothing
-    elseif (errtype==:relerr)
-        objfun_vals[objfun_vals.==0] .= eps()*100 # Hack to avoid division by zero
-        D = Diagonal(1 ./ objfun_vals)
-        Jac[:] =D*Jac
-        res[:] =D*res
-    else
-        error("Unknown errtype '", errtype, "'.")
-    end
-    return (Jac, res)
-end
 
 ## Compute running error
 # eval_runerr()
