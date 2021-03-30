@@ -3,10 +3,10 @@ export gen_monomial
 """
      (graph,crefs)=gen_monomial(a; input=:A, polyname=:P)
 
-Generates the graph for the polynomial using the monomial basis coefficieents. More precisely, 
+Generates the graph for the polynomial using the monomial basis coefficieents. More precisely,
 it corresponds to evaluation of the polynomial
 
-    p(s)=a[1]*I+a[2]*A+...a[n]*A^(n-1),
+    p(A)=a[1]*I+a[2]*A+...a[n]*A^(n-1),
 
 where A^k is naively evaluated as A^k=A*A^(k-1) for k=2,3,...,n-1. The kwarg `polyname` specifies the name of intermediate variables.
     """
