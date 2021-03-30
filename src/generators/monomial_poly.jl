@@ -3,8 +3,8 @@ export gen_monomial
 """
      (graph,crefs)=gen_monomial(a; input=:A, polyname=:P)
 
-Generates the graph for the polynomial using the monomial basis coefficieents. More precisely,
-it corresponds to evaluation of the polynomial
+Generates the graph for the polynomial using the monomial basis coefficients. More precisely,
+it corresponds to the evaluation of the polynomial
 
     p(A)=a[1]*I+a[2]*A+...a[n]*A^(n-1),
 
@@ -32,7 +32,7 @@ function gen_monomial(a; input=:A, polyname=:P)
 
     nodelist = Vector{Symbol}(undef,n)
     nodelist[1] = :I
-    nodelist[2] = :A
+    nodelist[2] = Symbol("$input")
 
     # Create monomial basis
     A = input;
