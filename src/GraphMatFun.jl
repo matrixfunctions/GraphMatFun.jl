@@ -9,6 +9,7 @@ include("merge.jl")
 # Optimization routines
 include("optimization/opt_common.jl")
 include("optimization/gaussnewton.jl")
+include("optimization/linear_fit.jl")
 
 # Generators
 include("generators/denman_beavers_gen.jl");
