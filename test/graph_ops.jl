@@ -51,4 +51,21 @@ using LinearAlgebra, Polynomials
         add_ldiv!(graph,name,:D,:N);
     end
 
+    # Node renaming
+    graph=Compgraph()
+    add_lincomb!(graph,:AI,2.0,:A,2.0,:I)
+    add_mult!(graph,:Pout,:AI,:A)
+    add_output!(graph,:Pout)
+
+    @test_throws ErrorException rename_node!(graph,:I,:B)
+    @test_throws ErrorException rename_node!(graph,:A,:B)
+
+    graph1=deepcopy(graph)
+    rename_node!(graph1,:AI,:B)
+    @test eval_graph(graph1,A)==eval_graph(graph,A)
+
+    graph1=deepcopy(graph)
+    rename_node!(graph1,:Pout,:B)
+    @test eval_graph(graph1,A)==eval_graph(graph,A)
+
 end
