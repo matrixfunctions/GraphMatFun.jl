@@ -26,7 +26,7 @@ function gen_ps(a; input=:A, scaling=1.0,
     k = n-1; # Polynomial degree
 
     if scaling != 1
-        a = a .* scaling.^(0:d)
+        a = a .* scaling.^(0:k)
     end
 
     # Degenerate cases k = 0 and k = 1
