@@ -19,6 +19,7 @@ include("generators/bbc_exp.jl");
 include("generators/sid.jl");
 include("generators/monomial_poly.jl");
 include("generators/rational.jl");
+include("generators/horner.jl");
 
 
 
