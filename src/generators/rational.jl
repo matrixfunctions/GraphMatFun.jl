@@ -29,7 +29,7 @@ function gen_rational(den_graph, num_graph; den_cref=Vector{Tuple{Symbol,Int}}()
     add_ldiv!(graph, :pade, graph.outputs[2], graph.outputs[1])
     cref =vcat(den_cref, num_cref);
     empty!(graph.outputs)
-    push!(graph.outputs, :pade)
+    add_output!(graph, :pade)
 
     return (graph, cref)
 end
