@@ -10,7 +10,7 @@ Generates the graph for the Paterson-Stockmayer procedure with monomial basis co
 
 where α=`scaling`.
 
-Reference: The code is follows the description in
+Reference: The code follows the description in
 
 M. Fasi, Optimality of the Paterson–Stockmeyer method for evaluating matrix polynomials and rational matrix functions, Linear Algebra Appl. (2019)
 
