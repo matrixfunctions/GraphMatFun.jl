@@ -16,7 +16,7 @@ to the values of `objfun`, in the points `discr`. Reference to the coefficients
 The variable `graph` is modified during the iterations and the function has no
 return value.
 
-See `opt_gaussnewton!` for a description the kwarg `errtype`,
+See `opt_gauss_newton!` for a description the kwarg `errtype`,
 and `solve_linlsqr` for the kwargs `linlsqr`, and `droptol`.
 
     """

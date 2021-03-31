@@ -1,10 +1,10 @@
-export opt_gaussnewton!
+export opt_gauss_newton!
 
 """
-    (iter,resnorm)=opt_gaussnewton!(graph, objfun, discr; maxit = 100, logger = 0,
-                              errtype = :abserr, stoptol = 1e-6,
-                              cref = get_all_cref(graph), γ0 = 1.0,
-                              linlsqr = :backslash, droptol = 0)
+    (iter,resnorm)=opt_gauss_newton!(graph, objfun, discr; maxit = 100, logger = 0,
+                                     errtype = :abserr, stoptol = 1e-6,
+                                     cref = get_all_cref(graph), γ0 = 1.0,
+                                     linlsqr = :backslash, droptol = 0)
 
 Applies the Gauss–Newton algorithm to solve the nonlinear least squares problem:
 Fit the output of the `graph` to the values of `objfun`, in the points `discr`.
@@ -25,16 +25,16 @@ The stepsize can be scaled with `γ0`.
 solved; see `solve_linlsqr`.
 
     """
-function opt_gaussnewton!(graph, objfun, discr;
-                          maxit = 100,
-                          logger = 0,
-                          errtype = :abserr,
-                          stoptol = 1e-6,
-                          cref = get_all_cref(graph),
-                          γ0 = 1.0,
-                          linlsqr = :backslash,
-                          droptol = 0
-                          )
+function opt_gauss_newton!(graph, objfun, discr;
+                           maxit = 100,
+                           logger = 0,
+                           errtype = :abserr,
+                           stoptol = 1e-6,
+                           cref = get_all_cref(graph),
+                           γ0 = 1.0,
+                           linlsqr = :backslash,
+                           droptol = 0
+                           )
 
     resnorm=Inf
     iter=maxit

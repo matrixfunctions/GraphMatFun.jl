@@ -9,7 +9,7 @@ using LinearAlgebra
 
     coeff_pert = [3; -1; 2.0; 0.1; 1.2] + 0.9*[-3; 1; -2.0; 0.1; -1.2]
     (graph,cref) = gen_monomial(coeff_pert); graph = complex(graph)
-    opt_gaussnewton!(graph, p, discr, logger=0,
+    opt_gauss_newton!(graph, p, discr, logger=0,
                       stoptol=1e-14, γ0=0.85 , cref=cref,
                       errtype=:relerr,
                       linlsqr=:svd, droptol=1e-15)
@@ -23,7 +23,7 @@ using LinearAlgebra
 
     coeff_pert = [3; -1; 2.0; 0.1; 1.2] + 0.9*[-3; 1; -2.0; 0.1; -1.2]
     (graph,cref) = gen_monomial(coeff_pert); graph = complex(graph)
-    opt_gaussnewton!(graph, p, discr,
+    opt_gauss_newton!(graph, p, discr,
                       stoptol=5e-13, cref=cref, errtype=:abserr)
 
     @test all(abs.(eval_graph(graph,discr) .- p.(discr)) .< 5e-13)

@@ -8,7 +8,7 @@ include("merge.jl")
 
 # Optimization routines
 include("optimization/opt_common.jl")
-include("optimization/gaussnewton.jl")
+include("optimization/gauss_newton.jl")
 include("optimization/linear_fit.jl")
 
 # Generators
