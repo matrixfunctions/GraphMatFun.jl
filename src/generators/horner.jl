@@ -46,7 +46,7 @@ function gen_horner(a; input=:A, B=:B, C=:C, scaling=1.0)
             #   Bj=a[j]*I+α*Cj
             add_mult!(graph, Cj, input, Bjp1)
             add_lincomb!(graph, Bj, a[j], :I, scaling, Cj)
-            cref[j+1] = (Bj,1)
+            cref[j] = (Bj,1)
         end
     end
     push!(graph.outputs,Symbol("$(B)1"))
