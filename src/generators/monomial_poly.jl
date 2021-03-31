@@ -6,9 +6,9 @@ export gen_monomial
 Generates the graph for the polynomial using the monomial basis coefficients. More precisely,
 it corresponds to the evaluation of the polynomial
 
-    p(A)=a[1]*I+a[2]*(αA)+...a[n]*(αA)^(n-1),
+    p(s) = a[1] + a[2]*(αs) + ... + a[n]*(αs)^(n-1),
 
-where α=`scaling`, and A^k is naively evaluated as A^k=A*A^(k-1) for k=2,3,...,n-1.
+where α=`scaling`, and s^k is naively evaluated as s^k=s*s^(k-1) for k=2,3,...,n-1.
 The kwarg `polyname` specifies the name of intermediate variables.
     """
 function gen_monomial(a; input=:A, scaling=1.0, polyname=:P)

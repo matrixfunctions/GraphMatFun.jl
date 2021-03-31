@@ -6,7 +6,7 @@ export gen_ps
 
 Generates the graph for the Paterson-Stockmayer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
 
-    p(s)=a[1]+a[2]*(αs)+...a[n]*(αs)^(n-1)
+    p(s) = a[1] + a[2]*(αs) + ... + a[n]*(αs)^(n-1)
 
 where α=`scaling`.
 
