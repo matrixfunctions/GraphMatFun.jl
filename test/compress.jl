@@ -98,4 +98,49 @@ using LinearAlgebra
     @test graph2.parents == Dict(:P0=>(:P1,:P2),:P1=>(:A,:I),:P2=>(:A,:A))
     @test graph2.outputs == [:P0]
 
+
+
+    ## Test function to remove redundant nodes.
+    graph=Compgraph();
+    add_lincomb!(graph,:AI1,1.0,:A,2.0,:I)
+    add_lincomb!(graph,:AI2,1.0,:A,2.0,:I)
+    add_lincomb!(graph,:IA1,2.0,:I,1.0,:A)
+    add_mult!(graph,:P1,:AI1,:AI2)
+    add_mult!(graph,:P2,:AI2,:AI1)
+    add_ldiv!(graph,:D1,:AI1,:P2)
+    add_ldiv!(graph,:D2,:AI1,:P2)
+    add_mult!(graph,:out,:D1,:D2)
+    add_output!(graph,:out)
+
+    cref=get_all_cref(graph)
+
+    graph1=deepcopy(graph)
+    cref1=get_all_cref(graph1)
+    compress_graph_redundant!(graph1,cref,compress_lincomb=false)
+    @test length(get_sorted_keys(graph1)) == 6
+    @test cref == cref1
+    @test eval_graph(graph1,A) == eval_graph(graph,A)
+
+    graph1=deepcopy(graph)
+    cref1=get_all_cref(graph1)
+    compress_graph_redundant!(graph1,cref1,compress_lincomb=true)
+    @test length(get_sorted_keys(graph1)) == 4
+    @test cref1 == [(:AI1, 1), (:AI1, 2)]
+    @test eval_graph(graph1,A) == eval_graph(graph,A)
+
+    graph1=deepcopy(graph)
+    cref1=get_all_cref(graph1)
+    compress_graph_redundant!(graph1,cref1)
+    @test length(get_sorted_keys(graph1)) == 4
+    @test cref1 == [(:AI1, 1), (:AI1, 2)]
+    @test eval_graph(graph1,A) == eval_graph(graph,A)
+
+    add_output!(graph,:D2) # Now :D2 cannot be merged with :D1.
+    graph1=deepcopy(graph)
+    cref1=get_all_cref(graph1)
+    compress_graph_redundant!(graph1,cref1)
+    @test length(get_sorted_keys(graph1)) == 5
+    @test cref1 == [(:AI1, 1), (:AI1, 2)]
+    @test eval_graph(graph1,A) == eval_graph(graph,A)
+
 end

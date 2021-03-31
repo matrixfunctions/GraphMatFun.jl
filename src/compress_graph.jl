@@ -4,8 +4,11 @@
 export compress_graph_dangling!
 export compress_graph_zero_coeff!
 export compress_graph_output_cleaning!
-export comprrss_graph_trivial_nodes!
-export compress_graph!;
+export has_identity_lincomb
+export has_trivial_nodes
+export compress_graph_trivial_nodes!
+export compress_graph_redundant!
+export compress_graph!
 
 
 function delete_crefs!(cref,n)
@@ -177,8 +180,8 @@ function find_replacement_node(graph,node)
     end
 end
 
-# Replace node with its parent.
-function replace_node!(graph,node,replacement)
+# Replace node with replacement node.
+function replace_node!(graph,node,replacement,cref)
     # Make replacement an output node if current node was.
     if (node in graph.outputs)
         deleteat!(graph.outputs,graph.outputs.==node)
@@ -191,10 +194,11 @@ function replace_node!(graph,node,replacement)
     end
     # Delete node from graph.
     del_node!(graph,node)
+    delete_crefs!(cref,node)
 end
 
 """
-    has_identity_lincomb(graph)
+    has_identity_lincomb(graph) -> Bool
 
 Checks whether the graph has a node which is a linear combination of identity
 matrices.
@@ -212,7 +216,7 @@ function has_identity_lincomb(graph)
 end
 
 """
-    has_trivial_node(graph)
+    has_trivial_node(graph) -> Bool
 
 Checks whether the graph has trivial nodes, that is, multiplications by the
 identity or linear systems whose coefficient is the identity matrix.
@@ -246,6 +250,88 @@ function compress_graph_trivial!(graph,cref=[])
             if replacement!=[]
                 println("Replace node ",key," by ",replacement);
                 replace_node!(graph,key,replacement)
+                ismodified=true
+            end
+        end
+    end
+end
+
+### Remove redundant nodes:
+# 1) :mult with same coefficients;
+# 2) :ldiv with same terms;
+# 3) :lincomb with same terms and coefficients (not necessarily)
+
+# Return list of nodes that can be merged with node.
+function find_redundant_nodes(graph,node,compress_lincomb)
+    # Find nodes with same operation and same parents.
+    operation=graph.operations[node]
+    if !compress_lincomb && operation==:lincomb
+        return Array{Symbol}([])
+    end
+    parents=graph.parents[node]
+    same_operation=keys(filter(kv->kv.first!=node &&
+        operation==kv.second, graph.operations))
+    if operation==:ldiv # Order of parents matter.
+        redundant_candidates=keys(filter(kv->kv.first in same_operation &&
+            kv.second==parents, graph.parents))
+    elseif operation==:mult # Order of parents doesn't matter.
+        redundant_candidates=keys(filter(kv->kv.first in same_operation &&
+            isempty(setdiff(collect(parents),collect(kv.second))),
+            graph.parents))
+    elseif operation==:lincomb
+        # For :lincomb nodes, check that coefficients are the same.
+        coefficients=graph.coeffs[node]
+        # Parents in the same order.
+        same_parents_order=keys(filter(kv->kv.first in same_operation &&
+            parents==kv.second, graph.parents))
+        redundant_candidates_order=keys(filter(
+            kv->kv.first in same_parents_order && kv.second==coefficients,
+            graph.coeffs))
+        # Parents in reverse order.
+        same_parents_reverse=keys(filter(kv->kv.first in same_operation &&
+            parents==reverse(kv.second), graph.parents))
+        redundant_candidates_reverse=keys(filter(
+            kv->kv.first in same_parents_reverse && kv.second==reverse(coefficients),
+            graph.coeffs))
+        redundant_candidates=union(redundant_candidates_order,
+            redundant_candidates_reverse)
+    end
+
+    # Rendundants nodes must both or neither be output nodes.
+    is_output_node=node in graph.outputs
+    redundant_nodes=collect(filter(x->x in redundant_candidates &&
+        !xor(x in graph.outputs,is_output_node),
+        redundant_candidates))
+
+    return redundant_nodes
+end
+
+# Merge redundant nodes into node.
+function merge_redundant_nodes!(graph,node,redundant_nodes,cref)
+    for key in redundant_nodes
+        println("Merge node ",key," with ",node);
+        replace_node!(graph,key,node,cref)
+    end
+end
+
+"""
+    compress_graph_redundant!(graph,compress_lincomb=false,cref=[])
+
+Removes from the graph redundant nodes, that is, nodes that repeat a computaion
+that is already present in the graph. Nodes corresponding to a linear
+combination are removed only if the coefficients are the same and
+`compress_lincomb` is set to `true`.
+
+    """
+function compress_graph_redundant!(graph,cref=[];compress_lincomb=true)
+    # cref is not used as this function does not remove lincomb nodes.
+    ismodified=true
+    while ismodified
+        ismodified=false
+        for (key,parents) in graph.parents # No need to check input nodes.
+            redundant_nodes=find_redundant_nodes(graph,key,compress_lincomb)
+            if !isempty(redundant_nodes)
+                merge_redundant_nodes!(graph,key,redundant_nodes,cref)
                 ismodified=true
             end
         end
