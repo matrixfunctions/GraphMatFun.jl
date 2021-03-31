@@ -1,7 +1,7 @@
 export gen_ps
 
 """
-     (graph,crefs)=gen_ps(a;input=:A,scaling=1.0;
+     (graph,crefs)=gen_ps(a; input=:A, scaling=1.0,
                           B_base=:B, C_base=:C, P_base=:P)
 
 Generates the graph for the Paterson-Stockmayer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
