@@ -268,43 +268,6 @@ function check_node_name_legality(graph,node)
 end
 
 """
-    rename_node!(graph,oldsymbol,newsymbol,cref=[])
-
-Changes the symbol of the node `oldsymbol` to `newsymbol`.
-    """
-function rename_node!(graph,oldsymbol,newsymbol,cref=[])
-    # Make sure node can be renamed and new name is legal in current graph.
-    if oldsymbol in [:I,:A]
-        error("Node '", oldsymbol, "' cannot be renamed. ")
-    end
-    check_node_name_legality(graph,newsymbol)
-
-    # Update graph.
-    if haskey(graph.operations,oldsymbol)
-        push!(graph.operations,newsymbol=>pop!(graph.operations,oldsymbol))
-        push!(graph.parents,newsymbol=>pop!(graph.parents,oldsymbol))
-    end
-    parents_of_oldsymbol=findall(x->oldsymbol in x,graph.parents)
-    for key in parents_of_oldsymbol
-        oldparents=pop!(graph.parents,key)
-        newparents=map(x->x==oldsymbol ? newsymbol : x,oldparents)
-        push!(graph.parents,key=>newparents)
-    end
-    if haskey(graph.coeffs,oldsymbol)
-        push!(graph.coeffs,newsymbol=>pop!(graph.coeffs,oldsymbol))
-    end
-    if oldsymbol in graph.outputs
-        graph.outputs[findall(x->x==oldsymbol,graph.outputs)].=newsymbol;
-    end
-
-    # Update cref.
-    cref_oldsymbol=findall(x->oldsymbol in x,cref)
-    for index in cref_oldsymbol
-        cref[index]=map(x->x==oldsymbol ? newsymbol : x,cref[index])
-    end
-end
-
-"""
     v=get_sorted_keys(graph)
 
 Returns a list of all nodes, sorted.
