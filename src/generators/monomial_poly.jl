@@ -1,16 +1,17 @@
 export gen_monomial
 
 """
-     (graph,crefs)=gen_monomial(a; input=:A, polyname=:P)
+     (graph,crefs)=gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
 
 Generates the graph for the polynomial using the monomial basis coefficients. More precisely,
 it corresponds to the evaluation of the polynomial
 
-    p(A)=a[1]*I+a[2]*A+...a[n]*A^(n-1),
+    p(A)=a[1]*I+a[2]*(αA)+...a[n]*(αA)^(n-1),
 
-where A^k is naively evaluated as A^k=A*A^(k-1) for k=2,3,...,n-1. The kwarg `polyname` specifies the name of intermediate variables.
+where α=`scaling`, and A^k is naively evaluated as A^k=A*A^(k-1) for k=2,3,...,n-1.
+The kwarg `polyname` specifies the name of intermediate variables.
     """
-function gen_monomial(a; input=:A, polyname=:P)
+function gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
 
     # Initial setup
     n = length(a);
@@ -29,22 +30,23 @@ function gen_monomial(a; input=:A, polyname=:P)
     end
 
     outkey = Symbol("$(polyname)$n")
-
     nodelist = Vector{Symbol}(undef,n)
     nodelist[1] = :I
     nodelist[2] = Symbol("$input")
 
     # Create monomial basis
-    A = input;
     key = input
     for i=2:d
         prevkey = key
         key = Symbol("$input$i")
-        add_mult!(graph, key, A, prevkey)
+        add_mult!(graph, key, input, prevkey)
         nodelist[i+1] = key
     end
 
-    # Sum up the polynomial
+    # scale and sum up the polynomial
+    if scaling != 1
+        a = a .* scaling.^(0:d)
+    end
     cref[:] .= add_sum!(graph, outkey, a, nodelist, polyname)
 
     add_output!(graph,outkey);
