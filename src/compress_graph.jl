@@ -276,7 +276,7 @@ function find_redundant_nodes(graph,node,compress_lincomb)
             kv.second==parents, graph.parents))
     elseif operation==:mult # Order of parents doesn't matter.
         redundant_candidates=keys(filter(kv->kv.first in same_operation &&
-            isempty(setdiff(collect(parents),collect(kv.second))),
+            (kv.second == parents || kv.second == reverse(parents)),
             graph.parents))
     elseif operation==:lincomb
         # For :lincomb nodes, check that coefficients are the same.
