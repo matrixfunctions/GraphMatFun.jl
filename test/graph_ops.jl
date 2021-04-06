@@ -57,8 +57,6 @@ using LinearAlgebra, Polynomials
     add_mult!(graph,:Pout,:AI,:A)
     add_output!(graph,:Pout)
 
-    @test_throws ErrorException rename_node!(graph,:I,:B)
-    @test_throws ErrorException rename_node!(graph,:A,:B)
 
     graph1=deepcopy(graph)
     rename_node!(graph1,:AI,:B)
