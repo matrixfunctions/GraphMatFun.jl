@@ -6,7 +6,7 @@ export compress_graph_zero_coeff!
 export compress_graph_output_cleaning!
 export has_identity_lincomb
 export has_trivial_nodes
-export compress_graph_trivial_nodes!
+export compress_graph_trivial!
 export compress_graph_redundant!
 export compress_graph!
 
