@@ -249,7 +249,7 @@ function compress_graph_trivial!(graph,cref=[])
             replacement=find_replacement_node(graph,key)
             if replacement!=[]
                 println("Replace node ",key," by ",replacement);
-                replace_node!(graph,key,replacement)
+                replace_node!(graph,key,replacement,cref)
                 ismodified=true
             end
         end
