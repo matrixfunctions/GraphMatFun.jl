@@ -39,10 +39,10 @@ function opt_gauss_newton!(graph, objfun, discr;
     resnorm=Inf
     iter=maxit
     vals = init_vals_eval_graph!(graph, discr, nothing)
+    objfun_vals = objfun.(discr)
 
     for j=1:maxit
         F = eval_graph(graph, discr, vals=vals)
-        objfun_vals = objfun.(discr)
         res = F - objfun_vals
         Jac = eval_jac(graph, discr, cref, vals=vals)
         adjust_for_errtype!(Jac, res, objfun_vals, errtype)
