@@ -58,14 +58,14 @@ end
 
 
 """
-     (graph,crefs)=gen_monomial_recursive(a; input=:A, scaling=1.0, polyname=:P)
+     (graph,crefs)=gen_monomial_recursive(a; scaling=1.0)
 
 Generates the same polynomial as `gen_monomial`, in the monomial basis.
 However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_monomial_recursive(a; input=:A, scaling=1.0, polyname=:P)
+function gen_monomial_recursive(a; scaling=1.0)
 
     n = length(a)
     d = n-1
