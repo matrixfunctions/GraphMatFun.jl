@@ -1,28 +1,23 @@
 export gen_monomial, gen_monomial_recursive
 
 """
-     (graph,crefs)=gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
+     (graph,crefs)=gen_monomial(a; input=:A, polyname=:P)
 
 Generates the graph for the polynomial using the monomial basis coefficients. More precisely,
 it corresponds to the evaluation of the polynomial
 
-    p(s) = a[1] + a[2]*(αs) + ... + a[n]*(αs)^(n-1),
+    p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1),
 
-where α=`scaling`, and s^k is naively evaluated as s^k=s*s^(k-1) for k=2,3,...,n-1.
+where s^k is naively evaluated as s^k=s*s^(k-1) for k=2,3,...,n-1.
 The kwarg `polyname` specifies the name of intermediate variables.
     """
-function gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
+function gen_monomial(a; input=:A, polyname=:P)
 
     # Initial setup
     n = length(a);
     cref=Vector{Tuple{Symbol,Int}}(undef,n)
     graph = Compgraph(eltype(a));
     d = n-1; # Polynomial degree
-
-    # Apply scaling
-    if scaling != 1
-        a = a .* scaling.^(0:d)
-    end
 
     # Degenerate case d = 0
     if d == 0
@@ -58,20 +53,17 @@ end
 
 
 """
-     (graph,crefs)=gen_monomial_recursive(a; scaling=1.0)
+     (graph,crefs)=gen_monomial_recursive(a)
 
 Generates the same polynomial as `gen_monomial`, in the monomial basis.
 However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_monomial_recursive(a; scaling=1.0)
+function gen_monomial_recursive(a)
 
     n = length(a)
     d = n-1
-    if scaling != 1
-        a = a .* scaling.^(0:d)
-    end
     T = eltype(a)
 
     if d == 0

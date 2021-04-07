@@ -1,21 +1,19 @@
 export gen_ps
 
 """
-     (graph,crefs)=gen_ps(a; input=:A, scaling=1.0,
+     (graph,crefs)=gen_ps(a; input=:A,
                           B_base=:B, C_base=:C, P_base=:P)
 
 Generates the graph for the Paterson-Stockmayer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
 
-    p(s) = a[1] + a[2]*(αs) + ... + a[n]*(αs)^(n-1)
-
-where α=`scaling`.
+    p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1).
 
 Reference: The code follows the description in
 
 M. Fasi, Optimality of the Paterson–Stockmeyer method for evaluating matrix polynomials and rational matrix functions, Linear Algebra Appl. (2019)
 
     """
-function gen_ps(a; input=:A, scaling=1.0,
+function gen_ps(a; input=:A,
                 B_base=:B, C_base=:C, P_base=:P);
 
     # Initial setup
@@ -24,10 +22,6 @@ function gen_ps(a; input=:A, scaling=1.0,
     graph=Compgraph(eltype(a));
 
     k = n-1; # Polynomial degree
-
-    if scaling != 1
-        a = a .* scaling.^(0:k)
-    end
 
     # Degenerate cases k = 0 and k = 1
     if k < 2
