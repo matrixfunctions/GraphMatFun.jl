@@ -13,4 +13,6 @@ using Test
     include("merge_graphs.jl");
     include("polynomials.jl");
     include("polynomials_recursive.jl");
+    include("newton_schultz.jl");
+
 end
