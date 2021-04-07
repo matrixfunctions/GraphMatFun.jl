@@ -23,6 +23,13 @@ using LinearAlgebra
 
             (graph,cref) = eval(poly_gens[key])([coeff[1]])
             @test eval_graph(graph,A) ≈ P3
+
+            if key == "Horner" # Add test here if scaling is available
+                s = -0.89
+                (graph_1,cref_1) = eval(poly_gens[key])(coeff .* s.^(0:length(coeff)-1))
+                (graph_2,cref_2) = eval(poly_gens[key])(coeff, scaling=s)
+                @test eval_graph(graph_1,A) ≈ eval_graph(graph_2,A)
+            end
         end
     end
 end
