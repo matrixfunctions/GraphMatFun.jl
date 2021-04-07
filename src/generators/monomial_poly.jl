@@ -19,6 +19,10 @@ function gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
     graph = Compgraph(eltype(a));
     d = n-1; # Polynomial degree
 
+    # Apply scaling
+    if scaling != 1
+        a = a .* scaling.^(0:d)
+    end
 
     # Degenerate case d = 0
     if d == 0
@@ -43,10 +47,7 @@ function gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
         nodelist[i+1] = key
     end
 
-    # scale and sum up the polynomial
-    if scaling != 1
-        a = a .* scaling.^(0:d)
-    end
+    # Sum up the polynomial
     cref[:] .= add_sum!(graph, outkey, a, nodelist, polyname)
 
     add_output!(graph,outkey);
