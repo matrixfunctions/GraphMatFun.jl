@@ -1,4 +1,4 @@
-export gen_monomial
+export gen_monomial, gen_monomial_recursive
 
 """
      (graph,crefs)=gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
@@ -52,5 +52,37 @@ function gen_monomial(a; input=:A, scaling=1.0, polyname=:P)
 
     add_output!(graph,outkey);
     return (graph,cref)
+
+end
+
+
+
+"""
+     (graph,crefs)=gen_monomial_recursive(a; input=:A, scaling=1.0, polyname=:P)
+
+Generates the same polynomial as `gen_monomial`, in the monomial basis.
+However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
+degrees of freedom in `crefs`.
+
+    """
+function gen_monomial_recursive(a; input=:A, scaling=1.0, polyname=:P)
+
+    n = length(a)
+    d = n-1
+    if scaling != 1
+        a = a .* scaling.^(0:d)
+    end
+    T = eltype(a)
+
+    if d == 0
+        error("Does not implement degree-zero polynomial.")
+    end
+
+    x = Vector{Tuple{Vector,Vector}}(undef,d-1)
+    for i = 1:d-1
+        x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
+    end
+
+    return gen_general_poly_recursion(x, a)
 
 end

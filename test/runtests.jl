@@ -12,4 +12,5 @@ using Test
     include("linear_fit.jl");
     include("merge_graphs.jl");
     include("polynomials.jl");
+    include("polynomials_recursive.jl");
 end
