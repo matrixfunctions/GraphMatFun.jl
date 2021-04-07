@@ -7,7 +7,8 @@ using LinearAlgebra
     s = -0.89;
 
 
-    poly_gens = Dict("Monomial" => (:gen_monomial,:gen_monomial_recursive))
+    poly_gens = Dict("Monomial" => (:gen_monomial,:gen_monomial_recursive),
+                     "Horner"   => (:gen_horner,:gen_horner_recursive) )
 
     for key = keys(poly_gens)
         @testset "$key" begin
