@@ -1,10 +1,10 @@
-export gen_ps
+export gen_ps, gen_ps_recursive
 
 """
      (graph,crefs)=gen_ps(a; input=:A,
                           B_base=:B, C_base=:C, P_base=:P)
 
-Generates the graph for the Paterson-Stockmayer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
+Generates the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
 
     p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1).
 
@@ -129,5 +129,69 @@ function gen_ps(a; input=:A,
 
     add_output!(graph, Pout)
     return (graph,cref)
+
+end
+
+
+"""
+     (graph,crefs)=gen_ps_recursive(a; input=:A)
+
+Generates the same polynomial as `gen_ps`, i.e.,
+the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents.
+However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
+degrees of freedom in `crefs`.
+
+    """
+function gen_ps_recursive(a; input=:A)
+
+    # Initial setup
+    n = length(a)
+    T = eltype(a)
+    graph=Compgraph(T)
+    k = n-1; # Polynomial degree
+
+    if k < 2 # Degenerate cases k = 0 and k = 1
+        if k == 0
+            error("Does not implement degree-zero polynomial.")
+        elseif k == 1
+            return gen_general_poly_recursion([([a[1],a[2]], [one(T),zero(T)])], vcat(zeros(T,2),one(T)))
+        end
+    else
+        s = ceil(Int,sqrt(k))
+        v = floor(Int,k/s)
+    end
+
+    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+v+v)
+    # Create monomial basis (The first s+1 slots in an x-component)
+    for i = 1:(s-1)
+        x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
+    end
+
+    # Create intermediate coefficient-polynomials. (The follwoing v slots in an x-component)
+    for i = 0:(v-1)
+        lower_idx = i*s+1
+        upper_idx = lower_idx+s-1
+        idx = lower_idx:upper_idx
+        c = view(a, idx)
+        x[i+s] = ( vcat(c,zeros(T,i+1)), vcat(one(T),zeros(T,i+s)) )
+    end
+
+    # Handle highest powers separately. i=v. Part of (3), the following equation, and (4) in Fasi 2019.
+    ks = rem(k,s) # Degree of remaining highest order term. We compute B_v_ks
+    idx = (n-(ks+1)+1):n
+    diff = s - (ks+1)
+    c = view(a, idx)
+    i = s+v
+    x[i] = ( vcat(c,zeros(diff),zeros(T,i-s+1)), vcat(one(T),zeros(T,i)) )
+
+    # Evaluate outer-polynomial with Horner-type scheme.
+    i = s+v+1
+    x[i] = ( vcat(zeros(T,s),one(T),zeros(v+1)), vcat(zeros(T,i),one(T)) ) # A^s*P_{v-1}
+    for i = 0:v-2
+        x[s+v+2+i] = ( vcat(zeros(T,s),one(T),zeros(v+2+i)), vcat(zeros(T,s+1),zeros(T,(v-1)-i),one(T),zeros(T,2*i+1),one(T)) ) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
+    end
+
+    z = vcat(zeros(s+1),one(T),zeros(v+v-1),one(T))
+    return gen_general_poly_recursion(x, z, input=input)
 
 end

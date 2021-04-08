@@ -3,10 +3,11 @@ using LinearAlgebra
 
     A = [3 4 ; 5 6.6];
 
-    coeff = [3.0; -1.0; 2.0; 0.1; 1.2];
+    coeff = [3.0; -1.0; 2.0; 0.1; 1.2; 0.1; 0.091; -0.1; -0.3; 0.04];
 
     poly_gens = Dict("Monomial" => (:gen_monomial,:gen_monomial_recursive),
-                     "Horner"   => (:gen_horner,:gen_horner_recursive) )
+                     "Horner"   => (:gen_horner,:gen_horner_recursive),
+                     "PS"   => (:gen_ps,:gen_ps_recursive) )
 
     for key = keys(poly_gens)
         @testset "$key" begin
