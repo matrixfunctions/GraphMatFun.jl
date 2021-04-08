@@ -1,4 +1,4 @@
-export gen_newton_schulz
+export gen_newton_schulz, gen_newton_schulz_recursive
 
 """
      (graph,crefs)=gen_newton_schulz(k, T=ComplexF64; input=:A, B=:B, C=:C, V=:V)
@@ -48,4 +48,34 @@ function gen_newton_schulz(k, T=ComplexF64; input=:A, Z=:Z, Q=:Q, V=:V)
     Vii = Symbol("$(V)$(k+1)")
 
     return (graph,cref)
+end
+
+
+
+"""
+     (graph,crefs)=gen_newton_schulz_recursive(k, T=ComplexF64)
+
+Does `k` iterations of the Newton–Schulz iteration for approximating the inverse,
+using the recursion
+
+    Z_i=A*V_i
+    V_{i+1}=V_i*(2*I-Z_i).
+
+The function makes a call to `gen_general_poly_recursion`, resulting in more
+degrees of freedom in `crefs`. See also `gen_newton_schulz`.
+
+    """
+function gen_newton_schulz_recursive(k, T=ComplexF64)
+
+    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,2*k)
+    # Z_i=A*V_i --- Odd numbers
+    for i = 1:2:(2*k-1)
+        x[i] = ( vcat(zero(T),one(T),zeros(T,i-1)), vcat(zeros(T,i),one(T)) )
+    end
+    # V_{i+1}=V_i*(2*I-Z_i) --- Even numbers
+    for i = 2:2:(2*k)
+        x[i] = ( vcat(zeros(T,i-1),one(T),zero(T)), vcat(2,zeros(T,i-1),-one(T)) )
+    end
+
+    return gen_general_poly_recursion(x, vcat(zeros(T,2*k+1),one(T)))
 end
