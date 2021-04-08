@@ -70,7 +70,7 @@ function gen_monomial_recursive(a)
         error("Does not implement degree-zero polynomial.")
     end
 
-    x = Vector{Tuple{Vector,Vector}}(undef,d-1)
+    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,d-1)
     for i = 1:d-1
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end

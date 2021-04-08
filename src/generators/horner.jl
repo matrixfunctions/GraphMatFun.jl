@@ -83,7 +83,7 @@ function gen_horner_recursive(a; scaling=1.0)
         return gen_general_poly_recursion([([a[1],a[2]*scaling], [one(T),zero(T)])], vcat(zeros(T,2),one(T)))
     end
 
-    x = Vector{Tuple{Vector,Vector}}(undef,n-2)
+    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,n-2)
     x[1] = ( [a[n-1],a[n]*scaling], [zero(T),scaling] )
     for i = 2:n-2
         x[i] = ( vcat(a[n-i],zeros(T,i-1),one(T)), vcat(zero(T),scaling,zeros(T,i-1)) )
