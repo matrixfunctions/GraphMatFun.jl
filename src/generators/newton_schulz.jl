@@ -3,7 +3,7 @@ export gen_newton_schulz
 """
      (graph,crefs)=gen_newton_schulz(k, T=ComplexF64; input=:A, B=:B, C=:C, V=:V)
 
-Does `k` iterations of the Newton–Schultz iteration for approximating the inverse
+Does `k` iterations of the Newton–Schulz iteration for approximating the inverse
 of a matrix A (name given by `input`), i.e., the recursion
 
     V_k+1 = V_k*(2*I - A*V_k),

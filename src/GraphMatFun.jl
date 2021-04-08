@@ -20,7 +20,7 @@ include("generators/sid.jl");
 include("generators/monomial_poly.jl");
 include("generators/rational.jl");
 include("generators/horner.jl");
-include("generators/newton_schultz.jl");
+include("generators/newton_schulz.jl");
 
 
 

@@ -1,5 +1,5 @@
 using LinearAlgebra
-@testset "Newton–Schultz iteration" begin
+@testset "Newton–Schulz iteration" begin
 
     A = [2.7 4 ; 5.3 6.6]/7
 
