@@ -22,6 +22,8 @@ export get_all_cref
 export get_coeffs
 export set_coeffs!
 
+export get_sorted_keys
+
 # Hash tables representing a computation graph
 struct Compgraph{T}
     operations::Dict{Symbol,Symbol}
