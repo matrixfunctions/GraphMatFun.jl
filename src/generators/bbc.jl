@@ -2,7 +2,7 @@ export gen_general_poly_recursion
 
 
 """
-    (graph,crefs)=gen_general_poly_recursion(k;compress_keys=true,T=ComplexF64)
+    (graph,crefs)=gen_general_poly_recursion(k;compress_keys=true,T=ComplexF64,input=:A)
     (graph,crefs)=gen_general_poly_recursion(x,z;compress_keys=true)
 
 Corresponds to the general polynomial recursion
@@ -19,7 +19,8 @@ and
 The `x`-values are given in the argument `x`, which is
 a `Vector{Tuple{Vector,Vector}}`, containing the elements
 of each sum. The `z`-vector contains the elements
-to form the output. If `compress_keys=true`, the references
+to form the output, and `input` determines the name of the matrix A above.
+If `compress_keys=true`, the references
 to `z[3],z[4],...` are not returned.
 If the parameter `k` is supplied instead of the coefficients,
 all coeffs will be set to one.
@@ -28,14 +29,14 @@ Reference: The general recursion is mentioned in equation (9) in this paper:
 
 * Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 """
-function gen_general_poly_recursion(x,z;compress_keys=true)
+function gen_general_poly_recursion(x,z;compress_keys=true,input=:A)
     (graph,crefs)=gen_general_poly_recursion_B(x);
 
     k=size(x,1);
 
     # Add the polynomial in the Bk coeffs
 
-    z_nodes=[:I; :A];
+    z_nodes=[:I; input];
     for s=2:k+1
         push!(z_nodes,Symbol("B$s"));
     end

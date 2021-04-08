@@ -57,7 +57,7 @@ end
 
 
 """
-     (graph,crefs)=gen_horner_recursive(a; scaling=1.0)
+     (graph,crefs)=gen_horner_recursive(a; scaling=1.0, input=:A)
 
 Generates a polynomial using Horner's evaluation scheme. The polynomial
 
@@ -69,9 +69,9 @@ is evaluated as
 
 where α=`scaling`.
 However, the function uses a call to `gen_general_poly_recursion`, resulting in more
-degrees of freedom in `crefs`.
+degrees of freedom in `crefs`. See also `gen_horner`.
     """
-function gen_horner_recursive(a; scaling=1.0)
+function gen_horner_recursive(a; scaling=1.0, input=:A)
 
     n = length(a)
     T = eltype(a)
@@ -89,6 +89,6 @@ function gen_horner_recursive(a; scaling=1.0)
         x[i] = ( vcat(a[n-i],zeros(T,i-1),one(T)), vcat(zero(T),scaling,zeros(T,i-1)) )
     end
 
-    return gen_general_poly_recursion(x, vcat(a[1],zeros(T,n-2),one(T)))
+    return gen_general_poly_recursion(x, vcat(a[1],zeros(T,n-2),one(T)), input=input)
 
 end

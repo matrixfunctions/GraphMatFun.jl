@@ -53,7 +53,7 @@ end
 
 
 """
-     (graph,crefs)=gen_newton_schulz_recursive(k, T=ComplexF64)
+     (graph,crefs)=gen_newton_schulz_recursive(k, T=ComplexF64, input=:A)
 
 Does `k` iterations of the Newton–Schulz iteration for approximating the inverse,
 using the recursion
@@ -65,7 +65,7 @@ The function makes a call to `gen_general_poly_recursion`, resulting in more
 degrees of freedom in `crefs`. See also `gen_newton_schulz`.
 
     """
-function gen_newton_schulz_recursive(k, T=ComplexF64)
+function gen_newton_schulz_recursive(k, T=ComplexF64, input=:A)
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,2*k)
     # Z_i=A*V_i --- Odd numbers
@@ -77,5 +77,5 @@ function gen_newton_schulz_recursive(k, T=ComplexF64)
         x[i] = ( vcat(zeros(T,i-1),one(T),zero(T)), vcat(2,zeros(T,i-1),-one(T)) )
     end
 
-    return gen_general_poly_recursion(x, vcat(zeros(T,2*k+1),one(T)))
+    return gen_general_poly_recursion(x, vcat(zeros(T,2*k+1),one(T)), input=input)
 end
