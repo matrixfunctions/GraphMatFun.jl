@@ -1,17 +1,17 @@
 export merge_graphs;
 
 # Change a symbol name using prefix & postfix
-function translate_keyname(key,prefix,postfix,skip_basic)
+function translate_keyname(key,prefix,postfix,skip_basic,input)
     newkey=Symbol(prefix*string(key)*postfix);
-    if (skip_basic  & (key==:I || key==:A))
+    if (skip_basic  & (key==:I || key==input))
         newkey=key
     end
     return newkey;
 end
 
-function change_keywords!(graph;prefix="G",postfix="",skip_basic=true)
+function change_keywords!(graph;prefix="G",postfix="",skip_basic=true,input=:A)
 
-    translate=key->translate_keyname(key,prefix,postfix,skip_basic);
+    translate=key->translate_keyname(key,prefix,postfix,skip_basic,input);
 
     # Go through all dicts and update symbols according to translate
     for dict_org in (graph.coeffs, graph.operations, graph.parents)
@@ -38,7 +38,7 @@ end
 
 Takes all the nodes and edges in `graph1` and `graph2` and generates a new graph. The node names are in `graph1` are changed by adding a prefix `prefix1` and `graph2` correspondingly. The nodes `:I` and `:A` are unchanged if `skip_basicX=true`. All coefficient references `crefX` are modified accordingly.
 """
-function merge_graphs(graph1,graph2;prefix1="",prefix2="G2",skip_basic1=true,skip_basic2=true,cref1=Vector(),cref2=Vector())
+function merge_graphs(graph1,graph2;prefix1="",prefix2="G2",skip_basic1=true,skip_basic2=true,cref1=Vector(),cref2=Vector(),input1=:A,input2=:A)
 
     T1=eltype(graph1)
     T2=eltype(graph2)
@@ -46,9 +46,9 @@ function merge_graphs(graph1,graph2;prefix1="",prefix2="G2",skip_basic1=true,ski
     T=promote_type(T1,T2);
 
     g1=deepcopy(graph1)
-    change_keywords!(g1,prefix=prefix1,skip_basic=skip_basic1);
+    change_keywords!(g1,prefix=prefix1,skip_basic=skip_basic1,input=input1);
     g2=deepcopy(graph2)
-    change_keywords!(g2,prefix=prefix2,skip_basic=skip_basic2);
+    change_keywords!(g2,prefix=prefix2,skip_basic=skip_basic2,input=input2);
 
     operations=merge(g1.operations,g2.operations)
     parents=merge(g1.parents,g2.parents)
