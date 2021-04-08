@@ -20,10 +20,9 @@ intermediate steps.
 
 References:
 
-Günther Schulz. Iterative Berechnung der reziproken Matrix. Z. Angew. Math. Mech.,
-13:57–59, 1933.
+* Günther Schulz. Iterative Berechnung der reziproken Matrix. Z. Angew. Math. Mech., 13:57–59, 1933.
 
-N. J. Higham. Functions of Matrices. SIAM publications, Philadelphia, PA, 2008.
+* N. J. Higham. Functions of Matrices. SIAM publications, Philadelphia, PA, 2008.
     """
 function gen_newton_schulz(k, T=ComplexF64; input=:A, Z=:Z, Q=:Q, V=:V)
 
