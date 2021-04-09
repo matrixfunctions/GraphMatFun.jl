@@ -68,7 +68,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_general_poly_recursion(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
 
     elseif (k==5)
@@ -140,7 +140,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_general_poly_recursion(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
 
     elseif (k==6)
@@ -215,7 +215,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_general_poly_recursion(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
 
     elseif (k==7)
@@ -299,7 +299,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_general_poly_recursion(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y);
     else
         error("Not implemented for k=$k");
     end

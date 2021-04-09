@@ -11,7 +11,7 @@ using LinearAlgebra
 
     z=[1.0; -0.1; 0.1; 0.01];
 
-    (graph,crefs)=gen_general_poly_recursion(x,z,compress_keys=false)
+    (graph,crefs)=gen_degopt_poly(x,z,compress_keys=false)
 
     x0=3.1415;
     ev1=eval_graph(graph,x0);
@@ -40,7 +40,7 @@ using LinearAlgebra
 
     z=ones(T,4);
     x=[(x1a,x1b), (x2a,x2b)]
-    (graph2,crefs2)=gen_general_poly_recursion(x,z)
+    (graph2,crefs2)=gen_degopt_poly(x,z)
 
 
 

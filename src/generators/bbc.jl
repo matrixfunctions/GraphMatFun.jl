@@ -1,11 +1,11 @@
-export gen_general_poly_recursion
+export gen_degopt_poly
 
 
 """
-    (graph,crefs)=gen_general_poly_recursion(k;compress_keys=true,T=ComplexF64,input=:A)
-    (graph,crefs)=gen_general_poly_recursion(x,z;compress_keys=true)
+    (graph,crefs)=gen_degopt_poly(k;compress_keys=true,T=ComplexF64,input=:A)
+    (graph,crefs)=gen_degopt_poly(x,z;compress_keys=true)
 
-Corresponds to the general polynomial recursion
+Corresponds to the (for a fixed numer of multiplications) degree-optimal polynomial
 
     B1=A
     B2=(x *I+x *A)(x *I+x *A)
@@ -14,7 +14,7 @@ Corresponds to the general polynomial recursion
 
 and
 
-    Out=z*I+z*A1+z*B2+z*B3+z*B4..
+    Out=z*I+z*A1+z*B2+z*B3+z*B4...
 
 The `x`-values are given in the argument `x`, which is
 a `Vector{Tuple{Vector,Vector}}`, containing the elements
@@ -29,9 +29,9 @@ Reference: The general recursion is mentioned in equation (9) in this paper:
 
 * Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 """
-function gen_general_poly_recursion(x,z;compress_keys=true,input=:A)
+function gen_degopt_poly(x,z;compress_keys=true,input=:A)
     T = promote_type(eltype(eltype(eltype(x))), eltype(z))
-    (graph,crefs)=gen_general_poly_recursion_B(x,T,input=input);
+    (graph,crefs)=gen_degopt_poly_B(x,T,input=input);
 
     k=size(x,1);
 
@@ -61,7 +61,7 @@ function gen_general_poly_recursion(x,z;compress_keys=true,input=:A)
     return (graph,crefs);
 
 end
-function gen_general_poly_recursion(k;T=ComplexF64,compress_keys=true)
+function gen_degopt_poly(k;T=ComplexF64,compress_keys=true)
 
     x=Vector{Tuple{Vector{T},Vector{T}}}(undef,k);
     for i=1:k
@@ -70,13 +70,13 @@ function gen_general_poly_recursion(k;T=ComplexF64,compress_keys=true)
 
     z=ones(T,k+2)
 
-    gen_general_poly_recursion(x,z;compress_keys=compress_keys)
+    gen_degopt_poly(x,z;compress_keys=compress_keys)
 end
 
 
 # Normally x::Vector{Tuple{Vector{Number},Vector{Number}}}
 # Containing the coefficients in the recursion
-function gen_general_poly_recursion_B(x,T;input=:A)
+function gen_degopt_poly_B(x,T;input=:A)
 
 
     k=size(x,1);

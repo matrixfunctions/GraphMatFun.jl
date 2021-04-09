@@ -56,7 +56,7 @@ end
      (graph,crefs)=gen_monomial_degopt(a; input=:A)
 
 Generates the same polynomial as `gen_monomial`, in the monomial basis.
-However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
+However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
     """
@@ -75,6 +75,6 @@ function gen_monomial_degopt(a; input=:A)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end
 
-    return gen_general_poly_recursion(x, a, input=input)
+    return gen_degopt_poly(x, a, input=input)
 
 end

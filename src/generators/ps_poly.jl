@@ -138,7 +138,7 @@ end
 
 Generates the same polynomial as `gen_ps`, i.e.,
 the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents.
-However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
+However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
     """
@@ -158,7 +158,7 @@ function gen_ps_degopt(a; input=:A)
             for i = 1:(k-1)
                 x[i] = (vcat(zero(T),one(T),zeros(i-1)), vcat(zeros(i),one(T)))
             end
-            return gen_general_poly_recursion(x, a)
+            return gen_degopt_poly(x, a)
         end
     end
 
@@ -201,6 +201,6 @@ function gen_ps_degopt(a; input=:A)
     end
 
     z = vcat(a[1:s],zero(T),zeros(T,v-1-i_adj),one(T))
-    return gen_general_poly_recursion(x, z, input=input)
+    return gen_degopt_poly(x, z, input=input)
 
 end
