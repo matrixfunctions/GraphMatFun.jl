@@ -191,7 +191,7 @@ function gen_ps_recursive(a; input=:A)
         c = view(a, idx)
         xl = vcat(zeros(T,s),one(T),zeros(T,v-1-i-i_adj)) # Coeffs for A^s
         if (i == v-2) && (ks == 0) # If highest order term is constant we incorporate it here
-            xr =  vcat(c,a[n],one(T)) # Coeffs for P_{v-i} + A^s*a[n]
+            xr =  vcat(c,a[n]) # Coeffs for P_{v-i} + A^s*a[n]
         else
             xr =  vcat(c,zero(T),zeros(T,v-2-i-i_adj),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
         end
