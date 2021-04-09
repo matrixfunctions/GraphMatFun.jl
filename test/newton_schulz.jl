@@ -5,7 +5,7 @@ using LinearAlgebra
 
     k=4
     (graph,cref) = gen_newton_schulz(k)
-    (graph_2,cref_2) = gen_newton_schulz_recursive(k)
+    (graph_2,cref_2) = gen_newton_schulz_degopt(k)
     Vk = A
     for i = 1:k
         Vkk = Vk*(2*I - A*Vk)
@@ -17,6 +17,6 @@ using LinearAlgebra
     (graph,cref) = gen_newton_schulz(15)
     @test eval_graph(graph,A) ≈ inv(A)
 
-    (graph_2,cref_2) = gen_newton_schulz_recursive(15)
+    (graph_2,cref_2) = gen_newton_schulz_degopt(15)
     @test eval_graph(graph,A) ≈ eval_graph(graph_2,A)
 end

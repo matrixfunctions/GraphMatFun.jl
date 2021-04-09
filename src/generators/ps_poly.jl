@@ -1,4 +1,4 @@
-export gen_ps, gen_ps_recursive
+export gen_ps, gen_ps_degopt
 
 """
      (graph,crefs)=gen_ps(a; input=:A,
@@ -134,7 +134,7 @@ end
 
 
 """
-     (graph,crefs)=gen_ps_recursive(a; input=:A)
+     (graph,crefs)=gen_ps_degopt(a; input=:A)
 
 Generates the same polynomial as `gen_ps`, i.e.,
 the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents.
@@ -142,7 +142,7 @@ However, it does so by wrapping a call to `gen_general_poly_recursion`, resultin
 degrees of freedom in `crefs`.
 
     """
-function gen_ps_recursive(a; input=:A)
+function gen_ps_degopt(a; input=:A)
 
     # Initial setup
     n = length(a)

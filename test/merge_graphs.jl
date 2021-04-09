@@ -27,9 +27,9 @@ using LinearAlgebra
 
     A = [2.7 4 ; 5.3 6.6]/7
     (graph,cref) = gen_newton_schulz(3)
-    (graph_2,cref_2) = gen_newton_schulz_recursive(3)
+    (graph_2,cref_2) = gen_newton_schulz_degopt(3)
     rename_node!(graph_2,graph_2.outputs[1],:Myout)
-    (graph_3,cref_3) = gen_newton_schulz_recursive(3, input=:G2Myout)
+    (graph_3,cref_3) = gen_newton_schulz_degopt(3, input=:G2Myout)
     graph_4 = merge_graphs(graph_2,graph_3;prefix1="G2",prefix2="G3",input2=:G2Myout)
     @test eval_graph(graph_4,A) ≈ eval_graph(graph,eval_graph(graph,A))
 

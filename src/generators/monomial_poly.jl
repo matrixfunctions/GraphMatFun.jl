@@ -1,4 +1,4 @@
-export gen_monomial, gen_monomial_recursive
+export gen_monomial, gen_monomial_degopt
 
 """
      (graph,crefs)=gen_monomial(a; input=:A, polyname=:P)
@@ -53,14 +53,14 @@ end
 
 
 """
-     (graph,crefs)=gen_monomial_recursive(a; input=:A)
+     (graph,crefs)=gen_monomial_degopt(a; input=:A)
 
 Generates the same polynomial as `gen_monomial`, in the monomial basis.
 However, it does so by wrapping a call to `gen_general_poly_recursion`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_monomial_recursive(a; input=:A)
+function gen_monomial_degopt(a; input=:A)
 
     n = length(a)
     d = n-1

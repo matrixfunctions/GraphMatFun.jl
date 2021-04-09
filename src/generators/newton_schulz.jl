@@ -1,4 +1,4 @@
-export gen_newton_schulz, gen_newton_schulz_recursive
+export gen_newton_schulz, gen_newton_schulz_degopt
 
 """
      (graph,crefs)=gen_newton_schulz(k, T=ComplexF64; input=:A, B=:B, C=:C, V=:V)
@@ -52,7 +52,7 @@ end
 
 
 """
-     (graph,crefs)=gen_newton_schulz_recursive(k, T=ComplexF64; input=:A)
+     (graph,crefs)=gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
 
 Does `k` iterations of the Newton–Schulz iteration for approximating the inverse,
 using the recursion
@@ -64,7 +64,7 @@ The function makes a call to `gen_general_poly_recursion`, resulting in more
 degrees of freedom in `crefs`. See also `gen_newton_schulz`.
 
     """
-function gen_newton_schulz_recursive(k, T=ComplexF64; input=:A)
+function gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,2*k)
     # Z_i=A*V_i --- Odd numbers

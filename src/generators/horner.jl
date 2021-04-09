@@ -1,4 +1,4 @@
-export gen_horner, gen_horner_recursive
+export gen_horner, gen_horner_degopt
 
 """
      (graph,crefs)=gen_horner(a; input=:A, B=:B, C=:C, scaling=1.0)
@@ -57,7 +57,7 @@ end
 
 
 """
-     (graph,crefs)=gen_horner_recursive(a; scaling=1.0, input=:A)
+     (graph,crefs)=gen_horner_degopt(a; scaling=1.0, input=:A)
 
 Generates a polynomial using Horner's evaluation scheme. The polynomial
 
@@ -71,7 +71,7 @@ where α=`scaling`.
 However, the function uses a call to `gen_general_poly_recursion`, resulting in more
 degrees of freedom in `crefs`. See also `gen_horner`.
     """
-function gen_horner_recursive(a; scaling=1.0, input=:A)
+function gen_horner_degopt(a; scaling=1.0, input=:A)
 
     n = length(a)
     T = eltype(a)

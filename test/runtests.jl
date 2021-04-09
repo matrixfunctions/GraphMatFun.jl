@@ -12,7 +12,7 @@ using Test
     include("linear_fit.jl");
     include("merge_graphs.jl");
     include("polynomials.jl");
-    include("polynomials_recursive.jl");
+    include("polynomials_degopt.jl");
     include("newton_schulz.jl");
 
 end
