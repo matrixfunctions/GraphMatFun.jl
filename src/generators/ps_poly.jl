@@ -176,14 +176,14 @@ function gen_ps_recursive(a; input=:A)
 
     i = s
     x[i] = ( vcat(zeros(T,s),one(T)), vcat(c,zeros(T,diff),zero(T)) ) # A^s*P_{v-1}
-    for i = reverse(1:v-1)
-        lower_idx = i*s+1
+    for i = reverse(0:v-2)
+        lower_idx = (i+1)*s+1
         upper_idx = lower_idx+s-1
         idx = lower_idx:upper_idx
         c = view(a, idx)
-        xl = vcat(zeros(T,s),one(T),zeros(v-i)) # Coeffs for A^s
-        xr =  vcat(c,zero(T),zeros(T,v-1-i),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
-        x[s+v-i] = (xl,xr) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
+        xl = vcat(zeros(T,s),one(T),zeros(v-1-i)) # Coeffs for A^s
+        xr =  vcat(c,zero(T),zeros(T,v-2-i),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
+        x[s+v-1-i] = (xl,xr) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
     end
 
     z = vcat(a[1:s],zero(T),zeros(T,v-1),one(T))
