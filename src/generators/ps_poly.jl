@@ -153,10 +153,12 @@ function gen_ps_recursive(a; input=:A)
     if k <= 2 # Degenerate cases k = 0, k = 1, and k = 2
         if k == 0
             error("Does not implement degree-zero polynomial.")
-        elseif k == 1
-            return gen_general_poly_recursion([], [a[1],a[2]])
-        elseif k == 2
-            return gen_general_poly_recursion([([zero(T),one(T)],[zero(T),one(T)])], a)
+        else # PS not more efficient than monomial evaluation for low degrees, but gives complications in code below
+            x = Vector{Tuple{Vector{T},Vector{T}}}(undef,k-1)
+            for i = 1:(k-1)
+                x[i] = (vcat(zero(T),one(T),zeros(i-1)), vcat(zeros(i),one(T)))
+            end
+            return gen_general_poly_recursion(x, a)
         end
     end
 
