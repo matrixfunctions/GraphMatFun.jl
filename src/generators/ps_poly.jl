@@ -161,37 +161,32 @@ function gen_ps_recursive(a; input=:A)
         v = floor(Int,k/s)
     end
 
-    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+v+v)
+    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+v-1)
     # Create monomial basis (The first s+1 slots in an x-component)
     for i = 1:(s-1)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end
 
-    # Create intermediate coefficient-polynomials. (The follwoing v slots in an x-component)
-    for i = 0:(v-1)
-        lower_idx = i*s+1
-        upper_idx = lower_idx+s-1
-        idx = lower_idx:upper_idx
-        c = view(a, idx)
-        x[i+s] = ( vcat(c,zeros(T,i+1)), vcat(one(T),zeros(T,i+s)) )
-    end
-
-    # Handle highest powers separately. i=v. Part of (3), the following equation, and (4) in Fasi 2019.
+    # Evaluate outer-polynomial with Horner-type scheme, and at the same time
+    # create the intermediate coefficient-polynomials
     ks = rem(k,s) # Degree of remaining highest order term. We compute B_v_ks
     idx = (n-(ks+1)+1):n
     diff = s - (ks+1)
     c = view(a, idx)
-    i = s+v
-    x[i] = ( vcat(c,zeros(diff),zeros(T,i-s+1)), vcat(one(T),zeros(T,i)) )
 
-    # Evaluate outer-polynomial with Horner-type scheme.
-    i = s+v+1
-    x[i] = ( vcat(zeros(T,s),one(T),zeros(v+1)), vcat(zeros(T,i),one(T)) ) # A^s*P_{v-1}
-    for i = 0:v-2
-        x[s+v+2+i] = ( vcat(zeros(T,s),one(T),zeros(v+2+i)), vcat(zeros(T,s+1),zeros(T,(v-1)-i),one(T),zeros(T,2*i+1),one(T)) ) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
+    i = s
+    x[i] = ( vcat(zeros(T,s),one(T)), vcat(c,zeros(T,diff),zero(T)) ) # A^s*P_{v-1}
+    for i = reverse(1:v-1)
+        lower_idx = i*s+1
+        upper_idx = lower_idx+s-1
+        idx = lower_idx:upper_idx
+        c = view(a, idx)
+        xl = vcat(zeros(T,s),one(T),zeros(v-i)) # Coeffs for A^s
+        xr =  vcat(c,zero(T),zeros(T,v-1-i),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
+        x[s+v-i] = (xl,xr) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
     end
 
-    z = vcat(zeros(s+1),one(T),zeros(v+v-1),one(T))
+    z = vcat(a[1:s],zero(T),zeros(T,v-1),one(T))
     return gen_general_poly_recursion(x, z, input=input)
 
 end
