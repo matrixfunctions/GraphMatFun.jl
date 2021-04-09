@@ -30,7 +30,8 @@ Reference: The general recursion is mentioned in equation (9) in this paper:
 * Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 """
 function gen_general_poly_recursion(x,z;compress_keys=true,input=:A)
-    (graph,crefs)=gen_general_poly_recursion_B(x,input=input);
+    T = promote_type(eltype(eltype(eltype(x))), eltype(z))
+    (graph,crefs)=gen_general_poly_recursion_B(x,T,input=input);
 
     k=size(x,1);
 
@@ -72,22 +73,13 @@ function gen_general_poly_recursion(k;T=ComplexF64,compress_keys=true)
     gen_general_poly_recursion(x,z;compress_keys=compress_keys)
 end
 
-#
-function gen_general_poly_recursion_B(k,T;input=:A)
-    x=Vector{Tuple{Vector{T},Vector{T}}}(undef,k);
-    for i=1:k
-        x[i]=(ones(T,i+1),ones(T,i+1));
-    end
-    return gen_general_poly_recursion_B(x,input=input);
-end
 
 # Normally x::Vector{Tuple{Vector{Number},Vector{Number}}}
 # Containing the coefficients in the recursion
-function gen_general_poly_recursion_B(x;input=:A)
+function gen_general_poly_recursion_B(x,T;input=:A)
 
 
     k=size(x,1);
-    T=eltype(eltype(eltype(x)));
 
     graph=Compgraph(T);
     useful_syms=[:I,input];
