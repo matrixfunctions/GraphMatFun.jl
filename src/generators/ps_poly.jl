@@ -154,7 +154,7 @@ function gen_ps_recursive(a; input=:A)
         if k == 0
             error("Does not implement degree-zero polynomial.")
         elseif k == 1
-            return gen_general_poly_recursion([([a[1],a[2]], [one(T),zero(T)])], vcat(zeros(T,2),one(T)))
+            return gen_general_poly_recursion([], [a[1],a[2]])
         end
     else
         s = ceil(Int,sqrt(k))
