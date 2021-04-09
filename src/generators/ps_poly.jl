@@ -161,7 +161,14 @@ function gen_ps_recursive(a; input=:A)
         v = floor(Int,k/s)
     end
 
-    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+v-1)
+    ks = rem(k,s) # Degree of remaining highest order term. We compute B_v_ks
+    if ks == 0
+        i_adj = 1
+    else
+        i_adj = 0
+    end
+
+    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+v-1-i_adj)
     # Create monomial basis (The first s+1 slots in an x-component)
     for i = 1:(s-1)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
@@ -169,24 +176,28 @@ function gen_ps_recursive(a; input=:A)
 
     # Evaluate outer-polynomial with Horner-type scheme, and at the same time
     # create the intermediate coefficient-polynomials
-    ks = rem(k,s) # Degree of remaining highest order term. We compute B_v_ks
-    idx = (n-(ks+1)+1):n
-    diff = s - (ks+1)
-    c = view(a, idx)
+    if ks != 0
+        idx = (n-(ks+1)+1):n
+        diff = s - (ks+1)
+        c = view(a, idx)
+        x[s] = ( vcat(zeros(T,s),one(T)), vcat(c,zeros(T,diff),zero(T)) ) # A^s*P_{v-1}
+    end
 
-    i = s
-    x[i] = ( vcat(zeros(T,s),one(T)), vcat(c,zeros(T,diff),zero(T)) ) # A^s*P_{v-1}
     for i = reverse(0:v-2)
         lower_idx = (i+1)*s+1
         upper_idx = lower_idx+s-1
         idx = lower_idx:upper_idx
         c = view(a, idx)
-        xl = vcat(zeros(T,s),one(T),zeros(v-1-i)) # Coeffs for A^s
-        xr =  vcat(c,zero(T),zeros(T,v-2-i),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
-        x[s+v-1-i] = (xl,xr) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
+        xl = vcat(zeros(T,s),one(T),zeros(v-1-i-i_adj)) # Coeffs for A^s
+        if (i == v-2) && (ks == 0)
+            xr =  vcat(c,a[n],one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
+        else
+            xr =  vcat(c,zero(T),zeros(T,v-2-i-i_adj),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
+        end
+        x[(s-i_adj)+v-1-i] = (xl,xr) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
     end
 
-    z = vcat(a[1:s],zero(T),zeros(T,v-1),one(T))
+    z = vcat(a[1:s],zero(T),zeros(T,v-1-i_adj),one(T))
     return gen_general_poly_recursion(x, z, input=input)
 
 end
