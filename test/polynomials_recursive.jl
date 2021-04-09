@@ -1,9 +1,9 @@
-using LinearAlgebra
+using LinearAlgebra, Polynomials
 @testset "Polynomial evaluation" begin
 
-    A = [3 4 ; 5 6.6];
+    A=Polynomial("x")
 
-    coeff = collect(0.1:0.1:2.1)
+    coeff = collect(1:21.0)
 
     poly_gens = Dict("Monomial" => (:gen_monomial,:gen_monomial_recursive),
                      "Horner"   => (:gen_horner,:gen_horner_recursive),
@@ -14,7 +14,7 @@ using LinearAlgebra
             for n = 2:length(coeff)
                 (graph_1,cref_1) = eval(poly_gens[key][1])(coeff[1:n])
                 (graph_2,cref_2) = eval(poly_gens[key][2])(coeff[1:n])
-                @test eval_graph(graph_2,A) ≈ eval_graph(graph_1,A)
+                @test eval_graph(Compgraph(Any,graph_2),A) == eval_graph(Compgraph(Any,graph_1),A)
                 @test sum(values(graph_2.operations) .== :mult) == sum(values(graph_1.operations) .== :mult)
             end
 
