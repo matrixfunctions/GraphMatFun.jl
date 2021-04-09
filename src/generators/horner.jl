@@ -80,7 +80,7 @@ function gen_horner_recursive(a; scaling=1.0, input=:A)
         error("Does not implement degree-zero polynomial.")
     end
     if n == 2
-        return gen_general_poly_recursion([([a[1],a[2]*scaling], [one(T),zero(T)])], vcat(zeros(T,2),one(T)))
+        return gen_general_poly_recursion([], [a[1],a[2]*scaling])
     end
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,n-2)
