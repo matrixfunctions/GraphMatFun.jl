@@ -150,18 +150,19 @@ function gen_ps_recursive(a; input=:A)
     graph=Compgraph(T)
     k = n-1; # Polynomial degree
 
-    if k < 2 # Degenerate cases k = 0 and k = 1
+    if k <= 2 # Degenerate cases k = 0, k = 1, and k = 2
         if k == 0
             error("Does not implement degree-zero polynomial.")
         elseif k == 1
             return gen_general_poly_recursion([], [a[1],a[2]])
+        elseif k == 2
+            return gen_general_poly_recursion([([zero(T),one(T)],[zero(T),one(T)])], a)
         end
-    else
-        s = ceil(Int,sqrt(k))
-        v = floor(Int,k/s)
     end
 
-    ks = rem(k,s) # Degree of remaining highest order term. We compute B_v_ks
+    s = ceil(Int,sqrt(k))
+    v = floor(Int,k/s)
+    ks = rem(k,s) # Degree of remaining highest order term. Treat special if only constant. Save one multiplication
     if ks == 0
         i_adj = 1
     else
@@ -169,14 +170,14 @@ function gen_ps_recursive(a; input=:A)
     end
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+v-1-i_adj)
-    # Create monomial basis (The first s+1 slots in an x-component)
+    # Create monomial basis (The first s-1 elements in the x-vector  <=> The first s+1 slots in an x-component)
     for i = 1:(s-1)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end
 
     # Evaluate outer-polynomial with Horner-type scheme, and at the same time
     # create the intermediate coefficient-polynomials
-    if ks != 0
+    if ks != 0 # If highest order term non-constant we create the polynomial
         idx = (n-(ks+1)+1):n
         diff = s - (ks+1)
         c = view(a, idx)
@@ -189,8 +190,8 @@ function gen_ps_recursive(a; input=:A)
         idx = lower_idx:upper_idx
         c = view(a, idx)
         xl = vcat(zeros(T,s),one(T),zeros(v-1-i-i_adj)) # Coeffs for A^s
-        if (i == v-2) && (ks == 0)
-            xr =  vcat(c,a[n],one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
+        if (i == v-2) && (ks == 0) # If highest order term is constant we incorporate it here
+            xr =  vcat(c,a[n],one(T)) # Coeffs for P_{v-i} + A^s*a[n]
         else
             xr =  vcat(c,zero(T),zeros(T,v-2-i-i_adj),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
         end
