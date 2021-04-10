@@ -316,7 +316,7 @@ function set_coeffs!(graph, x, cref=get_all_cref(graph))
             other = graph.coeffs[node][1];
             graph.coeffs[node]=(other, x[idx]);
         else
-            error("This is undefine: Unknown parent.")
+            error("This is undefined: Unknown parent.")
         end
     end
     return nothing
