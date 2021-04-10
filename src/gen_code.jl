@@ -371,6 +371,8 @@ function function_definition(lang::LangC,T,funname)
     push_code!(code,"#include<assert.h>")
     push_code!(code,"#include<stdlib.h>")
     push_code!(code,"#include<string.h>")
+    push_code!(code,"")
+    push_comment!(code, "Code for polynomial evaluation.")
     push_code!(code,"void $blas_prefix$funname(const $blas_type *A, "*
                     "const size_t n, $blas_type *output) {")
     return code
@@ -438,6 +440,26 @@ function function_end(lang::LangC,graph,mem)
         push_code!(code,"free(memslots);")
     end
     push_code!(code,"}");
+    return code
+end
+
+function gen_main(lang::LangC,T,funname)
+    (blas_type,blas_prefix)=get_blas_type(lang,T)
+    code=init_code(lang);
+    push_code!(code,"\n\n\n")
+    push_code!(code,"#include <stdio.h>")
+    push_code!(code,"")
+    push_comment!(code,"Code snippet showing how to call $funname().")
+    push_code!(code,"int main() {")
+    push_code!(code,"size_t i;")
+    push_code!(code,"size_t n = 3;")
+    push_code!(code,"$blas_type A[9] = {")
+    push_code!(code,"1,1,1,")
+    push_code!(code,"1,1,1,")
+    push_code!(code,"1,1,1,")
+    push_code!(code,"};")
+    push_code!(code,"$funname(A,n,A);")
+    push_code!(code,"}")
     return code
 end
 
@@ -665,7 +687,8 @@ Currently supported language: `LangJulia`, `LangMatlab`,
 function gen_code(fname,graph;
                   priohelp=Dict{Symbol,Float64}(),
                   lang=LangJulia(),
-                  funname="dummy")
+                  funname="dummy",
+                  generate_main=false)
 
     if has_trivial_nodes(graph)
         error("Please run compress_graph!() on the graph first.")
@@ -703,9 +726,9 @@ function gen_code(fname,graph;
     nof_slots=0;
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
-                                     T,graph,node,
-                                     can_be_deallocated[i],
-                                     mem)
+                                                       T,graph,node,
+                                                       can_be_deallocated[i],
+                                                       mem)
 
         # How many slots needed to reach this point
         if (!isnothing(findlast(mem.slots .!= :Free)))
@@ -722,16 +745,20 @@ function gen_code(fname,graph;
 
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
-                                     T,graph,node,
-                                     can_be_deallocated[i],
-                                     mem)
+                                                       T,graph,node,
+                                                       can_be_deallocated[i],
+                                                       mem)
         println(file,to_string(exec_code))
     end
     println(file,to_string(function_end(lang,graph,mem)));
 
+    if generate_main
+        exec_code=gen_main(lang,T,funname)
+        println(file,to_string(exec_code))
+    end
+
     if (fname isa String)
         close(file)
     end
-
 
 end
