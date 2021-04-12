@@ -12,15 +12,16 @@ include("optimization/gauss_newton.jl")
 include("optimization/linear_fit.jl")
 
 # Generators
-include("generators/denman_beavers_gen.jl");
-include("generators/ps_poly.jl");
-include("generators/bbc.jl");
-include("generators/bbc_exp.jl");
-include("generators/sid.jl");
-include("generators/monomial_poly.jl");
-include("generators/rational.jl");
-include("generators/horner.jl");
-include("generators/newton_schulz.jl");
+include("generators/denman_beavers_gen.jl")
+include("generators/ps_poly.jl")
+include("generators/bbc.jl")
+include("generators/bbc_exp.jl")
+include("generators/sid.jl")
+include("generators/monomial_poly.jl")
+include("generators/rational.jl")
+include("generators/horner.jl")
+include("generators/newton_schulz.jl")
+include("generators/exp.jl")
 
 
 
