@@ -3,7 +3,7 @@ export gen_degopt_poly
 
 """
     (graph,crefs)=gen_degopt_poly(k;compress_keys=true,T=ComplexF64,input=:A)
-    (graph,crefs)=gen_degopt_poly(x,z;compress_keys=true)
+    (graph,crefs)=gen_degopt_poly(x,z;compress_keys=true,input=:A)
 
 Corresponds to the (for a fixed numer of multiplications) degree-optimal polynomial
 
@@ -61,7 +61,7 @@ function gen_degopt_poly(x,z;compress_keys=true,input=:A)
     return (graph,crefs);
 
 end
-function gen_degopt_poly(k;T=ComplexF64,compress_keys=true)
+function gen_degopt_poly(k;T=ComplexF64,compress_keys=true,input=:A)
 
     x=Vector{Tuple{Vector{T},Vector{T}}}(undef,k);
     for i=1:k
@@ -70,7 +70,7 @@ function gen_degopt_poly(k;T=ComplexF64,compress_keys=true)
 
     z=ones(T,k+2)
 
-    gen_degopt_poly(x,z;compress_keys=compress_keys)
+    gen_degopt_poly(x,z;compress_keys=compress_keys,input=:A)
 end
 
 
