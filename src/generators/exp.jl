@@ -2,11 +2,13 @@ export gen_exp_native_jl, gen_exp_native_jl_degopt
 
 
 """
-     (graph,crefs)=gen_exp_native_jl(A)
+     (graph,crefs)=gen_exp_native_jl(A; input=:A)
 
 Creates a graph for the native scaling-and-squaring for the matrix exponential, as
 implemented in Julia. The matrix `A` is taken as
-input to determine the length of the Padé approximant, and the number of squares applied.
+input to determine the length of the Padé approximant and the number of squares applied,
+as well as determining the type of the coefficients.
+The kwarg `input` determines the name of the matrix, in the graph.
 
 References:
 
@@ -16,20 +18,21 @@ References:
 
 * Julia's matrix exponential, at the time of conversion: https://github.com/JuliaLang/julia/blob/697e782ab86bfcdd7fd15550241fe162c51d9f98/stdlib/LinearAlgebra/src/dense.jl#L554
     """
-function gen_exp_native_jl(A)
-    nA = opnorm(A, 1)
+function gen_exp_native_jl(A; input=:A)
     T = eltype(A)
-    graph = Compgraph(T)
+    nA = opnorm(A, 1)
     if (nA <= 2.1)
-        return gen_exp_native_jl_A(graph, nA, T)
+        return gen_exp_native_jl_A(nA, T, input)
     else
-        return gen_exp_native_jl_B(graph, nA, T)
+        return gen_exp_native_jl_B(nA, T, input)
     end
 end
 
 
 # For sufficiently small nA, use lower order Padé-Approximations
-function gen_exp_native_jl_A(graph, nA, T)
+function gen_exp_native_jl_A(nA, T, input)
+    graph = Compgraph(T)
+
     if nA > 0.95
         C = T[17643225600.,8821612800.,2075673600.,302702400.,
               30270240.,   2162160.,    110880.,     3960.,
@@ -48,7 +51,7 @@ function gen_exp_native_jl_A(graph, nA, T)
     s = (div(n, 2) - 1)
     cref=Vector{Tuple{Symbol,Int}}(undef,n)
 
-    add_mult!(graph,:A2,:A,:A)
+    add_mult!(graph,:A2,input,input)
     evenmon = Vector{Symbol}(undef,s+1)
     evenmon[1] = :I
     evenmon[2] = :A2
@@ -63,7 +66,7 @@ function gen_exp_native_jl_A(graph, nA, T)
 
     a = view(C,2:2:n)
     cref[s+2:n] = add_sum!(graph, :Ua, a, evenmon, :Ua)
-    add_mult!(graph,:U,:Ua,:A)
+    add_mult!(graph,:U,:Ua,input)
 
     add_lincomb!(graph,:X,1.0,:V,1.0,:U)
     add_lincomb!(graph,:Z,1.0,:V,-1.0,:U)
@@ -76,14 +79,16 @@ end
 
 
 # Full scaling and squaring
-function gen_exp_native_jl_B(graph, nA, T)
+function gen_exp_native_jl_B(nA, T, input)
+    graph = Compgraph(T)
+
     s  = log2(nA/5.4) # power of 2 later reversed by squaring
-    C=:A
+    C=input
     if s > 0
         si = ceil(Int,s)
         γ = 1/convert(T,2^si)
         C=:C
-        add_lincomb!(graph,C,γ,:A,0,:I)
+        add_lincomb!(graph,C,γ,input,0,:I)
     end
     CC = T[64764752532480000.,32382376266240000.,7771770303897600.,
            1187353796428800.,  129060195264000.,  10559470521600.,
@@ -159,19 +164,20 @@ export gen_exp_native_jl
 XXX
     """
 function gen_exp_native_jl_degopt(A; input=:A)
-    nA = opnorm(A, 1)
     T = eltype(A)
-    graph = Compgraph(T)
+    nA = opnorm(A, 1)
     if (nA <= 2.1)
-        return gen_exp_native_jl_A_degopt(graph, nA, T, input)
+        return gen_exp_native_jl_A_degopt(nA, T, input)
     else
-        return gen_exp_native_jl_B_degopt(graph, nA, T, input)
+        return gen_exp_native_jl_B_degopt(nA, T, input)
     end
 end
 
 
 # For sufficiently small nA, use lower order Padé-Approximations
-function gen_exp_native_jl_A_degopt(graph, nA, T, input)
+function gen_exp_native_jl_A_degopt(nA, T, input)
+    graph = Compgraph(T)
+
     if nA > 0.95
         C = T[17643225600.,8821612800.,2075673600.,302702400.,
               30270240.,   2162160.,    110880.,     3960.,
@@ -218,12 +224,14 @@ end
 
 
 # Full scaling and squaring
-function gen_exp_native_jl_B_degopt(graph, nA, T, input)
+function gen_exp_native_jl_B_degopt(nA, T, input)
+
     s  = log2(nA/5.4) # power of 2 later reversed by squaring
     C=input
     if s > 0
         si = ceil(Int,s)
         C=:C
+        # Actual scaling below, after graph is created
     end
     CC = T[64764752532480000.,32382376266240000.,7771770303897600.,
            1187353796428800.,  129060195264000.,  10559470521600.,
