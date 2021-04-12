@@ -48,8 +48,13 @@ function initsim(s,prev_graph,prev_cref)
         graph=Compgraph(s.eltype, prev_graph);
         cref=prev_cref;
     else
-        if (s.graph == :sid) # generator has nof mult as input
+        if (s.graph in [:sid,:bbc]) # generator has nof mult as input
+
+            if (s.graph == :sid)
                 (graph,cref)=gen_sid_exp(m)
+            elseif (s.graph == :bbc)
+                (graph,cref)=gen_bbc_basic_exp(m)
+            end
         else
             deg0=m-1;
             graph_mult=0;
@@ -57,7 +62,6 @@ function initsim(s,prev_graph,prev_cref)
             oldcref=Nothing;
             while graph_mult<m+1
 
-                @show deg0
                 deg0 += 1;
                 if (s.init==:lsqr)
                     bdiscr=big.(discr);
@@ -78,14 +82,11 @@ function initsim(s,prev_graph,prev_cref)
                     (graph,cref)=gen_horner_degopt(c)
                 elseif (s.graph == :ps)
                     (graph,cref)=gen_ps_degopt(c)
-#                elseif (s.graph == :sid)
-#                    (graph,cref)=gen_sid_exp(m)
                 else
                     error("Wrong graph type $(s.graph)");
                 end
                 graph_mult=count(values(graph.operations) .==:mult);
 
-                @show graph_mult
             end
 
             graph=oldgraph; # Useful at termination
@@ -110,7 +111,12 @@ end
 
 function runsim(s::Simulation,prev_graph,prev_cref)
     (graph,cref,discr)=initsim(s,prev_graph,prev_cref)
-    println("Running graph \"$(s.graph)\" with $(s.m) multiplications rho=$(s.rho) ");
+    if (s.graph != :prev)
+        println("Running graph \"$(s.graph)\" initialized as \"$(s.init)\" with $(s.m) multiplications rho=$(s.rho) ");
+    else
+        d=s.opt_kwargs[:droptol];
+        println("Running with droptol \"$(d)\" with $(s.m) multiplications rho=$(s.rho) ");
+    end
 
     opt_gauss_newton!(graph,exp,discr;logger=1,
                       stoptol=1e-16,cref=cref,
@@ -119,7 +125,7 @@ function runsim(s::Simulation,prev_graph,prev_cref)
 end
 
 
-function showerr(s,graph)
+function showerr(s,graph,output=true)
     n=s.n
     rho=s.rho
     discr=s.rho*exp.(1im*range(0,2*pi,length=s.n)[1:end-1]);
@@ -131,7 +137,10 @@ function showerr(s,graph)
     end
 
     err=norm((s.f.(discr)-eval_graph(graph,discr))./s.f.(discr),Inf)
-    println("Target error: $err");
+    if (output)
+        println("Target error: $(Float64(err))");
+    end
+
     return err
 end
 
