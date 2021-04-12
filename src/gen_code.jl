@@ -24,18 +24,17 @@ end
 function init_code(lang)
     return CodeSnippet(Vector{String}(undef,0),lang);
 end
-function push_code!(code,str)
-    push!(code.code_lines,str);
+function push_code!(code,str;ind_lvl=1,ind_str="    ")
+    indentation=repeat(ind_str,ind_lvl)
+    push!(code.code_lines,indentation*str);
 end
-function push_comment!(code,str)
-    push!(code.code_lines,comment(code.lang,str));
+function push_comment!(code,str;ind_lvl=1,ind_str="    ")
+    indentation=repeat(ind_str,ind_lvl)
+    push!(code.code_lines,indentation*comment(code.lang,str));
 end
 function to_string(code)
     return join(code.code_lines,"\n");
 end
-
-
-
 
 # Every language needs:
 # comment(::Lang,s)
@@ -103,8 +102,8 @@ reference_constant(::LangC,T,id)=(T<:Complex) ? "&$id" : "$id"
 
 function function_definition(lang::LangJulia,T,funname)
     code=init_code(lang);
-    push_code!(code,"using LinearAlgebra");
-    push_code!(code,"function $funname(A)");
+    push_code!(code,"using LinearAlgebra",ind_lvl=0);
+    push_code!(code,"function $funname(A)",ind_lvl=0);
     return code
 end
 function function_init(lang::LangJulia,T,mem,graph)
@@ -124,7 +123,7 @@ function function_init(lang::LangJulia,T,mem,graph)
     end
     push_code!(code,"for  j=$start_j:max_memslots");
 
-    push_code!(code,"    memslots[j]=Matrix{T}(undef,n,n);");
+    push_code!(code,"memslots[j]=Matrix{T}(undef,n,n);",ind_lvl=2);
     push_code!(code,"end");
     # Initialize I
     I_slot_name=get_slot_name(mem,:I);
@@ -163,7 +162,7 @@ function function_end(lang::LangJulia,graph,mem)
     retval=get_slot_name(mem,retval_node);
 
     push_code!(code,"return $retval; "*comment(lang,"Returning $retval_node"))
-    push_code!(code,"end");
+    push_code!(code,"end",ind_lvl=0);
     return code
 end
 
@@ -276,7 +275,7 @@ end
 ### MATLAB
 function function_definition(lang::LangMatlab,T,funname)
     code=init_code(lang);
-    push_code!(code,"function output=$funname(A)");
+    push_code!(code,"function output=$funname(A)",ind_lvl=0);
     return code
 end
 
@@ -294,7 +293,7 @@ end
 function function_end(lang::LangMatlab,graph,mem)
     code=init_code(lang);
     push_code!(code,"output=$(graph.outputs[end]);");
-    push_code!(code,"end")
+    push_code!(code,"end",ind_lvl=0)
     return code
 end
 
@@ -367,14 +366,14 @@ end
 function function_definition(lang::LangC,T,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
-    push_code!(code,get_blas_includes(lang))
-    push_code!(code,"#include<assert.h>")
-    push_code!(code,"#include<stdlib.h>")
-    push_code!(code,"#include<string.h>")
+    push_code!(code,get_blas_includes(lang),ind_lvl=0)
+    push_code!(code,"#include<assert.h>",ind_lvl=0)
+    push_code!(code,"#include<stdlib.h>",ind_lvl=0)
+    push_code!(code,"#include<string.h>",ind_lvl=0)
     push_code!(code,"")
-    push_comment!(code, "Code for polynomial evaluation.")
+    push_comment!(code, "Code for polynomial evaluation.",ind_lvl=0)
     push_code!(code,"void $blas_prefix$funname(const $blas_type *A, "*
-                    "const size_t n, $blas_type *output) {")
+        "const size_t n, $blas_type *output) {",ind_lvl=0)
     return code
 end
 
@@ -420,7 +419,7 @@ function function_init(lang::LangC,T,mem,graph)
         push_code!(code,"size_t j;")
         push_code!(code,"memset($nodemem, 0, n*n*sizeof(*memslots));")
         push_code!(code,"for(j=0; j<n*n; j+=n+1)");
-        push_code!(code,"        memslots[j] = ONE;")
+        push_code!(code,"memslots[j] = ONE;",ind_lvl=2)
     end
 
     return code
@@ -439,7 +438,7 @@ function function_end(lang::LangC,graph,mem)
     if size(mem.slots,1) > 0
         push_code!(code,"free(memslots);")
     end
-    push_code!(code,"}");
+    push_code!(code,"}",ind_lvl=0);
     return code
 end
 
@@ -676,14 +675,16 @@ function gen_main(lang::LangC,T,fname,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
     push_code!(code,"\n\n\n")
-    push_code!(code,"typedef $blas_type blas_type;")
+    push_code!(code,"typedef $blas_type blas_type;",ind_lvl=0)
     push_code!(code,"")
 
     # Main function starts here.
-    push_comment!(code,"Code snippet that calls $blas_prefix$funname().")
-    push_comment!(code,"With the GNU Compiler Collection, compile with:")
+    push_comment!(code,"Code snippet that calls $blas_prefix$funname().",
+                  ind_lvl=0)
+    push_comment!(code,"With the GNU Compiler Collection, compile with:",
+                  ind_lvl=0)
     push_comment!(code,compilation_string(lang,fname))
-    push_code!(code,"int main() {")
+    push_code!(code,"int main() {",ind_lvl=0)
     push_code!(code,"size_t i;")
 
     # Generate matrix.
@@ -696,7 +697,7 @@ function gen_main(lang::LangC,T,fname,funname)
 
     # Call polynomial evaluation function.
     push_code!(code,"$blas_prefix$funname(A,n,A);")
-    push_code!(code,"}")
+    push_code!(code,"}",ind_lvl=0)
     return code
 end
 
