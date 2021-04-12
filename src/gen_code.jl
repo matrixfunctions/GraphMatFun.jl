@@ -787,7 +787,7 @@ function gen_code(fname,graph;
     println(file,to_string(function_end(lang,graph,mem)));
 
     # Generate main function, if necessary.
-    if generate_main
+    if generate_main && typeof(lang) <: LangC
         exec_code=gen_main(lang,T,fname,funname)
         println(file,to_string(exec_code))
     end
