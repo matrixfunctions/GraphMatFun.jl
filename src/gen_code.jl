@@ -669,7 +669,10 @@ function matrix_to_string(lang::LangC,A)
     return matrix_string
 end
 
-function gen_main(lang::LangC,T,funname)
+compilation_string(::LangC_OpenBLAS,fname)="gcc -o main_compiled fname -lblas"
+compilation_string(::LangC_MKL,fname)="gcc -o main_compiled fname -lmkl_rt"
+
+function gen_main(lang::LangC,T,fname,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
     push_code!(code,"\n\n\n")
@@ -678,6 +681,8 @@ function gen_main(lang::LangC,T,funname)
 
     # Main function starts here.
     push_comment!(code,"Code snippet that calls $blas_prefix$funname().")
+    push_comment!(code,"With the GNU Compiler Collection, compile with:")
+    push_comment!(code,compilation_string(lang,fname))
     push_code!(code,"int main() {")
     push_code!(code,"size_t i;")
 
@@ -767,7 +772,6 @@ function gen_code(fname,graph;
 
     end
 
-
     # Sweep 2:
     mem=init_mem(lang,nof_slots)
     println(file,to_string(function_init(lang,T,mem,graph)));
@@ -782,8 +786,9 @@ function gen_code(fname,graph;
     end
     println(file,to_string(function_end(lang,graph,mem)));
 
+    # Generate main function, if necessary.
     if generate_main
-        exec_code=gen_main(lang,T,funname)
+        exec_code=gen_main(lang,T,fname,funname)
         println(file,to_string(exec_code))
     end
 
