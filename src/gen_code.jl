@@ -443,26 +443,6 @@ function function_end(lang::LangC,graph,mem)
     return code
 end
 
-function gen_main(lang::LangC,T,funname)
-    (blas_type,blas_prefix)=get_blas_type(lang,T)
-    code=init_code(lang);
-    push_code!(code,"\n\n\n")
-    push_code!(code,"#include <stdio.h>")
-    push_code!(code,"")
-    push_comment!(code,"Code snippet showing how to call $funname().")
-    push_code!(code,"int main() {")
-    push_code!(code,"size_t i;")
-    push_code!(code,"size_t n = 3;")
-    push_code!(code,"$blas_type A[9] = {")
-    push_code!(code,"1,1,1,")
-    push_code!(code,"1,1,1,")
-    push_code!(code,"1,1,1,")
-    push_code!(code,"};")
-    push_code!(code,"$funname(A,n,A);")
-    push_code!(code,"}")
-    return code
-end
-
 function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
 
@@ -665,6 +645,56 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     nodemem = 0
     return (code,nodemem)
 end
+
+function scalar_to_string(::LangC,x)
+    return "$x"
+end
+function scalar_to_string(::LangC_OpenBLAS,x::T) where T<:Complex
+    return "$(real(z)) + $(imag(z))*I"
+end
+function scalar_to_string(::LangC_MKL,x::T) where T<:Complex
+    return "{$(real(z)), $(imag(z))}"
+end
+function matrix_to_string(lang::LangC,A)
+    (m,n) = size(A)
+    matrix_string = ""
+    for i=1:m
+        for j=1:n
+            matrix_string *=
+                scalar_to_string(lang,A[i,j]) *
+                (j!=n ? ", " : "")
+        end
+        matrix_string *= (i!=n ? ",\n" : "")
+    end
+    return matrix_string
+end
+
+function gen_main(lang::LangC,T,funname)
+    (blas_type,blas_prefix)=get_blas_type(lang,T)
+    code=init_code(lang);
+    push_code!(code,"\n\n\n")
+    push_code!(code,"typedef $blas_type blas_type;")
+    push_code!(code,"")
+
+    # Main function starts here.
+    push_comment!(code,"Code snippet that calls $blas_prefix$funname().")
+    push_code!(code,"int main() {")
+    push_code!(code,"size_t i;")
+
+    # Generate matrix.
+    n=3 # Size of dummy matrix.
+    push_code!(code,"size_t n = $n;")
+    push_code!(code,"blas_type A[9] = {")
+    A=randn(T,n,n)
+    push_code!(code,matrix_to_string(lang,A))
+    push_code!(code,"};")
+
+    # Call polynomial evaluation function.
+    push_code!(code,"$blas_prefix$funname(A,n,A);")
+    push_code!(code,"}")
+    return code
+end
+
 
 
 
