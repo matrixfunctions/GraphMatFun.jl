@@ -137,10 +137,9 @@ function gen_exp_native_jl_B(graph, nA, T)
     if (s>0)
         for t=1:si
             Qt=Symbol("S"*string(t))
-            if (t>1)
-                Qtm1=Symbol("S"*string(t-1))
-            end
             add_mult!(graph,Qt,Qtm1,Qtm1)
+
+            Qtm1 = Qt
         end
     end
 
