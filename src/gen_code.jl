@@ -646,13 +646,13 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
     return (code,nodemem)
 end
 
-function scalar_to_string(::LangC,x)
-    return "$x"
+function scalar_to_string(::LangC,z)
+    return "$z"
 end
-function scalar_to_string(::LangC_OpenBLAS,x::T) where T<:Complex
+function scalar_to_string(::LangC_OpenBLAS,z::T) where T<:Complex
     return "$(real(z)) + $(imag(z))*I"
 end
-function scalar_to_string(::LangC_MKL,x::T) where T<:Complex
+function scalar_to_string(::LangC_MKL,z::T) where T<:Complex
     return "{$(real(z)), $(imag(z))}"
 end
 function matrix_to_string(lang::LangC,A)
