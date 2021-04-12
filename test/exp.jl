@@ -2,7 +2,8 @@ using LinearAlgebra
 @testset "Matrix exponential" begin
 
 
-    exp_gens = Dict("Julia Native" => :gen_exp_native_jl)
+    exp_gens = Dict("Julia Native" => :gen_exp_native_jl,
+                    "Julia Native degopt" => :gen_exp_native_jl_degopt)
 
     for key = keys(exp_gens)
         @testset "$key" begin
