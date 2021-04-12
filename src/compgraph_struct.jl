@@ -190,7 +190,7 @@ function add_sum!(graph,node,c,nodelist,base_name=node)
     elseif (size(nodelist,1)==2)
         # Direct call to lincomb if we sum two nodes
         add_lincomb!(graph,node,c[1],nodelist[1],c[2],nodelist[2])
-        return ((node,1),(node,2));
+        return [(node,1),(node,2)]
     end
 
     cref=Vector{Tuple{Symbol,Int}}()
