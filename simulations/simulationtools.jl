@@ -139,8 +139,9 @@ function showerr(s,graph,output=true)
     end
 
     err=norm((s.f.(discr)-eval_graph(graph,discr))./s.f.(discr),Inf)
+    imagnorm=Float64(norm(imag.(get_coeffs(graph))));
     if (output)
-        println("Target error: $(Float64(err))");
+        println("Target error: $(Float64(err)) norm(imag(coeffs))= $imagnorm");
     end
 
     return err
@@ -208,7 +209,7 @@ function read_one_key(; io = stdin)
 end
 
 
-function interactive_simulations(init_sim,sim0)
+function interactive_simulations(init_sim,sim0,predefsims="")
 
     max_j=1000;
     simlist=Vector{Any}(undef,max_j);
@@ -229,7 +230,11 @@ function interactive_simulations(init_sim,sim0)
         err=showerr(target,graph);
         print("Commandlist : "*String(join(commandlist[1:j]))* " ");
 
-        x=String(read_one_key());
+        if (j+1>length(predefsims))
+            x=String(read_one_key());
+        else
+            x=string(predefsims[j+1]);
+        end
 
         println("$x");
         if (x=="b")
@@ -237,7 +242,6 @@ function interactive_simulations(init_sim,sim0)
         else
             skip=false;
             if (x=="s")
-                println("Simulate")
                 sim=deepcopy(simlist[j]);
             elseif (x=="D")
                 sim=change_param(simlist[j],:droptol,2);
@@ -254,7 +258,6 @@ function interactive_simulations(init_sim,sim0)
             elseif (x=="r")
                 graph=deepcopy(graph)
                 v=get_coeffs(graph);
-
                 set_coeffs!(graph,real.(v));
                 println("Realify (removing $(Float64(norm(imag.(v)))) )");
                 sim=deepcopy(simlist[j]);
