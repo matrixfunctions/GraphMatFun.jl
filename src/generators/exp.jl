@@ -167,15 +167,15 @@ function gen_exp_native_jl_degopt(A; input=:A)
     T = eltype(A)
     nA = opnorm(A, 1)
     if (nA <= 2.1)
-        return gen_exp_native_jl_A_degopt(nA, T, input)
+        return gen_exp_native_jl_degopt_A(nA, T, input)
     else
-        return gen_exp_native_jl_B_degopt(nA, T, input)
+        return gen_exp_native_jl_degopt_B(nA, T, input)
     end
 end
 
 
 # For sufficiently small nA, use lower order Padé-Approximations
-function gen_exp_native_jl_A_degopt(nA, T, input)
+function gen_exp_native_jl_degopt_A(nA, T, input)
     graph = Compgraph(T)
 
     if nA > 0.95
@@ -224,7 +224,7 @@ end
 
 
 # Full scaling and squaring
-function gen_exp_native_jl_B_degopt(nA, T, input)
+function gen_exp_native_jl_degopt_B(nA, T, input)
 
     s  = log2(nA/5.4) # power of 2 later reversed by squaring
     C=input
@@ -299,20 +299,23 @@ function gen_exp_native_jl_B_degopt(nA, T, input)
     add_lincomb!(graph,:Z,1.0,:VV,-1.0,:UU)
     add_ldiv!(graph,:P,:Z,:X)
 
-    Qtm1=:P
-    Qt=:P
+
     if (s>0)
         γ = 1/convert(T,2^si)
         add_lincomb!(graph,C,γ,:A,0,:I)
-        for t=1:si
-            Qt=Symbol("S"*string(t))
-            add_mult!(graph,Qt,Qtm1,Qtm1)
-
-            Qtm1 = Qt
+        xS = Vector{Tuple{Vector{T},Vector{T}}}(undef,si)
+        for i=1:si
+            xS[i] = ( vcat(zeros(T,i),one(T)), vcat(zeros(T,i),one(T)) )
         end
+        zS = vcat(zeros(T,si+1), one(T))
+        (graphS,crefS) = gen_degopt_poly(xS, zS, input=:P)
+
+        graph = merge_graphs(graph, graphS, prefix1="", prefix2="S", skip_basic1=true, skip_basic2=true, cref1=cref, cref2=crefS, input1=C, input2=:P)
+        cref =vcat(cref, crefS)
+    else
+        add_output!(graph,:P)
     end
 
-    add_output!(graph,Qt)
 
     return (graph,cref)
 end
