@@ -159,9 +159,10 @@ export gen_exp_native_jl
 
 
 """
-     (graph,crefs)=gen_exp_native_jl_degopt(A)
+     (graph,crefs)=gen_exp_native_jl_degopt(A; input=:A))
 
-XXX
+Same as `gen_exp_native_jl` but with calls to `gen_degopt_poly` for contruction of
+numerator and denominator polynomials.
     """
 function gen_exp_native_jl_degopt(A; input=:A)
     T = eltype(A)
@@ -194,27 +195,48 @@ function gen_exp_native_jl_degopt_A(nA, T, input)
 
     n = length(C)
     s = (div(n, 2) - 1)
-    cref=Vector{Tuple{Symbol,Int}}(undef,n)
 
-    add_mult!(graph,:A2,:A,:A)
-    evenmon = Vector{Symbol}(undef,s+1)
-    evenmon[1] = :I
-    evenmon[2] = :A2
+    xU = Vector{Tuple{Vector{T},Vector{T}}}(undef,s+1)
+    # Even monomials
+    xU[1] = ( vcat(zeros(T,1),one(T)), vcat(zeros(T,1),one(T)) )
     for k = 2:s
-        sym = Symbol("A$(2*k)")
-        add_mult!(graph,sym,:A2,evenmon[k])
-        evenmon[k+1] = sym
+        xU[k] = ( vcat(zeros(T,2),one(T),zeros(k-2)), vcat(zeros(T,k),one(T)) )
     end
 
-    a = view(C,1:2:n-1)
-    cref[1:s+1] = add_sum!(graph, :V, a, evenmon, :V)
+    # U
+    a = view(C,4:2:n)
+    xU[s+1] = ( vcat(zeros(T,1),one(T),zeros(T,s+1)), vcat(C[2],zero(T),a) )
+    zU = vcat(zeros(T,s+2), one(T))
+    (graphU,crefU) = gen_degopt_poly(xU, zU, input=:A)
+    rename_node!(graphU, Symbol("T2k$(4+s)") , :U, crefU)
 
-    a = view(C,2:2:n)
-    cref[s+2:n] = add_sum!(graph, :Ua, a, evenmon, :Ua)
-    add_mult!(graph,:U,:Ua,:A)
+    # V
+    xV = Vector{Tuple{Vector{T},Vector{T}}}(undef,s)
+    xV[1:s]=xU[1:s]
+    a = view(C,3:2:n-1)
+    zV = vcat(C[1],zero(T),a)
+    (graphV,crefV) = gen_degopt_poly(xV, zV, input=:A)
+    rename_node!(graphV, Symbol("T2k$(3+s)") , :V, crefV)
 
-    add_lincomb!(graph,:X,1.0,:V,1.0,:U)
-    add_lincomb!(graph,:Z,1.0,:V,-1.0,:U)
+
+    graph = merge_graphs(graphU, graphV, prefix1="U", prefix2="V", skip_basic1=true, skip_basic2=true, cref1=crefU, cref2=crefV, input1=:A, input2=:A)
+    cref =vcat(crefU, crefV)
+    empty!(graph.outputs)
+
+    # Remove redundant creation of monomial basis, e.g., VB3 == UB3 and VBa4_3 == UBa4_3
+    for N = ["VB", "UB"]
+        for k=reverse(2:s+1)
+            rename_node!(graph, Symbol(string(N,"$k")), Symbol("B$(k)"), cref)
+            for NN = ["a", "b"]
+                for kk = reverse(2:k-1)
+                    rename_node!(graph, Symbol(string(N,NN,"$(k)_$(kk)")), Symbol(string("B",NN,"$(k)_$(kk)")) , cref)
+                end
+            end
+        end
+    end
+
+    add_lincomb!(graph,:X,1.0,:VV,1.0,:UU)
+    add_lincomb!(graph,:Z,1.0,:VV,-1.0,:UU)
     add_ldiv!(graph,:P,:Z,:X)
 
     add_output!(graph,:P)
@@ -315,7 +337,6 @@ function gen_exp_native_jl_degopt_B(nA, T, input)
     else
         add_output!(graph,:P)
     end
-
 
     return (graph,cref)
 end
