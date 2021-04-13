@@ -77,7 +77,6 @@ end
 
 function gen_sastre_basic(b)
 
-    @show b
     if (size(b,1) !=9)
         error("Not implemented");
     end
@@ -153,7 +152,5 @@ function gen_sastre_degopt(s,c,d,e,f)
     # y1s
     z=[f[1:s+1];e[1];1.0];
 
-    @show x
-    @show z
     return gen_degopt_poly(x,z);
 end
