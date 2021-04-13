@@ -207,7 +207,7 @@ function gen_exp_native_jl_degopt_A(nA, T, input)
     a = view(C,4:2:n)
     xU[s+1] = ( vcat(zeros(T,1),one(T),zeros(T,s+1)), vcat(C[2],zero(T),a) )
     zU = vcat(zeros(T,s+2), one(T))
-    (graphU,crefU) = gen_degopt_poly(xU, zU, input=:A)
+    (graphU,crefU) = gen_degopt_poly(xU, zU, input=input)
     rename_node!(graphU, Symbol("T2k$(4+s)") , :U, crefU)
 
     # V
@@ -215,11 +215,11 @@ function gen_exp_native_jl_degopt_A(nA, T, input)
     xV[1:s]=xU[1:s]
     a = view(C,3:2:n-1)
     zV = vcat(C[1],zero(T),a)
-    (graphV,crefV) = gen_degopt_poly(xV, zV, input=:A)
+    (graphV,crefV) = gen_degopt_poly(xV, zV, input=input)
     rename_node!(graphV, Symbol("T2k$(3+s)") , :V, crefV)
 
 
-    graph = merge_graphs(graphU, graphV, prefix1="U", prefix2="V", skip_basic1=true, skip_basic2=true, cref1=crefU, cref2=crefV, input1=:A, input2=:A)
+    graph = merge_graphs(graphU, graphV, prefix1="U", prefix2="V", skip_basic1=true, skip_basic2=true, cref1=crefU, cref2=crefV, input1=input, input2=input)
     cref =vcat(crefU, crefV)
     empty!(graph.outputs)
 
@@ -324,7 +324,7 @@ function gen_exp_native_jl_degopt_B(nA, T, input)
 
     if (s>0)
         γ = 1/convert(T,2^si)
-        add_lincomb!(graph,C,γ,:A,0,:I)
+        add_lincomb!(graph,C,γ,input,0,:I)
         xS = Vector{Tuple{Vector{T},Vector{T}}}(undef,si)
         for i=1:si
             xS[i] = ( vcat(zeros(T,i),one(T)), vcat(zeros(T,i),one(T)) )
