@@ -48,12 +48,14 @@ function initsim(s,prev_graph,prev_cref)
         graph=Compgraph(s.eltype, prev_graph);
         cref=prev_cref;
     else
-        if (s.graph in [:sid,:bbc]) # generator has nof mult as input
+        if (s.graph in [:sid,:bbc,:sastre]) # generator has nof mult as input
 
             if (s.graph == :sid)
                 (graph,cref)=gen_sid_exp(m)
             elseif (s.graph == :bbc)
                 (graph,cref)=gen_bbc_basic_exp(m)
+            elseif (s.graph == :sastre)
+                (graph,cref)=gen_sastre_basic_exp(m)
             end
         else
             deg0=m-1;
@@ -119,7 +121,7 @@ function runsim(s::Simulation,prev_graph,prev_cref)
     end
 
     opt_gauss_newton!(graph,exp,discr;logger=1,
-                      stoptol=1e-16,cref=cref,
+                      stoptol=1e-30,cref=cref,
                       s.opt_kwargs...);
     return (deepcopy(graph),cref);
 end
@@ -157,4 +159,132 @@ function make_agressive(sim)
     new_sim.opt_kwargs[:droptol]=new_sim.opt_kwargs[:droptol]/10;
 
     return new_sim;
+end
+
+
+function run_simlist(simlist)
+    graph=0; cref=[];
+    for sim=simlist
+        if (sim isa String)
+            println(sim)
+        else
+            oldgraph=graph
+            (graph,cref)=runsim(sim,graph,cref);
+            err=showerr(target,graph);
+            if (err>1e20)
+                println("Too large error. Aborting.");
+                break;
+            end
+
+        end
+    end
+    return (graph,cref)
+end
+
+
+
+function change_param(sim,param,factor)
+    sim=deepcopy(sim);
+    if (param in [:droptol,:γ0])
+        o=sim.opt_kwargs
+        o[param]=o[param]*factor;
+        println("$param=$(o[param])");
+    else
+        T=typeof(getfield(sim,param));
+        setfield!(sim,param,convert(T,getfield(sim,param)*factor));
+        println("$param= $(getfield(sim,param))");
+    end
+
+    return sim;
+end
+
+
+function read_one_key(; io = stdin)
+    setraw!(raw) = ccall(:jl_tty_set_mode, Int32, (Ptr{Cvoid},Int32), io.handle, raw)
+    setraw!(true)
+    s=read(io, 1)
+    setraw!(false)
+    return s
+end
+
+
+function interactive_simulations(init_sim,sim0)
+
+    max_j=1000;
+    simlist=Vector{Any}(undef,max_j);
+    commandlist=Vector{String}(undef,max_j);
+    graphlist=Vector{Any}(undef,max_j);
+    (graph,cref)=runsim(init_sim,0,0);
+    simlist[1]=init_sim;
+    graphlist[1]=graph;
+    commandlist[1]="I";
+    err=showerr(target,graph);
+    (graph,cref)=runsim(sim0,graph,cref);
+    simlist[2]=sim0;
+    graphlist[2]=graph;
+    commandlist[2]="s";
+    j=2;
+    while (command != "q")
+        graph=graphlist[j];
+        err=showerr(target,graph);
+        print("Commandlist : "*String(join(commandlist[1:j]))* " ");
+
+        x=String(read_one_key());
+
+        println("$x");
+        if (x=="b")
+            j=j-1;
+        else
+            skip=false;
+            if (x=="s")
+                println("Simulate")
+                sim=deepcopy(simlist[j]);
+            elseif (x=="D")
+                sim=change_param(simlist[j],:droptol,2);
+            elseif (x=="d")
+                sim=change_param(simlist[j],:droptol,1/2);
+            elseif (x=="g")
+                sim=change_param(simlist[j],:γ0,0.8);
+            elseif (x=="G")
+                sim=change_param(simlist[j],:γ0,1/0.8);
+            elseif (x=="n")
+                sim=change_param(simlist[j],:n,1/2);
+            elseif (x=="N")
+                sim=change_param(simlist[j],:n,2);
+            elseif (x=="r")
+                graph=deepcopy(graph)
+                v=get_coeffs(graph);
+
+                set_coeffs!(graph,real.(v));
+                println("Realify (removing $(Float64(norm(imag.(v)))) )");
+                sim=deepcopy(simlist[j]);
+            elseif (x=="q");
+                println("Quit!");
+                break;
+            else
+                println("Unknown command $x")
+                skip=true;
+            end
+            if (!skip)
+                graphlist[j+1]=graph;
+                simlist[j+1]=sim;
+                commandlist[j+1]=x;
+                j=j+1;
+            end
+
+        end
+
+
+        if (x=="s")
+            (graph,cref)=runsim(simlist[j-1],graphlist[j-1],cref);
+            #
+            graphlist[j]=graph;
+            simlist[j]=sim;
+        end
+
+
+    end
+
+    return (graph,simlist[1:j],graphlist[1:j],join(commandlist[1:j]))
+
 end
