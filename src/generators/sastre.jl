@@ -71,18 +71,46 @@ function gen_sastre_basic(b)
     e0=(b3-d1*e2)/c3; # Not explicitly documented?
 
 
-    # Now build by transforming (14) to degopt form
 
-    T=Float64;
-    x = Vector{Tuple{Vector{T},Vector{T}}}(undef,3)
 
-    x[1]=([0, 1], [0, 1.0]);
-    x[2]=([0, 0, 1], [0, c3, c4]) # y02
-    x[3]=([0, d1, d2, 1], [0, 0, e2, 1]); # first term in y12
-    z=[f0, f1, f2, e0, 1];
+    e=[e0;NaN;e2];
+    c=[c3;c4];
+    f=[f0;f1;f2];
+    d=[d1;d2];
 
+    s=2;
+    return gen_sastre_degopt(s,c,d,e,f)
+    #gen_degopt_poly(x,z);
+
+
+end
+
+
+# Internal use only
+# Transforms formula (34)-(35) to degopt form
+# Input are the coefficients given in the paper
+# s int
+# d=[d1,...ds]
+# c=[c_(s+1)...c_(2*s)]  # size = s
+# e=[e0;NaN;e2;...e_s]  # size = s+1
+# f=[f0;...f_s]
+# Nof mult: s+1
+function gen_sastre_degopt(s,c,d,e,f)
+    T=eltype(c)
+    x = Vector{Tuple{Vector{T},Vector{T}}}()
+
+    for j=1:s-1
+        push!(x,([0.0;1.0;zeros(T,j-1)],[zeros(T,j);1.0]));
+    end
+
+    # y0s
+    push!(x,([zeros(T,s);1.0],[0.0;c[1:s]]));
+
+    # first term y1s
+    push!(x,([0.0;d[1:s];1.0],[0.0;0.0;e[3:(s+1)];1.0]));
+
+    # y1s
+    z=[f[1:s+1];e[1];1.0];
 
     return gen_degopt_poly(x,z);
-
-
 end
