@@ -1,4 +1,4 @@
-
+include("reset_all.jl");
 include("simulationtools.jl");
 
 
@@ -28,6 +28,11 @@ sastre.graph=:sastre;
 (sastre_org,_,_)=initsim(sastre,0,0);
 showerr(target,sastre_org)
 
+
+bbc=deepcopy(base_sim);
+bbc.graph=:bbc;
+(bbc_org,_,_)=initsim(bbc,0,0);
+showerr(target,bbc_org)
 
 
 
@@ -78,29 +83,43 @@ sastre_init.graph=:sastre;
 #  1.448620852496371e-15
 
 
+bbc_init=deepcopy(base_sim);
+bbc_init.init=:taylor;
+bbc_init.graph=:bbc;
+(graph_bbc,simlist,graphlist,commandlist)=
+        interactive_simulations(bbc_init,sim0,"IsssssddssssddsssssssssssdddssdddssssdddssdddsssNsssdddsssssrsrq");
+# 2.2665827420785147e-14
+
+
+
 sid_init=deepcopy(base_sim);
 sid_init.init=:taylor;
 sid_init.graph=:sid;
 (graph_sid,simlist,graphlist,commandlist)=
         interactive_simulations(sid_init,sim0,"IsssssddssssddsssssssssssdddssdddssssdddssdddsssNsssdddsssssssssdddssssddsdsdsrsddsddsddsddsddsddsddsddsNssdsq");
 
-err1=showerr(target,graph_ps1,false)
-err2=showerr(target,graph_ps2,false)
-err3=showerr(target,graph_mono1,false)
-err4=showerr(target,graph_mono2,false)
-err5=showerr(target,graph_sastre,false)
-err6=showerr(target,graph_sid,false)
+include("print_all.jl");
 
-errX1=showerr(target,sastre_org,false)
-errX2=showerr(target,sid_org,false)
-bbc_graph=gen_bbc_basic_exp(4)[1]
-errX3=showerr(target,bbc_graph,false)
-println("PS taylor $err1")
-println("PS lsqr $err2")
-println("mono taylor $err3")
-println("mono lsqr $err4")
-println("Sastre + opt $err5")
-println("SID + opt $err6")
-println("Sastre $errX1")
-println("SID $errX2")
-println("BBC $errX3")
+#err1=showerr(target,graph_ps1,false)
+#err2=showerr(target,graph_ps2,false)
+#err3=showerr(target,graph_mono1,false)
+#err4=showerr(target,graph_mono2,false)
+#err5=showerr(target,graph_sastre,false)
+#err6=showerr(target,graph_bbc,false)
+#err7=showerr(target,graph_sid,false)
+#
+#errX1=showerr(target,sastre_org,false)
+#errX2=showerr(target,sid_org,false)
+#bbc_graph=gen_bbc_basic_exp(4)[1]
+#errX3=showerr(target,bbc_graph,false)
+#println("PS taylor $err1")
+#println("PS lsqr $err2")
+#println("mono taylor $err3")
+#println("mono lsqr $err4")
+#println("Sastre+ $err5")
+#println("BBC+ $err6")
+#println("SID+ $err7")
+#println("Sastre $errX1")
+#println("SID $errX2")
+#println("BBC $errX3")
+#
