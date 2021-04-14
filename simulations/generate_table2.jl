@@ -54,7 +54,7 @@ ps2_init.init=:lsqr;
 ps2_init.graph=:ps;
 (graph_ps2,simlist,graphlist,commandlist)=
 interactive_simulations(ps2_init,sim0,
-                        "Issssssssssddssddsrssssssssssssdsrsddssssssssssssssddsdrq");
+                        "Issssssssssddssddsrssssssssssssdsrsddssssssssssssssddsdsssssssssdsdsdsdsdrq")
 # Err: 6E-12
 
 
@@ -87,8 +87,8 @@ bbc_init=deepcopy(base_sim);
 bbc_init.init=:taylor;
 bbc_init.graph=:bbc;
 (graph_bbc,simlist,graphlist,commandlist)=
-        interactive_simulations(bbc_init,sim0,"Isssssddssssddsssssssssssdddssdddssssdddssdddsssrq");
-# 2.2665827420785147e-14
+        interactive_simulations(bbc_init,sim0,"Isssssddssssddsssssssssssdddssdddssssdddssdddssssssssssdggdrq");
+#
 
 
 
