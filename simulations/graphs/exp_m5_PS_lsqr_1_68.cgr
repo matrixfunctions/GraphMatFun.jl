@@ -3,7 +3,7 @@
 %# Matrix exponential with degree optimal form optimized starting with PS_lsqr
 %# Domain: 1.68D
 %# Error: 1.1297156232565807e-11
-%# Created: 2021-04-14T15:19:40.853 by user jarl
+%# Created: 2021-04-14T15:21:52.889 by user jarl
 
 graph_coeff_type="BigFloat";
 

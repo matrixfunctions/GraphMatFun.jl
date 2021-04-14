@@ -3,7 +3,7 @@
 %# Matrix exponential with degree optimal form optimized starting with BBC+
 %# Domain: 1.68D
 %# Error: 6.170757136464723e-13
-%# Created: 2021-04-14T15:19:40.866 by user jarl
+%# Created: 2021-04-14T15:21:52.915 by user jarl
 
 graph_coeff_type="BigFloat";
 

@@ -3,7 +3,7 @@
 %# Matrix exponential with degree optimal form optimized starting with mono_taylor
 %# Domain: 1.68D
 %# Error: 1.14635026342479e-11
-%# Created: 2021-04-14T15:19:40.742 by user jarl
+%# Created: 2021-04-14T15:21:52.775 by user jarl
 
 graph_coeff_type="BigFloat";
 
