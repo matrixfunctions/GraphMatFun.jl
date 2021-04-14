@@ -1,4 +1,4 @@
-
+include("reset_all.jl");
 include("simulationtools.jl");
 
 
@@ -70,49 +70,13 @@ mono2_init.graph=:mono;
 # Err: 1.1e-11
 
 
-
-#sastre_init=deepcopy(base_sim);
-#sastre_init.init=:taylor;
-#sastre_init.graph=:sastre;
-#(graph_sastre,simlist,graphlist,commandlist)=
-#        interactive_simulations(sastre_init,sim0,"Isssssddssssddssssssssssssddsssssssddsssddsssssssssssssssssssssssssdssssssssssssssssddsrssssssrssssssdsdssssrsssssssdssssssssssdsssrssssrq");
-##  1.448620852496371e-15
-#
-
-#bbc_init=deepcopy(base_sim);
-#bbc_init.init=:taylor;
-#bbc_init.graph=:bbc;
-#(graph_bbc,simlist,graphlist,commandlist)=
-#        interactive_simulations(bbc_init,sim0,"Isssssddssssddsssssssssssdddssdddssssdddssdddsssrq");
-## 2.2665827420785147e-14
-#
-#
-
 sid_init=deepcopy(base_sim);
 sid_init.init=:taylor;
 sid_init.graph=:sid;
 (graph_sid,simlist,graphlist,commandlist)=
         interactive_simulations(sid_init,sim0,"IsssssddssssddsssssssssssdddssdddssssdddssdddsssNsssdddsssssssssdddssssddsdssssssrq");
 
-err1=showerr(target,graph_ps1,false)
-err2=showerr(target,graph_ps2,false)
-err3=showerr(target,graph_mono1,false)
-err4=showerr(target,graph_mono2,false)
-#err5=showerr(target,graph_sastre,false)
-err6=showerr(target,graph_bbc,false)
-err7=showerr(target,graph_sid,false)
 
-#errX1=showerr(target,sastre_org,false)
-errX2=showerr(target,sid_org,false)
-#bbc_graph=gen_bbc_basic_exp(m)[1]
-#errX3=showerr(target,bbc_graph,false)
-println("mono taylor $err3")
-println("mono lsqr $err4")
-println("PS taylor $err1")
-println("PS lsqr $err2")
-#println("Sastre+ $err5")
-#println("BBC+ $err6")
-println("SID+ $err7")
-#println("Sastre $errX1")
-#println("BBC $errX3")
-println("SID $errX2")
+
+include("print_all.jl");
+println("Run include(save_all.jl) if you want to save");

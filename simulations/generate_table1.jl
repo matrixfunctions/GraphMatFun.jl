@@ -99,6 +99,7 @@ sid_init.graph=:sid;
         interactive_simulations(sid_init,sim0,"IsssssddssssddsssssssssssdddssdddssssdddssdddsssNsssdddsssssssssdddssssddsdsdsrsddsddsddsddsddsddsddsddsNssdsq");
 
 include("print_all.jl");
+println("Run include(save_all.jl) if you want to save");
 
 #err1=showerr(target,graph_ps1,false)
 #err2=showerr(target,graph_ps2,false)
