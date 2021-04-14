@@ -4,7 +4,7 @@ export export_compgraph,import_compgraph;
 
 """
     export_compgraph(graph, fname; main_output=nothing,
-                     order=get_computation_order(graph)[1],
+                     order=get_topo_order(graph)[1],
                      fun="", dom="", err="", genby="",
                      descr="",
                      user=current user)
@@ -32,7 +32,7 @@ although `gen_code` produces faster matlab code.
 
     """
 function export_compgraph(graph, fname; main_output=nothing,
-                          order=get_computation_order(graph)[1],
+                          order=get_topo_order(graph)[1],
                           fun="", dom="", err="", genby="",
                           descr="",
                           user=splitdir(homedir())[end])
