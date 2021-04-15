@@ -1,4 +1,4 @@
-export gen_exp_native_jl, gen_exp_native_jl_degopt
+export gen_exp_native_jl, gen_exp_native_jl_degopt, gen_expm2009
 
 
 function get_expm_pade_coeffs(d, T)
@@ -341,4 +341,90 @@ function merge_rename_exp_native_jl_degopt!(graph, cref, M)
             end
         end
     end
+end
+
+
+
+"""
+     (graph,crefs)=gen_expm2009(A; input=:A)
+
+Creates a graph for the native scaling-and-squaring for the matrix exponential,
+as described in Algorithm 6.1 in the reference.
+Arguments are analogous to ` gen_exp_native_jl`.
+
+References:
+
+* A. H. Al-Mohy and N. J. Higham. A New Scaling and Squaring Algorithm for the Matrix Exponential. SIAM J. Matrix Anal. Appl., 2010 31:3, 970-989
+    """
+function gen_expm2009(A; input=:A)
+    error("Not correctly implemented yet!")
+    T = eltype(A)
+
+    A2 = A*A
+    d6 = normest(A2,3)^(1/6)
+    d4 = normest(A2,2)^(1/4)
+    η1 = max(d4,d6)
+    if (η1 <= 0.01495585217958292) && (ell(A,3) == 0)
+        C = get_expm_pade_coeffs(3, T)
+        return gen_exp_native_jl_low(C, input)
+    end
+
+    A4 = A2*A2
+    d4 = opnorm(A4,1)^(1/4)
+    η2 = max(d4,d6)
+    if (η2 <= 0.2539398330063230) && (ell(A,5) == 0)
+        C = get_expm_pade_coeffs(5, T)
+        return gen_exp_native_jl_low(C, input)
+    end
+
+    A6 = A2*A4
+    d6 = opnorm(A6,1)^(1/6)
+    d8 = normest(A4,2)^(1/8)
+    η3 = max(d6,d8)
+    if (η3 <= 0.9504178996162932) && (ell(A,7) == 0)
+        C = get_expm_pade_coeffs(7, T)
+        return gen_exp_native_jl_low(C, input)
+    end
+
+    if (η3 <= 2.097847961257068) && (ell(A,9) == 0)
+        C = get_expm_pade_coeffs(9, T)
+        return gen_exp_native_jl_low(C, input)
+    end
+
+    d10 = normest(A4,A6)^(1/10)
+    η4 = max(d8,d10)
+    η5 = min(η3,η4)
+    s = max(ceil(Int,log2(η5/4.25)), 0)
+    s = s + ell(2.0^(-s)*A, 13)
+
+    C = get_expm_pade_coeffs(13, T)
+    return gen_exp_native_jl_high(C, s, input)
+
+end
+
+#TODO: Change for a clever estimation
+function normest(B,m::Integer)
+    return opnorm(B^m, 1)
+end
+function normest(B1,B2)
+    return opnorm(B1*B2, 1)
+end
+#TODO: Find correct values for error expansion coefficients
+function ell(A,m)
+    if m == 3
+        c = -1
+    elseif m == 5
+        c = -1
+    elseif m == 7
+        c = -1
+    elseif m == 9
+        c = -1
+    elseif m == 13
+        c = -1
+    else
+        error("Not tabulated for this value.")
+    end
+    α = abs(c)*normest(abs.(A), 2*m+1)/opnorm(A,1)
+    u = eps(Float64)/2
+    return max( ceil(Int,log2(α/u)/(2*m)), 0 )
 end
