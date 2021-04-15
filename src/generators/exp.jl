@@ -1,6 +1,31 @@
 export gen_exp_native_jl, gen_exp_native_jl_degopt
 
 
+function get_expm_pade_coeffs(d, T)
+    if d == 13
+    return T[64764752532480000., 32382376266240000., 7771770303897600.,
+             1187353796428800.,  129060195264000.,   10559470521600.,
+             670442572800.,      33522128640.,       1323241920.,
+             40840800.,          960960.,            16380.,
+             182.,               1.]
+    elseif d == 9
+        C = T[17643225600., 8821612800., 2075673600., 302702400.,
+              30270240.,    2162160.,    110880.,     3960.,
+              90.,          1.]
+    elseif d == 7
+        C = T[17297280., 8648640., 1995840., 277200.,
+              25200.,    1512.,    56.,      1.]
+    elseif d == 5
+        C = T[30240., 15120., 3360.,
+              420.,   30.,   1.]
+    elseif d == 3
+        C = T[120., 60., 12., 1.]
+    else
+        error("Unknown degree for expm-Padé coefficients.")
+    end
+end
+
+
 """
      (graph,crefs)=gen_exp_native_jl(A; input=:A)
 
@@ -21,31 +46,38 @@ References:
 function gen_exp_native_jl(A; input=:A)
     T = eltype(A)
     nA = opnorm(A, 1)
-    if (nA <= 2.1)
-        return gen_exp_native_jl_A(nA, T, input)
+    d = get_expm_pade_degree_native_lj(nA)
+    if d < 13
+        C = get_expm_pade_coeffs(d, T)
+        return gen_exp_native_jl_low(C, input)
     else
-        return gen_exp_native_jl_B(nA, T, input)
+        C = get_expm_pade_coeffs(d, T)
+        s  = log2(nA/5.4) # power of 2 later reversed by squaring
+        return gen_exp_native_jl_high(C, s, input)
     end
 end
 
 
-# For sufficiently small nA, use lower order Padé-Approximations
-function gen_exp_native_jl_A(nA, T, input)
-    graph = Compgraph(T)
-
-    if nA > 0.95
-        C = T[17643225600.,8821612800.,2075673600.,302702400.,
-              30270240.,   2162160.,    110880.,     3960.,
-              90.,         1.]
-    elseif nA > 0.25
-        C = T[17297280.,8648640.,1995840.,277200.,
-              25200.,   1512.,     56.,     1.]
-    elseif nA > 0.015
-        C = T[30240.,15120.,3360.,
-              420.,   30.,   1.]
+function get_expm_pade_degree_native_lj(nA)
+    if nA <= 2.1
+        if nA > 0.95
+            return 9
+        elseif nA > 0.25
+            return 7
+        elseif nA > 0.015
+            return 5
+        else
+            return 3
+        end
     else
-        C = T[120.,60.,12.,1.]
+        return 13
     end
+end
+
+# For sufficiently small nA, use lower order Padé-Approximations
+function gen_exp_native_jl_low(C, input)
+    T = eltype(C)
+    graph = Compgraph(T)
 
     n = length(C)
     s = (div(n, 2) - 1)
@@ -77,12 +109,11 @@ function gen_exp_native_jl_A(nA, T, input)
     return (graph, cref)
 end
 
-
 # Full scaling and squaring
-function gen_exp_native_jl_B(nA, T, input)
+function gen_exp_native_jl_high(CC, s, input)
+    T = eltype(CC)
     graph = Compgraph(T)
 
-    s  = log2(nA/5.4) # power of 2 later reversed by squaring
     C=input
     if s > 0
         si = ceil(Int,s)
@@ -90,11 +121,6 @@ function gen_exp_native_jl_B(nA, T, input)
         C=:C
         add_lincomb!(graph,C,γ,input,0,:I)
     end
-    CC = T[64764752532480000.,32382376266240000.,7771770303897600.,
-           1187353796428800.,  129060195264000.,  10559470521600.,
-           670442572800.,      33522128640.,      1323241920.,
-           40840800.,           960960.,           16380.,
-           182.,                1.]
 
     cref=Vector{Tuple{Symbol,Int}}(undef,14)
 
@@ -155,8 +181,6 @@ end
 
 
 
-export gen_exp_native_jl
-
 
 """
      (graph,crefs)=gen_exp_native_jl_degopt(A; input=:A))
@@ -167,31 +191,22 @@ numerator and denominator polynomials.
 function gen_exp_native_jl_degopt(A; input=:A)
     T = eltype(A)
     nA = opnorm(A, 1)
-    if (nA <= 2.1)
-        return gen_exp_native_jl_degopt_A(nA, T, input)
+    d = get_expm_pade_degree_native_lj(nA)
+    if d < 13
+        C = get_expm_pade_coeffs(d, T)
+        return gen_exp_native_jl_low_degopt(C, input)
     else
-        return gen_exp_native_jl_degopt_B(nA, T, input)
+        C = get_expm_pade_coeffs(d, T)
+        s  = log2(nA/5.4) # power of 2 later reversed by squaring
+        return gen_exp_native_jl_high_degopt(C, s, input)
     end
 end
 
 
 # For sufficiently small nA, use lower order Padé-Approximations
-function gen_exp_native_jl_degopt_A(nA, T, input)
+function gen_exp_native_jl_low_degopt(C, input)
+    T = eltype(C)
     graph = Compgraph(T)
-
-    if nA > 0.95
-        C = T[17643225600.,8821612800.,2075673600.,302702400.,
-              30270240.,   2162160.,    110880.,     3960.,
-              90.,         1.]
-    elseif nA > 0.25
-        C = T[17297280.,8648640.,1995840.,277200.,
-              25200.,   1512.,     56.,     1.]
-    elseif nA > 0.015
-        C = T[30240.,15120.,3360.,
-              420.,   30.,   1.]
-    else
-        C = T[120.,60.,12.,1.]
-    end
 
     n = length(C)
     s = (div(n, 2) - 1)
@@ -223,17 +238,7 @@ function gen_exp_native_jl_degopt_A(nA, T, input)
     cref =vcat(crefU, crefV)
     empty!(graph.outputs)
 
-    # Remove redundant creation of monomial basis, e.g., VB3 == UB3 and VBa4_3 == UBa4_3
-    for N = ["VB", "UB"]
-        for k=reverse(2:s+1)
-            rename_node!(graph, Symbol(string(N,"$k")), Symbol("B$(k)"), cref)
-            for NN = ["a", "b"]
-                for kk = reverse(2:k-1)
-                    rename_node!(graph, Symbol(string(N,NN,"$(k)_$(kk)")), Symbol(string("B",NN,"$(k)_$(kk)")) , cref)
-                end
-            end
-        end
-    end
+    merge_rename_exp_native_jl_degopt!(graph, cref, s+1)
 
     add_lincomb!(graph,:X,1.0,:VV,1.0,:UU)
     add_lincomb!(graph,:Z,1.0,:VV,-1.0,:UU)
@@ -246,22 +251,15 @@ end
 
 
 # Full scaling and squaring
-function gen_exp_native_jl_degopt_B(nA, T, input)
-
-    s  = log2(nA/5.4) # power of 2 later reversed by squaring
+function gen_exp_native_jl_high_degopt(CC, s, input)
+    T = eltype(CC)
+    graph = Compgraph(T)
     C=input
     if s > 0
         si = ceil(Int,s)
         C=:C
         # Actual scaling below, after graph is created
     end
-    CC = T[64764752532480000.,32382376266240000.,7771770303897600.,
-           1187353796428800.,  129060195264000.,  10559470521600.,
-           670442572800.,      33522128640.,      1323241920.,
-           40840800.,           960960.,           16380.,
-           182.,                1.]
-
-
 
     #U  = A * (A6 * (CC[14].*A6 .+ CC[12].*A4 .+ CC[10].*A2) .+
     #          CC[8].*A6 .+ CC[6].*A4 .+ CC[4].*A2 .+ CC[2].*Inn)
@@ -305,17 +303,7 @@ function gen_exp_native_jl_degopt_B(nA, T, input)
     cref =vcat(crefU, crefV)
     empty!(graph.outputs)
 
-    # Remove redundant creation of monomial basis, e.g., VB3 == UB3 and VBa4_3 == UBa4_3
-    for N = ["VB", "UB"]
-        for k=reverse(2:4)
-            rename_node!(graph, Symbol(string(N,"$k")), Symbol("B$(k)"), cref)
-            for NN = ["a", "b"]
-                for kk = reverse(2:k-1)
-                    rename_node!(graph, Symbol(string(N,NN,"$(k)_$(kk)")), Symbol(string("B",NN,"$(k)_$(kk)")) , cref)
-                end
-            end
-        end
-    end
+    merge_rename_exp_native_jl_degopt!(graph, cref, 4)
 
     add_lincomb!(graph,:X,1.0,:VV, 1.0,:UU)
     add_lincomb!(graph,:Z,1.0,:VV,-1.0,:UU)
@@ -339,4 +327,18 @@ function gen_exp_native_jl_degopt_B(nA, T, input)
     end
 
     return (graph,cref)
+end
+
+# Remove redundant creation of monomial basis, e.g., VB3 == UB3 and VBa4_3 == UBa4_3
+function merge_rename_exp_native_jl_degopt!(graph, cref, M)
+    for N = ["VB", "UB"]
+        for k=reverse(2:M)
+            rename_node!(graph, Symbol(string(N,"$k")), Symbol("B$(k)"), cref)
+            for NN = ["a", "b"]
+                for kk = reverse(2:k-1)
+                    rename_node!(graph, Symbol(string(N,NN,"$(k)_$(kk)")), Symbol(string("B",NN,"$(k)_$(kk)")) , cref)
+                end
+            end
+        end
+    end
 end
