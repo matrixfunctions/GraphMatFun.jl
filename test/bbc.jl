@@ -63,9 +63,7 @@ using LinearAlgebra
                     @test get_coeffs(graph,xx[i][N]) == x[i][N]
                 end
         end
-        for i=1:k+2
-            @test get_coeffs(graph,zz[i])[1] == z[i]
-        end
+        @test get_coeffs(graph,zz) == z
     end
 
 
