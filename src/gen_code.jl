@@ -166,6 +166,15 @@ function function_end(lang::LangJulia,graph,mem)
     return code
 end
 
+# Adding of an identity matrix in julia code
+function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
+    push_comment!(code,"Add lincomb with identity. Use view of diaganal.");
+    push_code!(code,"copy!($(nodemem),$(non_I_parent_mem))");
+    push_code!(code,"$(nodemem) .*= $non_I_parent_coeff");
+    push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0));");
+    push_code!(code,"D .+= $I_parent_coeff");
+end
+
 
 function execute_operation!(lang::LangJulia,
                             T,graph,node,
@@ -222,23 +231,18 @@ function execute_operation!(lang::LangJulia,
 
             if (lang.exploit_uniformscaling &&  (parent1 == :I || parent2 == :I))
                 # BLAS does not work with unform scaling use inplace instead
-                push_comment!(code,"Identity operator lincomb");
                 if (parent1 == :I)
                     non_I_parent_mem=parent2mem;
                     non_I_parent_coeff=coeff2;
                     I_parent_coeff=coeff1;
-                else # parent2 == :I
+                elseif (parent2 == :I)
                     non_I_parent_mem=parent1mem;
                     non_I_parent_coeff=coeff1;
                     I_parent_coeff=coeff2;
                 end
-                push_code!(code,"copy!($(nodemem),$(non_I_parent_mem))");
-                push_code!(code,"$(nodemem) .*= $non_I_parent_coeff");
-                push_comment!(code,"Create a view of the diagonal");
-                push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0));");
-                push_code!(code,"D .+= $I_parent_coeff");
+                execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
 
-                #push_code!(code,"$(nodemem)[:]=$coeff1*$parent1mem+$coeff2*$parent2mem");
+
 
             else
 
@@ -262,8 +266,25 @@ function execute_operation!(lang::LangJulia,
             (nodemem_i,nodemem)=get_free_slot(mem)
 
             alloc_slot!(mem,nodemem_i,node);
-            push_code!(code,
-                       "$(nodemem)[:]=$coeff1*$parent1mem + $coeff2*$parent2mem")
+
+            if (parent1 == :I)
+
+                non_I_parent_mem=parent2mem;
+                non_I_parent_coeff=coeff2;
+                I_parent_coeff=coeff1;
+                execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
+            elseif (parent2 == :I)
+                non_I_parent_mem=parent1mem;
+                non_I_parent_coeff=coeff1;
+                I_parent_coeff=coeff2;
+                execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
+            else
+                push_code!(code,
+                           "$(nodemem)[:]=$coeff1*$parent1mem + $coeff2*$parent2mem")
+
+            end
+
+
         end
 
     else
