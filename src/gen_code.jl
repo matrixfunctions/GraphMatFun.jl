@@ -221,9 +221,24 @@ function execute_operation!(lang::LangJulia,
             nodemem=get_slot_name(mem,recycle_parent)
 
             if (lang.exploit_uniformscaling &&  (parent1 == :I || parent2 == :I))
-                # BLAS does not work with unform scaling
-                # Do inplace instead
-                push_code!(code,"$(nodemem)[:]=$coeff1*$parent1mem+$coeff2*$parent2mem");
+                # BLAS does not work with unform scaling use inplace instead
+                push_comment!(code,"Identity operator lincomb");
+                if (parent1 == :I)
+                    non_I_parent_mem=parent2mem;
+                    non_I_parent_coeff=coeff2;
+                    I_parent_coeff=coeff1;
+                else # parent2 == :I
+                    non_I_parent_mem=parent1mem;
+                    non_I_parent_coeff=coeff1;
+                    I_parent_coeff=coeff2;
+                end
+                push_code!(code,"copy!($(nodemem),$(non_I_parent_mem))");
+                push_code!(code,"$(nodemem) .*= $non_I_parent_coeff");
+                push_comment!(code,"Create a view of the diagonal");
+                push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0));");
+                push_code!(code,"D .+= $I_parent_coeff");
+
+                #push_code!(code,"$(nodemem)[:]=$coeff1*$parent1mem+$coeff2*$parent2mem");
 
             else
 
