@@ -733,7 +733,7 @@ function gen_main(lang::LangC,T,fname,funname)
     # Generate matrix.
     n=3 # Size of dummy matrix.
     push_code!(code,"size_t n = $n;")
-    push_code!(code,"blas_type A[9] = {")
+    push_code!(code,"blas_type A[$(n*n)] = {")
     A=randn(T,n,n)
     push_code!(code,matrix_to_string(lang,A))
     push_code!(code,"};")
