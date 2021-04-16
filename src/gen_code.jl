@@ -25,12 +25,15 @@ function init_code(lang)
     return CodeSnippet(Vector{String}(undef,0),lang);
 end
 function push_code!(code,str;ind_lvl=1,ind_str="    ")
+    # Indent only non-empty lines.
     indentation=repeat(ind_str,ind_lvl)
-    push!(code.code_lines,indentation*str);
+    indented_string=isempty(str) ? "" : indentation*str
+    push!(code.code_lines,indented_string);
 end
 function push_comment!(code,str;ind_lvl=1,ind_str="    ")
-    indentation=repeat(ind_str,ind_lvl)
-    push!(code.code_lines,indentation*comment(code.lang,str));
+    # Convert empty comments to empty lines.
+    push_code!(code, isempty(str) ? "" : comment(code.lang,str),
+               ind_lvl=ind_lvl,ind_str=ind_str)
 end
 function to_string(code)
     return join(code.code_lines,"\n");
@@ -710,7 +713,9 @@ compilation_string(::LangC_MKL,fname)="gcc -o main_compiled fname -lmkl_rt"
 function gen_main(lang::LangC,T,fname,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
-    push_code!(code,"\n\n\n")
+    push_code!(code,"")
+    push_code!(code,"")
+    push_code!(code,"")
     push_code!(code,"typedef $blas_type blas_type;",ind_lvl=0)
     push_code!(code,"")
 
