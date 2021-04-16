@@ -572,7 +572,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                 if p2_is_identity
                     push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
                                     "$nodemem, 1);")
-                    push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                    push_code!(code,"cblas_$blas_prefix"*"axpby(n, "*
                                     "$coeff2, &ONE, 0,\n"*
                                     "             $rone, $nodemem, n+1);");
                 else
@@ -584,7 +584,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                 if p1_is_identity
                     push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff2, "*
                                     "$nodemem, 1);")
-                    push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
+                    push_code!(code,"cblas_$blas_prefix"*"axpby(n, "*
                                     "$coeff1, &ONE, 0,\n"*
                                     "             $rone, $nodemem, n+1);");
                 else
@@ -610,18 +610,18 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                 push_code!(code,"memcpy($nodemem, $parent2mem, "*
                                 "n*n*sizeof(*memslots));")
                 push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff2, "*
-                                    "$nodemem, 1);")
-                push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
-                                    "$coeff1, &ONE, 0,\n"*
-                                    "             $rone, $nodemem, n+1);");
+                                "$nodemem, 1);")
+                push_code!(code,"cblas_$blas_prefix"*"axpby(n, "*
+                                "$coeff1, &ONE, 0,\n"*
+                                "             $rone, $nodemem, n+1);");
             elseif p2_is_identity
                 push_code!(code,"memcpy($nodemem, $parent1mem, "*
                                 "n*n*sizeof(*memslots));")
                 push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
                                 "$nodemem, 1);")
                 push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
-                                    "$coeff2, &ONE, 0,\n"*
-                                    "             $rone, $nodemem, n+1);");
+                                "$coeff2, &ONE, 0,\n"*
+                                "             $rone, $nodemem, n+1);");
             else
                 push_code!(code,"memcpy($nodemem, $parent2mem, "*
                                 "n*n*sizeof(*memslots));")
