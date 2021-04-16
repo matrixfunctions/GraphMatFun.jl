@@ -693,18 +693,17 @@ end
 function scalar_to_string(::LangC_MKL,z::T) where T<:Complex
     return "{$(real(z)), $(imag(z))}"
 end
-function matrix_to_string(lang::LangC,A)
+function print_indented_matrix(lang::LangC,code,A;ind_lvl=1)
     (m,n) = size(A)
-    matrix_string = ""
-    for i=1:m
-        for j=1:n
-            matrix_string *=
-                scalar_to_string(lang,A[i,j]) *
-                (j!=n ? ", " : "")
+    for j=1:n
+        column_string=""
+        for i=1:m
+            column_string *=
+                scalar_to_string(lang,A[i,j]) * (i!=m ? ", " : "")
         end
-        matrix_string *= (i!=n ? ",\n" : "")
+        column_string *= (j!=n ? "," : "")
+        push_code!(code,column_string,ind_lvl=ind_lvl)
     end
-    return matrix_string
 end
 
 compilation_string(::LangC_OpenBLAS,fname)=
@@ -735,7 +734,7 @@ function gen_main(lang::LangC,T,fname,funname)
     push_code!(code,"size_t n = $n;")
     push_code!(code,"blas_type A[$(n*n)] = {")
     A=randn(T,n,n)
-    push_code!(code,matrix_to_string(lang,A))
+    print_indented_matrix(lang,code,A,ind_lvl=2)
     push_code!(code,"};")
 
     # Call polynomial evaluation function.
