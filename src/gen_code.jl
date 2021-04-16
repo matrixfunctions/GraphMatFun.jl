@@ -707,8 +707,10 @@ function matrix_to_string(lang::LangC,A)
     return matrix_string
 end
 
-compilation_string(::LangC_OpenBLAS,fname)="gcc -o main_compiled fname -lblas"
-compilation_string(::LangC_MKL,fname)="gcc -o main_compiled fname -lmkl_rt"
+compilation_string(::LangC_OpenBLAS,fname)=
+    "gcc -o main_compiled $fname -labials -llapacke"
+compilation_string(::LangC_MKL,fname)=
+    "gcc -o main_compiled $fname -lmkl_rt"
 
 function gen_main(lang::LangC,T,fname,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
@@ -724,7 +726,7 @@ function gen_main(lang::LangC,T,fname,funname)
                   ind_lvl=0)
     push_comment!(code,"With the GNU Compiler Collection, compile with:",
                   ind_lvl=0)
-    push_comment!(code,compilation_string(lang,fname))
+    push_comment!(code,compilation_string(lang,fname),ind_lvl=0)
     push_code!(code,"int main() {",ind_lvl=0)
     push_code!(code,"size_t i;")
 
@@ -773,8 +775,7 @@ function gen_code(fname,graph;
     T=eltype(eltype(typeof(graph.coeffs.vals)));
 
     if (fname isa String)
-        fname = abspath(fname)
-        file = open(fname, "w+")
+        file = open(abspath(fname), "w+")
     else
         # Lazy: Print out to stdout if no filename
         file=Base.stdout;
