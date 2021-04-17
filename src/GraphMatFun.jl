@@ -23,7 +23,8 @@ include("generators/horner.jl")
 include("generators/newton_schulz.jl")
 include("generators/exp.jl")
 
-
+# Error bounds
+include("error_bounds.jl")
 
 # Code generations
 include("gen_code.jl")
