@@ -1,0 +1,4 @@
+graph=import_compgraph("simulations/graphs/exp_m7_SID+_3_59.cgr");;
+
+gen_code("/tmp/SID.jl",graph,funname="exp_SID_m7");
+include("/tmp/SID.jl");

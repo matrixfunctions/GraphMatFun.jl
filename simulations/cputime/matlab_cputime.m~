@@ -1,0 +1,10 @@
+load("n100_2_2.mat");
+n=100; tv=zeros(n,1);
+for k=1:n
+    tic;
+    expm(A);
+    tv(k)=toc;
+end
+
+format long
+mean(tv)

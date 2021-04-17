@@ -1,0 +1,16 @@
+function add_id1(a,A)
+    return a*I+A;
+end
+
+
+function diagview(A)
+    n=size(A,1);
+    aa=view(A,:); dd=view(aa,1:(n+1):n^2);
+end
+
+function add_id2(a,A)
+
+    dd += 3*ones(eltype(dd),n);
+    return a*I+A;
+
+end

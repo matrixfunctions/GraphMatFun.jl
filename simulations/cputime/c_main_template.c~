@@ -1,0 +1,80 @@
+#include<stdio.h>
+#include "exp_SID_m6.c"
+#include<time.h>
+#define NOF_SAMPLES 3
+
+
+void *main(){
+  double *A;
+  double *E;
+  int n,n0,i,j;
+  clock_t tv1, tv2;
+  double time;
+
+  long seconds,nanoseconds;
+  double elapsed;
+  struct timespec begin, end;
+
+  double timingv[NOF_SAMPLES];
+
+  double sum=0;
+  clock_gettime(CLOCK_REALTIME, &begin);
+
+
+  n=2000;
+  n0=10;
+  A = malloc(n*n*sizeof(*A));
+  E = malloc(n*n*sizeof(*A));
+
+  printf("Let's write it out\n");
+  for(i=0; i<n; i++){
+    for(j=0; j<n; j++){
+      A[i+n*j]=0.0;
+      if (abs(i-j)<4)
+
+	A[i+n*j]=0.1;
+      if (i==j)
+	A[i+n*j]=0.2;
+
+    }
+  }
+  printf("\n");
+  for(i=0; i<n0; i++){
+    for(j=0; j<n0; j++){
+      printf("%f ",A[i+n*j]);
+    }
+    printf("\n");
+  }
+
+
+  for (i=0;i<NOF_SAMPLES;i++){
+    tv1=clock();
+    clock_gettime(CLOCK_REALTIME, &begin);
+    dexp_SID_m6(A, n, E);
+    clock_gettime(CLOCK_REALTIME, &end);
+
+    tv2=clock();
+    time = (tv2 - tv1)/(CLOCKS_PER_SEC);
+    seconds = end.tv_sec - begin.tv_sec;
+    nanoseconds = end.tv_nsec - begin.tv_nsec;
+    elapsed=seconds + nanoseconds*1e-9;
+
+    printf("Elapsed time:%.3f\n",elapsed);
+    timingv[i] = elapsed;
+    sum += elapsed;
+
+
+  }
+  printf("Mean:%.3f\n",sum/ NOF_SAMPLES);
+//
+//
+  printf("\n");
+  for(i=0; i<n0; i++){
+    for(j=0; j<n0; j++){
+      printf("%f ",E[i+n*j]);
+    }
+    printf("\n");
+  }
+  return 0;
+//
+}

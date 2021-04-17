@@ -1,0 +1,10 @@
+using MAT;
+
+graph_m7=import_compgraph("simulations/graphs/exp_m7_SID+_3_59.cgr");;
+graph_m6=import_compgraph("simulations/graphs/exp_m6_SID+_2_22.cgr");;
+
+graph_m6=Compgraph(Float64,graph_m6);
+graph_m7=Compgraph(Float64,graph_m7);
+
+names=["m6_SIDplus_3_59","m7_SIDplus_2_22"];
+graphs=[graph_m6,graph_m7]
