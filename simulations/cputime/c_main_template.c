@@ -44,7 +44,7 @@ int main (int argc, char *argv[]){
 //  }
 
 
-  printf("FUNNAME elapsed time: ");
+  printf("* GRAPH: FUNNAME\n    TIMINGS:  ");
   for (i=0;i<NOF_SAMPLES;i++){
     //tv1=clock();
     clock_gettime(CLOCK_REALTIME, &begin);
@@ -57,14 +57,14 @@ int main (int argc, char *argv[]){
     nanoseconds = end.tv_nsec - begin.tv_nsec;
     elapsed=seconds + nanoseconds*1e-9;
 
-    printf("%.3f \n",elapsed);
+    printf("%6.3f ",elapsed);
     //timingv[i] = elapsed;
     sum += elapsed;
 
 
   }
   printf("\n");
-  printf("Mean:%.3f\n",sum/ NOF_SAMPLES);
+  printf("    MEAN: %.3f\n",sum/ NOF_SAMPLES);
 //
 //
 //  printf("\n");
