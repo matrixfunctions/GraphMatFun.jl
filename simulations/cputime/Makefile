@@ -1,6 +1,8 @@
 SHELL := /bin/bash
 .SILENT: gen run clean
 
+N=1000 # Default matrix size
+
 # Generate and compile test files in /tmp/.
 # Nothing happens in the current directory.
 gen:
@@ -13,7 +15,7 @@ gen:
 		extension=$${filebasename#*.}; \
 		type="$${filename#"$${filename%_*}_"}"; \
 		cat /tmp/c_main_template.c | \
-			sed "s/FUNNAME/d$$filename/" \
+			sed -e "s/FUNNAME/d$$filename/" -e "s/MATORDER/$(N)/"\
 			>> $$file; \
 		if [ $$extension == "c" ]; then \
 			if [ $$type == "MKL" ]; then \

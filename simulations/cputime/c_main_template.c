@@ -20,7 +20,7 @@ int main (int argc, char *argv[]){
   clock_gettime(CLOCK_REALTIME, &begin);
 
 
-  n=2000;
+  n=MATORDER;
   // n0=10;
   A = malloc(n*n*sizeof(*A));
   E = malloc(n*n*sizeof(*A));
