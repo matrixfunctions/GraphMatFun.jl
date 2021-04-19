@@ -1,9 +1,13 @@
 using MAT,LinearAlgebra;
 
 graph_m6=import_compgraph("simulations/graphs/exp_m6_mono_taylor_2_7.cgr");;
+graph_m6_SID=import_compgraph("simulations/graphs/exp_m6_SID_2_22.cgr");;
 graph_m7=import_compgraph("simulations/graphs/exp_m7_SID+_3_59.cgr");;
 
 graph_m6=Compgraph(Float64,graph_m6);
+graph_m6_SID=Compgraph(Float64,graph_m6_SID);
+compress_graph!(graph_m6_SID);
+
 graph_m7=Compgraph(Float64,graph_m7);
 
 
@@ -16,8 +20,8 @@ A0=2.5*A0/8
 
 (graph_native,_)=gen_exp_native_jl(A0);
 
-names=["m6_mono_taylor_2_7","m7_SIDplus_2_22","native_jl"];
-graphs=[graph_m6,graph_m7,graph_native]
+names=["m6_mono_taylor_2_7","m6_SID_2_22","m7_SIDplus_3_59","native_jl"];
+graphs=[graph_m6,graph_m6_SID,graph_m7,graph_native]
 
 
 priohelp=Dict();
