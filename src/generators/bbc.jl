@@ -1,4 +1,4 @@
-export gen_degopt_poly, get_degopt_coeffs
+export gen_degopt_poly, get_degopt_coeffs, get_topo_order_degopt
 
 
 """
@@ -167,4 +167,29 @@ function get_degopt_coeffs(k;compress_keys=false)
     end
 
     return (x,z)
+end
+
+"""
+    order=get_topo_order_degopt(k)
+
+A special implementation of `get_topo_order` for degree optimal polynomials
+generated with `gen_degopt_poly`. The natural order of computation is to compute
+row by row. See also `get_degopt_coeffs`.
+
+"""
+function get_topo_order_degopt(k)
+    (x,z) = get_degopt_coeffs(k,compress_keys=false)
+    computation_order=Vector{Symbol}(undef, 0)
+    for i = 1:k
+        for n = 1:2
+            for j = 2:(i+1)
+                    push!(computation_order, x[i][n][j][1])
+            end
+        end
+        push!(computation_order, Symbol("B$(i+1)"))
+    end
+    for i = 2:(2+k)
+        push!(computation_order, z[i][1])
+    end
+    return computation_order
 end
