@@ -1,4 +1,5 @@
 
+export gen_sastre_basic_exp, gen_sastre_basic;
 # Code related to the paper
 #
 # Efficient evaluation of matrix polynomials
