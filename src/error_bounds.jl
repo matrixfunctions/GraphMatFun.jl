@@ -1,5 +1,4 @@
 using Polynomials
-using Plots
 export get_polynomial
 export get_polynomial_coefficients
 export compute_fwd_theta
