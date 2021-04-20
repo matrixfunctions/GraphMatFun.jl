@@ -11,8 +11,8 @@ using Test
     include("graph_ops.jl");
     include("linear_fit.jl");
     include("merge_graphs.jl");
+    include("newton_schulz.jl");
+    include("opt_common");
     include("polynomials.jl");
     include("polynomials_degopt.jl");
-    include("newton_schulz.jl");
-
 end

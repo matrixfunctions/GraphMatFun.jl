@@ -31,6 +31,11 @@ using LinearAlgebra
     opt_linear_fit!(graph, p, discr, cref)
     @test all(abs.(eval_graph(graph,discr) .- p.(discr)) .< 1e-15)
 
+    discr = complex.(discr)
+    opt_linear_fit!(graph, p, discr, cref, linlsqr=:real_backslash)
+    @test all(abs.(eval_graph(graph,discr) .- p.(discr)) .< 1e-15)
+    @test isequal(eltype(graph),real(eltype(graph)))
+
 
     # Overdetermined
     discr = collect(1:10.0)
@@ -38,4 +43,13 @@ using LinearAlgebra
                     errtype=:relerr, linlsqr=:nrmeq)
     PA = p(A)
     @test norm(eval_graph(graph,A) - PA) < 1e-13 * norm(PA)
+
+
+    coeff = complex.(coeff)
+    p = z -> coeff[1]*one(z) + coeff[2]*z + coeff[3]*z^(-1)
+    opt_linear_fit!(graph, p, complex.(discr), cref,
+                    errtype=:relerr, linlsqr=:real_nrmeq)
+    @test norm(eval_graph(graph,A) - PA) < 1e-13 * norm(PA)
+    @test isequal(eltype(graph),real(eltype(graph)))
+
 end
