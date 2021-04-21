@@ -123,11 +123,11 @@ end
 
 A special implementation of `get_topo_order` for degree optimal polynomials
 generated with `gen_degopt_poly`. The natural order of computation is to compute
-row by row. See also `get_degopt_coeffs`.
+row by row. See also `get_degopt_crefs`.
 
 """
 function get_topo_order_degopt(k)
-    (x,z) = get_degopt_coeffs(k,compress_keys=false)
+    (x,z) = get_degopt_crefs(k,compress_keys=false)
     computation_order=Vector{Symbol}(undef, 0)
     for i = 1:k
         for n = 1:2
