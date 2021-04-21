@@ -6,7 +6,7 @@ include("simulationtools.jl");
 
 m=5;
 
-rho=1.68;  # SID rho m=5
+rho=1.9;  # SID rho m=5
 target=Simulation(m,n=200,f=exp,rho=rho)
 
 its=5;
@@ -14,7 +14,7 @@ droptol0=1e-10;
 
 base_sim=Simulation(m,n=50,f=exp,rho=rho,eltype=Complex{BigFloat},
          init=:taylor,
-         opt_kwargs=Dict(:logger=> 0,:γ0 => 0.5,:droptol => droptol0,
+         opt_kwargs=Dict(:logger=> 1,:γ0 => 0.5,:droptol => droptol0,
                  :linlsqr => :real_svd,:maxit => its))
 
 

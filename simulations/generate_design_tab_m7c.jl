@@ -18,6 +18,7 @@ base_sim=Simulation(m,n=50,f=exp,rho=rho,eltype=Complex{BigFloat},
          opt_kwargs=Dict(:logger=> 0,:γ0 => 0.5,:droptol => droptol0,
                  :linlsqr => :real_svd,:maxit => its))
 
+degopt_cref=vec_degopt(get_degopt_coeffs(m));
 
 sid=deepcopy(base_sim);
 sid.graph=:sid;
@@ -37,84 +38,104 @@ sim0.init=:prev;
 sim0.graph=:prev;
 
 
-monosqr1_init=deepcopy(base_sim);
-monosqr1_init.init=:taylor;
-graph_org=import_compgraph("simulations/graphs/exp_m6_mono_taylor_2_7.cgr");;
-showerr(target,graph_org)
-(graph,cref)=gen_degopt_by_squaring(graph_org);
-(x,y)=get_degopt_coeffs(graph);
-x[end][1][1] = 0.001 # Kickstart
-#y[1] += 1e-6;
-(graph,cref)=gen_degopt_poly(x,y);
-graph=Compgraph(Complex{BigFloat},graph);
-y_cref=get_degopt_coeffs(count(values(graph.operations) .== :mult))[2];
-showerr(target,graph)
-discr=sim0.rho*exp.(1im*range(0,2*pi,length=sim0.n)[1:end-1]);
-discr=convert.(Complex{BigFloat},discr);
-
-opt_linear_fit!(graph, exp, discr, y_cref;
-                  errtype = :relerr,
-                  linlsqr = :real_backslash,
-                  droptol = 1e-17)
-showerr(target,graph)
-
-
-#(xx,yy)=get_degopt_coeffs(graph);
-
-monosqr1_init.graph=(graph,cref);
-monosqr1_init.opt_kwargs[:droptol]=1e-14;
-monosqr1_init.opt_kwargs[:γ0]=0.5;
-monosqr1_init.opt_kwargs[:maxit]=0;
-(graph_monosqr1,simlist,graphlist,commandlist)=
-        interactive_simulations(monosqr1_init,sim0,"IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssssdddddddssrssssssssddddddddssssssddddsssssssdsrq");
-# rho 6 => 2.6422405729310504e-14
-
-# IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssss => 2.3E-14
-# IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssssdddddddssrssssssssddddddddssssss => 7.6E-16
-#monosqr1_init.graph=(graph_monosqr1,cref);
-#monosqr1_init.rho=5.5; sim0.rho=5.5;
-#(graph_monosqr1b,simlist,graphlist,commandlist)=
-#        interactive_simulations(monosqr1_init,sim0)
+#monosqr1_init=deepcopy(base_sim);
+#monosqr1_init.init=:taylor;
+#graph_org=import_compgraph("simulations/graphs/exp_m6_mono_taylor_2_7.cgr");;
+#showerr(target,graph_org)
+#(graph,cref)=gen_degopt_by_squaring(graph_org);
+#(x,y)=get_degopt_coeffs(graph);
+#x[end][1][1] = 0.001 # Kickstart
+##y[1] += 1e-6;
+#(graph,cref)=gen_degopt_poly(x,y);
+#graph=Compgraph(Complex{BigFloat},graph);
+#y_cref=get_degopt_coeffs(count(values(graph.operations) .== :mult))[2];
+#showerr(target,graph)
+#discr=sim0.rho*exp.(1im*range(0,2*pi,length=sim0.n)[1:end-1]);
+#discr=convert.(Complex{BigFloat},discr);
 #
-#asd
+#opt_linear_fit!(graph, exp, discr, y_cref;
+#                  errtype = :relerr,
+#                  linlsqr = :real_backslash,
+#                  droptol = 1e-17)
+#showerr(target,graph)
+#
+#
+##(xx,yy)=get_degopt_coeffs(graph);
+#
+#monosqr1_init.graph=(graph,cref);
+#monosqr1_init.opt_kwargs[:droptol]=1e-14;
+#monosqr1_init.opt_kwargs[:γ0]=0.5;
+#monosqr1_init.opt_kwargs[:maxit]=0;
+#(graph_monosqr1,simlist,graphlist,commandlist)=
+#  interactive_simulations(monosqr1_init,sim0,"IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssssdddddddssrssssssssddddddddssssss");
+##IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssssdddddddssrssssssssddddddddssssssddddsssssssdsrq");
+### rho 6 => 2.6422405729310504e-14
+##
+## IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssss => 2.3E-14
+## IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssssdddddddssrssssssssddddddddssssss => 7.6E-16
+##monosqr1_init.graph=(graph_monosqr1,cref);
+##monosqr1_init.rho=5.5; sim0.rho=5.5;
+##(graph_monosqr1b,simlist,graphlist,commandlist)=
+##        interactive_simulations(monosqr1_init,sim0)
+##
+##asd
 
+println("PS1");
 ps1_init=deepcopy(base_sim);
 ps1_init.init=:taylor;
 ps1_init.graph=:ps;
+(graph,cref)=scale_and_square_degopt(
+    "simulations/graphs/exp_m6_PS_taylor_2_7.cgr",sim0,0)
+ps1_init.graph=(graph,cref);
 (graph_ps1,simlist,graphlist,commandlist)=
 interactive_simulations(ps1_init,sim0,
-                        "IsnsssssssdssGGGsssssdddsssdddNsssssssssssdsssssssddssssdsssddsssddssddsssrsssssssdssdsrsdddsdggssssssssssddssddssssssssssddssssssssddssddssgdsssrssssssssrrrdggssssssssssssrssssssssssssssGsssssddssddssrq");
+                        "IsssdddddddddddsssddddssddddssdddddddsssddssssdlsssssssssssssssssssssssGgggggssssssssssGsssssssssssssssssssssssssssssssssddsq");
+#                        "IsnsssssssdssGGGsssssdddsssdddNsssssssssssdsssssssddssssdsssddsssddssddsssrsssssssdssdsrsdddsdggssssssssssddssddssssssssssddssssssssddssddssgdsssrssssssssrrrdggssssssssssssrssssssssssssssGsssssddssddssrq");
 #                        "IssnssrsddsddsddddsdddddsrsssdddssrsssssddddsssssssdddsdsdggsssNsssNssdddsssssssdddsssssssssssssssssssdddsssssssddddssssssddddssddddsssssGsGsssssddsssssssssrssrssrsrq");
 # Err: 1.2E-11
 
-ps2_init=deepcopy(base_sim);
-ps2_init.init=:lsqr;
-ps2_init.graph=:ps;
-(graph_ps2,simlist,graphlist,commandlist)=
-interactive_simulations(ps2_init,sim0,
-                        "IsnNsnssrsddsddsddddsdddddsrsssdddssrsssssddddsssssssdddsdsdggsssNsssNssdddsssssssdddsssssssssssssssssssdddsssssssddddssssssddddssddddsssssGsGsssssddsssssssssrssrssrsNssssssrq");
+#ps2_init=deepcopy(base_sim);
+#ps2_init.init=:lsqr;
+#ps2_init.graph=:ps;
+#(graph_ps2,simlist,graphlist,commandlist)=
+#interactive_simulations(ps2_init,sim0,
+#                        "IsnNsnssrsddsddsddddsdddddsrsssdddssrsssssddddsssssssdddsdsdggsssNsssNssdddsssssssdddsssssssssssssssssssdddsssssssddddssssssddddssddddsssssGsGsssssddsssssssssrssrssrsNssssssrq");
+#
+## Err: 6E-12
+#
 
-# Err: 6E-12
 
 
-
+#(graph_mono1,simlist,graphlist,commandlist)=
+#        interactive_simulations(mono1_init,sim0,"IsnsssssssdssGGGsssssdddsssdddNsssssssssssdsssssssddssssdsssddsssddssddsssrsssssssdssdsrsdddsdggssssssssssddssddssssssssssddssssssssddssddssgdsssrssssssssrrrdggssssssssssssrssssssssssssssGsssssddssddssrq");
+#
+println("MONO1");
 mono1_init=deepcopy(base_sim);
 mono1_init.init=:taylor;
-mono1_init.graph=:mono;
+(graph,cref)=scale_and_square_degopt(
+    "simulations/graphs/exp_m6_mono_taylor_2_7.cgr",sim0,1)
+mono1_init.graph=(graph,cref);
+mono1_init.opt_kwargs[:droptol]=1e-14;
+mono1_init.opt_kwargs[:γ0]=0.5;
+mono1_init.opt_kwargs[:maxit]=0;
+mono1_sim0=deepcopy(sim0);
+#mono1_sim0.opt_kwargs[:linlsqr]=:svd;
 (graph_mono1,simlist,graphlist,commandlist)=
-        interactive_simulations(mono1_init,sim0,"IsnsssssssdssGGGsssssdddsssdddNsssssssssssdsssssssddssssdsssddsssddssddsssrsssssssdssdsrsdddsdggssssssssssddssddssssssssssddssssssssddssddssgdsssrssssssssrrrdggssssssssssssrssssssssssssssGsssssddssddssrq");
+interactive_simulations(mono1_init,sim0,
+                        "IssssdddddsssGGssssssrsssrssssssrssssssdddsssrssssssdddssssddddssssssdddddddssrssssssssddddddddssssssq");
 
 
 
 
 
-mono2_init=deepcopy(base_sim);
-mono2_init.init=:lsqr;
-mono2_init.graph=:mono;
-(graph_mono2,simlist,graphlist,commandlist)=
-        interactive_simulations(mono2_init,sim0,"IsnsssssssdssGGGsssssdddsssdddNsssssssssssdsssssssddssssdsssddsssddssddsssrsssssssdssdsrsdddsdggssssssssssddssddssssssssssddssssssssddssddssgdsssrssssssssrrrdggssssssssssssrssssssssssssssGsssssddssddssrq");
 
-
+#mono2_init=deepcopy(base_sim);
+#mono2_init.init=:lsqr;
+#mono2_init.graph=:mono;
+#(graph_mono2,simlist,graphlist,commandlist)=
+#        interactive_simulations(mono2_init,sim0,"IsnsssssssdssGGGsssssdddsssdddNsssssssssssdsssssssddssssdsssddsssddssddsssrsssssssdssdsrsdddsdggssssssssssddssddssssssssssddssssssssddssddssgdsssrssssssssrrrdggssssssssssssrssssssssssssssGsssssddssddssrq");
+#
+#
 
 
 #sastre_init=deepcopy(base_sim);
@@ -134,13 +155,32 @@ mono2_init.graph=:mono;
 #
 #
 
+
+
+println("SID+: Using previous");
 sid_init=deepcopy(base_sim);
 sid_init.init=:taylor;
-sid_init.graph=:sid;
+graph_org=import_compgraph("simulations/graphs/exp_m7_SID+_3_59.cgr");
+(x,y)=get_degopt_coeffs(graph_org);
+x[end][1][1] = 0.001 # Kickstart
+x[end-1][2][1] = 0.001 # Kickstart
+#y[1] += 1e-6;
+(graph_org,cref)=gen_degopt_poly(x,y);
+sid_init.graph=(graph_org,degopt_cref)
+
 (graph_sid,simlist,graphlist,commandlist)=
-        interactive_simulations(sid_init,sim0,"IsnddddddddddddddssssssssssNsssddsdddddddsddddddddddddddsddssdddddddsssssssssddddddddsssssssssssssddssssssssssssssrdddsssssssssssssddsssssssssssssrq");
+        interactive_simulations(sid_init,sim0,"IsssdddddddddddddsslssssddddddsssssdddsssssssssdddsssssssGsdddsssssssdddddssslsssdddsssssssdddddslssssssssdddslsssssssddddslsssssssssdddslslsslsssssssGslsNsdsdgslslsssssssssslsddsslssssssslsq");
 
-
+#sid_init=deepcopy(base_sim);
+#sid_init.init=:taylor;
+##sid_init.graph=:sid;
+#(graph,cref)=scale_and_square_degopt(
+#    "simulations/graphs/exp_m6_SID+_2_7.cgr",sim0,1)
+#sid_init.graph=(graph,cref);
+#(graph_sid,simlist,graphlist,commandlist)=
+#        interactive_simulations(sid_init,sim0,"IsnddddddddddddddssssssssssNsssddsdddddddsddddddddddddddsddssdddddddsssssssssddddddddsssssssssssssddssssssssssssssrdddsssssssssssssddsssssssssssssrq");
+#
+#
 
 include("print_all.jl");
 println("Run include(save_all.jl) if you want to save");

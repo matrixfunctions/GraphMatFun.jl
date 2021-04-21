@@ -3,10 +3,11 @@ include("simulationtools.jl");
 
 
 
+include("add_squaring.jl");
 
 m=7;
 
-rho=4.0;  # SID rho m=7
+rho=6.0;  # SID rho m=7
 target=Simulation(m,n=200,f=exp,rho=rho)
 
 its=5;
@@ -15,7 +16,10 @@ droptol0=1e-10;
 base_sim=Simulation(m,n=50,f=exp,rho=rho,eltype=Complex{BigFloat},
          init=:taylor,
          opt_kwargs=Dict(:logger=> 0,:γ0 => 0.5,:droptol => droptol0,
-                 :linlsqr => :svd,:maxit => its))
+                 :linlsqr => :real_svd,:maxit => its))
+
+
+degopt_cref=vec_degopt(get_degopt_coeffs(m));
 
 
 sid=deepcopy(base_sim);
@@ -38,18 +42,21 @@ sim0.graph=:prev;
 
 ps1_init=deepcopy(base_sim);
 ps1_init.init=:taylor;
-ps1_init.graph=:ps;
+graph_org=import_compgraph("simulations/graphs/exp_m7_PS_taylor_3_59.cgr");
+ps1_init.graph=(graph_org,degopt_cref)
 (graph_ps1,simlist,graphlist,commandlist)=
 interactive_simulations(ps1_init,sim0,
-                        "IssnssrsddsddsddddsdddddsrsssdddssrsssssddddsssssssdddsdsdggsssNsssNssdddsssssssdddsssssssssssssssssssdddsssssssddddssssssddddssddddsssssGsGsssssddsssssssssrssrssrsrq");
+                        "IsNddddddddddssddsssdddsdddsq");
+#                        "IssnssrsddsddsddddsdddddsrsssdddssrsssssddddsssssssdddsdsdggsssNsssNssdddsssssssdddsssssssssssssssssssdddsssssssddddssssssddddssddddsssssGsGsssssddsssssssssrssrssrsrq");
 # Err: 1.2E-11
 
 ps2_init=deepcopy(base_sim);
 ps2_init.init=:lsqr;
-ps2_init.graph=:ps;
+graph_org=import_compgraph("simulations/graphs/exp_m7_PS_lsqr_3_59.cgr");
+ps2_init.graph=(graph_org,degopt_cref)
 (graph_ps2,simlist,graphlist,commandlist)=
 interactive_simulations(ps2_init,sim0,
-                        "IsnNsnssrsddsddsddddsdddddsrsssdddssrsssssddddsssssssdddsdsdggsssNsssNssdddsssssssdddsssssssssssssssssssdddsssssssddddssssssddddssddddsssssGsGsssssddsssssssssrssrssrsNssssssrq");
+                        "IsNddddddddddssddsssdddsdddsdddddssdddsssdddddsslssddddsdddddslssssddddddddssslsssssss");
 
 # Err: 6E-12
 
@@ -58,8 +65,16 @@ interactive_simulations(ps2_init,sim0,
 mono1_init=deepcopy(base_sim);
 mono1_init.init=:taylor;
 mono1_init.graph=:mono;
+graph_org=import_compgraph("simulations/graphs/exp_m7_mono_taylor_3_59.cgr");
+(x,y)=get_degopt_coeffs(graph_org);
+x[end][1][1] = 0.001 # Kickstart
+x[end-1][2][1] = 0.001 # Kickstart
+#y[1] += 1e-6;
+(graph_org,cref)=gen_degopt_poly(x,y);
+
+mono1_init.graph=(graph_org,degopt_cref)
 (graph_mono1,simlist,graphlist,commandlist)=
-        interactive_simulations(mono1_init,sim0,"IsnsddddssdddssdddsssdddsssdddsssdddssssssssssrsssddsddssssssssssssdddsssssssssssssddssrsddsssssssssssssssNsssssssssssdsddssssssssssssrsddsddsddsddsssssrssssssssssddsrssddsddsddsddsssdddsddsrq");
+        interactive_simulations(mono1_init,sim0,"IslsslssssslddddddddssssssssddddsslslsssssdddddddssssssssddssdssslssssssssssddsssddsslssGssssddddssDdddslsssddsq");
 
 
 
@@ -68,8 +83,16 @@ mono1_init.graph=:mono;
 mono2_init=deepcopy(base_sim);
 mono2_init.init=:lsqr;
 mono2_init.graph=:mono;
+graph_org=import_compgraph("simulations/graphs/exp_m7_mono_lsqr_3_59.cgr");
+(x,y)=get_degopt_coeffs(graph_org);
+x[end][1][1] = 0.001 # Kickstart
+x[end-1][2][1] = 0.001 # Kickstart
+#y[1] += 1e-6;
+(graph_org,cref)=gen_degopt_poly(x,y);
+mono2_init.graph=(graph_org,degopt_cref)
+
 (graph_mono2,simlist,graphlist,commandlist)=
-        interactive_simulations(mono2_init,sim0,"IsnsddddssdddssdddsssdddsssdddsssdddssssssssssrsssddsddssssssssssssdddsssssssssssssddssrsddsssssssssssssssNsssssssssssdsddssssssssssssdssdssdssssssssssssrq");
+        interactive_simulations(mono2_init,sim0,"IslsslssssslddddddddssssssssddddsslslsssssdddddddssssssssddssdssslssssssssssddsssddsslssGssssddddssDdddslsssddsq");
 
 
 
@@ -93,9 +116,16 @@ mono2_init.graph=:mono;
 
 sid_init=deepcopy(base_sim);
 sid_init.init=:taylor;
-sid_init.graph=:sid;
+graph_org=import_compgraph("simulations/graphs/exp_m7_SID+_3_59.cgr");
+(x,y)=get_degopt_coeffs(graph_org);
+x[end][1][1] = 0.001 # Kickstart
+x[end-1][2][1] = 0.001 # Kickstart
+#y[1] += 1e-6;
+(graph_org,cref)=gen_degopt_poly(x,y);
+sid_init.graph=(graph_org,degopt_cref)
+
 (graph_sid,simlist,graphlist,commandlist)=
-        interactive_simulations(sid_init,sim0,"IsnddddddddddddddssssssssssNsssddsdddddddsddddddddddddddsddssdddddddsssssssssddddddddsssssssssssssddssssssssssssssrdddsssssssssssssddsssssssssssssrq");
+        interactive_simulations(sid_init,sim0,"IsssdddddddddddddsslssssddddddsssssdddsssssssssdddsssssssGsdddsssssssdddddssslsssdddsssssssdddddslssssssssdddslsssssssddddslsssssssssdddslslsslsssssssGslsNsdsdgslslsssssssssslsddsslssssssslsq");
 
 
 

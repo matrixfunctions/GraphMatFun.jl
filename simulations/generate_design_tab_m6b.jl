@@ -36,6 +36,8 @@ sim0.init=:prev;
 sim0.graph=:prev;
 
 
+
+
 ps1_init=deepcopy(base_sim);
 ps1_init.init=:taylor;
 ps1_init.graph=:ps;
@@ -94,26 +96,7 @@ sid_init.graph=:sid;
 (graph_sid,simlist,graphlist,commandlist)=
         interactive_simulations(sid_init,sim0,"IsssssddssssddsssssssssssdddssdddssssdddssdddsssNsssdddsssssssssdddssssddsdssssssrq");
 
-err1=showerr(target,graph_ps1,false)
-err2=showerr(target,graph_ps2,false)
-err3=showerr(target,graph_mono1,false)
-err4=showerr(target,graph_mono2,false)
-#err5=showerr(target,graph_sastre,false)
-err6=showerr(target,graph_bbc,false)
-err7=showerr(target,graph_sid,false)
 
-#errX1=showerr(target,sastre_org,false)
-errX2=showerr(target,sid_org,false)
-#bbc_graph=gen_bbc_basic_exp(m)[1]
-#errX3=showerr(target,bbc_graph,false)
 
-println("mono taylor $err3")
-println("mono lsqr $err4")
-println("PS taylor $err1")
-println("PS lsqr $err2")
-#println("Sastre+ $err5")
-#println("BBC+ $err6")
-println("SID+ $err7")
-#println("Sastre $errX1")
-#println("BBC $errX3")
-println("SID $errX2")
+include("print_all.jl");
+println("Run include(save_all.jl) if you want to save");

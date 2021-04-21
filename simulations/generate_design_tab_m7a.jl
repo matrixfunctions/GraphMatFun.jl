@@ -36,6 +36,18 @@ sim0.init=:prev;
 sim0.graph=:prev;
 
 
+
+mono21_init=deepcopy(base_sim);
+mono21_init.init=:taylor;
+graph_org=import_compgraph("simulations/graphs/exp_m6_mono_taylor_2_7.cgr");;
+(graph,cref)=gen_degopt_by_squaring(graph_org);
+mono21_init.graph=(graph,cref);
+mono21_init.opt_kwargs[:droptol]=1e-8;
+mono21_init.opt_kwargs[:γ0]=0.5;
+mono21_init.opt_kwargs[:maxit]=0;
+(graph_mono21,simlist,graphlist,commandlist)=
+        interactive_simulations(mono21_init,sim0);
+
 ps1_init=deepcopy(base_sim);
 ps1_init.init=:taylor;
 ps1_init.graph=:ps;

@@ -15,7 +15,7 @@ droptol0=1e-10;
 base_sim=Simulation(m,n=50,f=exp,rho=rho,eltype=Complex{BigFloat},
          init=:taylor,
          opt_kwargs=Dict(:logger=> 0,:γ0 => 0.5,:droptol => droptol0,
-                 :linlsqr => :svd,:maxit => its))
+                 :linlsqr => :real_svd,:maxit => its))
 
 
 sid=deepcopy(base_sim);

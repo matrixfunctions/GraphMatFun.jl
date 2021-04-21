@@ -6,7 +6,7 @@ include("simulationtools.jl");
 
 m=5;
 
-rho=1.68;  # SID rho m=5
+rho=1.9;  # SID rho m=5
 target=Simulation(m,n=200,f=exp,rho=rho)
 
 its=5;
@@ -16,6 +16,9 @@ base_sim=Simulation(m,n=50,f=exp,rho=rho,eltype=Complex{BigFloat},
          init=:taylor,
          opt_kwargs=Dict(:logger=> 0,:γ0 => 0.5,:droptol => droptol0,
                  :linlsqr => :real_svd,:maxit => its))
+
+
+degopt_cref=vec_degopt(get_degopt_coeffs(m));
 
 
 sid=deepcopy(base_sim);
@@ -44,46 +47,35 @@ sim0.graph=:prev;
 
 ps1_init=deepcopy(base_sim);
 ps1_init.init=:taylor;
-ps1_init.graph=:ps;
+graph_org=import_compgraph("simulations/graphs/exp_m5_PS_taylor_1_68.cgr");
+ps1_init.graph=(graph_org,degopt_cref)
 (graph_ps1,simlist,graphlist,commandlist)=
 interactive_simulations(ps1_init,sim0,
-                        "IsnsssssssssddssddsrssssssssssssdsrsddssssssssssssssddsddssNssNssdsrsdsssddssssssssrssssssssssssddssssssddssssssrsdddsssssssNssdssssssssddssssssssrssdssssrq");
+                        "IsnddddssddsddsddslssssddsddsddslsssddsddsddsNsddsssssddsddssslssssssssdsq");
 # Err: 1.2E-11
 
-ps2_init=deepcopy(base_sim);
-ps2_init.init=:lsqr;
-ps2_init.graph=:ps;
-(graph_ps2,simlist,graphlist,commandlist)=
-interactive_simulations(ps2_init,sim0,
-                        "Issssssssssddssddsrssssssssssssdsrsddssssssssssssssddsdsssssssssdsdsdsdsdrq")
-# Err: 6E-12
+
 
 
 
 mono1_init=deepcopy(base_sim);
 mono1_init.init=:taylor;
 mono1_init.graph=:mono;
+graph_org=import_compgraph("simulations/graphs/exp_m5_mono_taylor_1_68.cgr");
+mono1_init.graph=(graph_org,degopt_cref)
 (graph_mono1,simlist,graphlist,commandlist)=
-        interactive_simulations(mono1_init,sim0,"Issssssssssddssddsrssssssssssssdsrsddssssssssssssssddsddrq");
+        interactive_simulations(mono1_init,sim0,"IssddsddsddsddsddssNslssslsdgggggsssssssssssssssssssssGGsGsssssssssssssddssssssssssssssssssdsddsddssssssssssssssssssdsddsssssssssssssssssssddsssssGsssssssssslsssssq");
 # Err: 1.1E-11
-
-mono2_init=deepcopy(base_sim);
-mono2_init.init=:lsqr;
-mono2_init.graph=:mono;
-(graph_mono2,simlist,graphlist,commandlist)=
-        interactive_simulations(mono2_init,sim0,"Issssssssssddssddsrssssssssssssdsrsddssssssssssssssddsq");
-# Err: 1.1e-11
 
 
 
 sastre_init=deepcopy(base_sim);
 sastre_init.init=:taylor;
-(graph,cref)=scale_and_square_degopt(
-    "simulations/graphs/exp_m4_Sastre+_0_69.cgr",sim0,1)
-sastre_init.graph=(graph,cref);
+graph_org=import_compgraph(
+    "simulations/graphs/exp_m5_Sastre+_1_68.cgr")
+sastre_init.graph=(graph_org,degopt_cref);
 (graph_sastre,simlist,graphlist,commandlist)=
-        interactive_simulations(sastre_init,sim0,"IIssssslssdddssssdsddsddssssssssddsNsddsssssssssddslssssssssddssddsslssssssssddsddslssssssssssssddsssssssssssNsq");
-##  1.448620852496371e-15
+        interactive_simulations(sastre_init,sim0,"Isddsddsddsddsddsddsddsddsddsssssq");
 #
 
 bbc_init=deepcopy(base_sim);
@@ -97,6 +89,9 @@ bbc_init.graph=:bbc;
 
 sid_init=deepcopy(base_sim);
 sid_init.init=:taylor;
+graph_org=import_compgraph(
+    "simulations/graphs/exp_m5_SID+_1_68.cgr")
+sid_init.graph=(graph,degopt_cref);
 sid_init.graph=:sid;
 (graph_sid,simlist,graphlist,commandlist)=
         interactive_simulations(sid_init,sim0,"IsssssddssssddsssssssssssdddssdddssssdddssdddsssNsssdddsssssssssdddssssddsdssssssrq");
