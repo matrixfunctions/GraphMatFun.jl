@@ -35,8 +35,9 @@ Solves the linear least squares problem
     Ad=b.
 
 `linlsqr` determines how the linear least squares problem is solved.
-It can be `:backslash`, `:nrmeq`, `:real_backslash`, `:real_nrmeq`, or `:svd`,
-and for the latter singular values below `droptol` are disregarded.
+It can be `:backslash`, `:real_backslash`, `:nrmeq`, `:real_nrmeq`, `:svd`,
+or `:real_svd`.
+For the latter two options singular values below `droptol` are disregarded.
 The `:real_X` options optimizes `d` in the space of real vectors.
      """
 function solve_linlsqr(A, b, linlsqr, droptol)
@@ -52,7 +53,11 @@ function solve_linlsqr(A, b, linlsqr, droptol)
         br = real(b)
         bi = imag(b)
         d = (Ar'*Ar + Ai'*Ai)\(Ar'*br + Ai'*bi)
-    elseif (linlsqr == :svd)
+    elseif (linlsqr == :svd) || (linlsqr == :real_svd)
+        if (linlsqr == :real_svd)
+            A = vcat(real(A),imag(A))
+            b = vcat(real(b),imag(b))
+        end
         if (eltype(A) == BigFloat || eltype(A) == Complex{BigFloat})
             # You must use include "using GenericSVD"
             Sfact=svd!(A; full=false, alg=nothing)

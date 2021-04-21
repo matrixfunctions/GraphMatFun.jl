@@ -18,12 +18,19 @@ end
     (graph,cref) = gen_monomial(zeros(length(coeff)))
     opt_linear_fit!(graph, p, discr, cref,
                     errtype=:relerr, linlsqr=:svd, droptol=1e-15)
-
     @test all(abs.(eval_graph(graph,discr) .- p.(discr)) .< 1e-14* abs.(p.(discr)))
-
     A = [3 4 ; 5 6.6]; PA = p(A)
     @test norm(eval_graph(graph,A) - PA) < 1e-14 * norm(PA)
 
+
+    (graph,cref) = gen_monomial(zeros(length(coeff)))
+    opt_linear_fit!(graph, p, complex(discr), cref,
+                    errtype=:relerr, linlsqr=:real_svd, droptol=1e-15)
+    @test all(abs.(eval_graph(graph,discr) .- p.(discr)) .< 1e-14* abs.(p.(discr)))
+    A = [3 4 ; 5 6.6]; PA = p(A)
+    @test norm(eval_graph(graph,A) - PA) < 1e-14 * norm(PA)
+    @test isequal(eltype(graph),real(eltype(graph)))
+    
 
     # Other functions
     coeff = [3; -1; 2.0]
