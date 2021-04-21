@@ -34,11 +34,15 @@ using LinearAlgebra, GenericSVD
     @test x ≈ coeffs
     @test isa(A,Matrix{Complex{BigFloat}})
     @test isa(b,Vector{Complex{BigFloat}})
+    x = solve_linlsqr(A, b, :backslash, 0.0) #Test for modification on input
+    @test x ≈ coeffs
 
-    x = solve_linlsqr(copy(A), b, :real_svd, 0.0)
+    x = solve_linlsqr(A, b, :real_svd, 0.0)
     @test x ≈ real(coeffs)
     @test isreal(x)
     @test isa(A,Matrix{Complex{BigFloat}})
     @test isa(b,Vector{Complex{BigFloat}})
+    x = solve_linlsqr(A, b, :backslash, 0.0) #Test for modification on input
+    @test x ≈ coeffs
 
 end
