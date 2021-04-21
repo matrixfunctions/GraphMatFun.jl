@@ -57,7 +57,7 @@ using LinearAlgebra
         z=collect(range(4,5,length=k+2))
         (graph,cref) = gen_degopt_poly(x,z)
 
-        (xx,zz) = get_degopt_coeffs(k)
+        (xx,zz) = get_degopt_crefs(k)
         for i=1:k
                 for N = 1:2
                     @test get_coeffs(graph,xx[i][N]) == x[i][N]
