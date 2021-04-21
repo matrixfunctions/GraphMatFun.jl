@@ -1,9 +1,9 @@
 %# Representation of a computation graph
 %# Function: exp
-%# Matrix exponential with degree optimal form optimized starting with BBC
+%# Matrix exponential with degree optimal form optimized on 1.68D starting with BBC
 %# Domain: 1.68D
 %# Error: 7.765227691290361e-13
-%# Created: 2021-04-14T15:21:53.012 by user jarl
+%# Created: 2021-04-21T09:34:43.519 by user jarl
 
 graph_coeff_type="BigFloat";
 
