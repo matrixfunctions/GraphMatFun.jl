@@ -3,8 +3,7 @@ using LinearAlgebra
 
 
     exp_gens = Dict("Julia native"        => :gen_exp_native_jl,
-                    "Julia native degopt" => :gen_exp_native_jl_degopt)#,
-                    # "expm 2009"           => :gen_expm2009)
+                    "Julia native degopt" => :gen_exp_native_jl_degopt)
 
     for key = keys(exp_gens)
         @testset "$key" begin
