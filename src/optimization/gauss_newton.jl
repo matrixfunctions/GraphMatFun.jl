@@ -22,7 +22,7 @@ If `logger` has a value >0, then the intermediate results are printed.
 that are considered free variables and optimized.
 The stepsize can be scaled with `γ0`.
 `linlsqr` and `droptol` determines how the inner linear least squares problem is
-solved; see `solve_linlsqr`.
+solved; see `solve_linlsqr!`.
 
     """
 function opt_gauss_newton!(graph, objfun, discr;
@@ -56,7 +56,7 @@ function opt_gauss_newton!(graph, objfun, discr;
             break
         end
 
-        d = solve_linlsqr(Jac, res, linlsqr, droptol)
+        d = solve_linlsqr!(Jac, res, linlsqr, droptol)
         x = get_coeffs(graph, cref)
         x -= γ0*d
         set_coeffs!(graph, x, cref)

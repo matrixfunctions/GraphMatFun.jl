@@ -17,7 +17,7 @@ The variable `graph` is modified during the iterations and the function has no
 return value.
 
 See `opt_gauss_newton!` for a description the kwarg `errtype`,
-and `solve_linlsqr` for the kwargs `linlsqr`, and `droptol`.
+and `solve_linlsqr!` for the kwargs `linlsqr`, and `droptol`.
 
     """
 function opt_linear_fit!(graph, objfun, discr, linear_cref;
@@ -40,7 +40,7 @@ function opt_linear_fit!(graph, objfun, discr, linear_cref;
 
     adjust_for_errtype!(A, objfun_vals, objfun_vals, errtype)
 
-    c = solve_linlsqr(A, objfun_vals, linlsqr, droptol)
+    c = solve_linlsqr!(A, objfun_vals, linlsqr, droptol)
     set_coeffs!(graph, c, linear_cref)
 
     return nothing

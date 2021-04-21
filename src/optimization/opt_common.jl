@@ -1,4 +1,4 @@
-export adjust_for_errtype!, solve_linlsqr
+export adjust_for_errtype!, solve_linlsqr!
 
 """
     adjust_for_errtype!(A, b, objfun_vals, errtype)
@@ -28,19 +28,20 @@ end
 
 
 """
-    d = solve_linlsqr(A, b, linlsqr, droptol)
+    d = solve_linlsqr!(A, b, linlsqr, droptol)
 
 Solves the linear least squares problem
 
     Ad=b.
 
-`linlsqr` determines how the linear least squares problem is solved.
+The argument `linlsqr` determines how the linear least squares problem is solved.
 It can be `:backslash`, `:real_backslash`, `:nrmeq`, `:real_nrmeq`, `:svd`,
 or `:real_svd`.
 For the latter two options singular values below `droptol` are disregarded.
 The `:real_X` options optimizes `d` in the space of real vectors.
+The input matrix `A` is sometimes overwritten.
      """
-function solve_linlsqr(A, b, linlsqr, droptol)
+function solve_linlsqr!(A, b, linlsqr, droptol)
     if (linlsqr == :backslash)
         d = A\b
     elseif (linlsqr == :real_backslash)
