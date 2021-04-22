@@ -1,15 +1,16 @@
-using MAT,LinearAlgebra;
+using LinearAlgebra;
 
 graph_m6=import_compgraph("simulations/graphs/exp_m6_mono_taylor_2_7.cgr");;
 graph_m6_SID=import_compgraph("simulations/graphs/exp_m6_SID_2_22.cgr");;
-graph_m7=import_compgraph("simulations/graphs/exp_m7_SID+_3_59.cgr");;
+graph_m7=import_compgraph("simulations/graphs/exp_m7_mono_taylor_6_0.cgr");;
+graph_m7_SID=import_compgraph("simulations/graphs/exp_m7_SID+_6_0.cgr");;
 
-graph_m6=Compgraph(Float64,graph_m6);
-graph_m6_SID=Compgraph(Float64,graph_m6_SID);
-compress_graph!(graph_m6_SID);
-
-graph_m7=Compgraph(Float64,graph_m7);
-
+#graph_m6=Compgraph(Float64,graph_m6);
+#graph_m6_SID=Compgraph(Float64,graph_m6_SID);
+#compress_graph!(graph_m6_SID);
+#
+#graph_m7=Compgraph(Float64,graph_m7);
+#
 
 #A=matread("simulations/cputime/n2000_2_2.mat")["A"];
 n=2000;
@@ -19,9 +20,29 @@ A0=2.5*A0/8
 
 
 (graph_native,_)=gen_exp_native_jl(A0);
+(graph_native2,_)=gen_exp_native_jl(ones(1,1)*5.5);
 
-names=["m6_mono_taylor_2_7","m6_SID_2_22","m7_SIDplus_3_59","native_jl"];
-graphs=[graph_m6,graph_m6_SID,graph_m7,graph_native]
+names=["m6_mono_taylor_2_7","m6_SID_2_22","m7_mono_taylor_6_0", "m7_SIDplus_6_0","native_73_jl","native_83_jl"];
+graphs=[graph_m6,graph_m6_SID,graph_m7,graph_m7_SID,graph_native,graph_native2]
+for (i,g)=enumerate(graphs)
+    if (count(values(g.operations) .== :ldiv) == 0)
+        degopt=Degopt(g);
+        normalize!(degopt);
+        (g,_)=gen_degopt_poly(degopt);
+    end
+    x=get_coeffs(g)
+    if (norm(imag.(x))<eps()*100)
+        set_coeffs!(g,real.(x));
+    else
+        error("non-real coeffs");
+    end
+    g=Compgraph(Float64,g);
+    compress_graph!(g);
+    compress_graph!(g);
+    graphs[i]=g;
+end
+
+
 
 
 priohelp=Dict();
