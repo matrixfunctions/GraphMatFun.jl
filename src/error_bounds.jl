@@ -104,7 +104,8 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
                                        coefftype=T,
                                        nterms=100,
                                        ndigits=100,
-                                       tolerance=eps(coefftype)/2) where T
+                                       tolerance=eps(coefftype)/2,
+                                       theta_init=big("0.2")) where T
     # Set precision to ndigits decimal digits.
     setprecision(Integer(ceil(log2(10. ^ndigits))));
 
@@ -136,7 +137,7 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
     # Find point where bound on relative backward error equals tolerance.
     e_bwd(z)=abs.(bnd_bwd_err(z))./abs.(z)
     h(z)=e_bwd(z) - tolerance
-    theta_bwd=fzero(h, 0.2)
+    theta_bwd=fzero(h, theta_init)
 
     return e_bwd,convert(coefftype,theta_bwd)
 end
