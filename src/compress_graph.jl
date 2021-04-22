@@ -8,6 +8,7 @@ export has_identity_lincomb
 export has_trivial_nodes
 export compress_graph_trivial!
 export compress_graph_redundant!
+export compress_graph_passthrough!
 export compress_graph!
 
 
@@ -338,6 +339,53 @@ function compress_graph_redundant!(graph,cref=[];compress_lincomb=true)
     end
 end
 
+
+"""
+    compress_graph_passthrough!(graph,cref=[]);
+
+Identifies lincombs that have coefficients (0 1) or (1 0)
+which correspond to identity operations. It redirect
+appropriately.
+
+"""
+function compress_graph_passthrough!(graph,cref=[]);
+    ismodified=true
+    while ismodified
+        ismodified=false;
+        for (key,coeffs) in graph.coeffs # No need to check input nodes.
+
+            if coeffs==(0, 1)
+                k_one=2;
+                k_zero=1;
+            elseif coeffs==(1, 0)
+                k_one=1;
+                k_zero=2;
+            else
+                continue
+            end
+            # k_one is to keep
+            # k_zero connection not important
+
+            #
+            p_passthrough=graph.parents[key][k_one];
+
+            # Find all nodes that use key and redirect them
+            for (key2,parents) in graph.parents
+                if (parents[1]==key)
+                    parents=(p_passthrough,parents[2])
+                    ismodified=true;
+                end
+                if (parents[2]==key)
+                    parents=(parents[1],p_passthrough)
+                    ismodified=true;
+                end
+                graph.parents[key2]=parents;
+            end
+        end
+
+    end
+end
+
 """
     compress_graph!(graph,cref=[])
 
@@ -350,5 +398,6 @@ function compress_graph!(graph,cref=[])
     compress_graph_output_cleaning!(graph,cref)
     compress_graph_zero_coeff!(graph,cref)
     compress_graph_trivial!(graph,cref)
+    compress_graph_passthrough!(graph,cref);
     compress_graph_dangling!(graph,cref)
 end
