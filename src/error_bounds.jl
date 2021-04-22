@@ -1,4 +1,4 @@
-using Polynomials
+using Polynomials,Roots
 export get_polynomial
 export get_polynomial_coefficients
 export compute_fwd_theta
@@ -135,7 +135,7 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
 
     # Find point where bound on relative backward error equals tolerance.
     e_bwd(z)=abs.(bnd_bwd_err(z))./abs.(z)
-    h(z)=e_bwd(z) - unitroundoff
+    h(z)=e_bwd(z) - tolerance
     theta_bwd=fzero(h, 0.2)
 
     return e_bwd,convert(coefftype,theta_bwd)
