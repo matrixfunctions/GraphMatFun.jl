@@ -1,5 +1,5 @@
 # Degree optimal polynomials
-export Degopt, grow!, get_degopt_crefs
+export Degopt, grow!, get_degopt_crefs, scale!;
 struct Degopt{T}
     x::Vector{Tuple{Vector{T},Vector{T}}}
     y::Vector{T}
@@ -82,4 +82,19 @@ function get_degopt_crefs(k;compress_keys=false)
     end
 
     return (x,z)
+end
+
+
+"""
+    scale!(degopt::Degopt,α)
+
+Effectively change a `Degopt` such that the input is scaled by `α`. If `p` is the original function, `f(α x)` will be the new function.
+
+"""
+function scale!(degopt::Degopt,α)
+    for x=degopt.x
+        x[1][2] *= α
+        x[2][2] *= α
+    end
+    degopt.y[2] *= α;
 end

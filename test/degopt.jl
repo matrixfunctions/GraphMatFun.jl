@@ -30,6 +30,12 @@ using LinearAlgebra
     @test eval_graph(g1,-3.0) ==  eval_graph(g3,-3.0)
 
 
+    # Test scale!
+
+    degopt4=deepcopy(degopt1);
+    scale!(degopt4,2);
+    (g4,_)=gen_degopt_poly(degopt4);
+    @test eval_graph(g4,0.3) == eval_graph(g1,2*0.3)
 
 
 end
