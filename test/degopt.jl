@@ -43,4 +43,10 @@ using LinearAlgebra
     (g5,_)=gen_degopt_poly(degopt5);
     @test eval_graph(g5,2+2im) == eval_graph(g1,2+2im)^2
 
+
+    # Test initialize as degopt
+    degopt6=Degopt(g1);
+    (g6,_)=gen_degopt_poly(degopt6);
+    @test eval_graph(g6,10.0) == eval_graph(g1,10.0);
+
 end
