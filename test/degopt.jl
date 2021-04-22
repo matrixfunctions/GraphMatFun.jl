@@ -1,5 +1,5 @@
 using LinearAlgebra
-@testset "bbc" begin
+@testset "degopt" begin
     x1a=[3; 4.0]
     x1b=[0.1; 0.3];
     x2a=[0.1; 0.1; -0.1];
@@ -35,6 +35,7 @@ using LinearAlgebra
     degopt4=deepcopy(degopt1);
     scale!(degopt4,2);
     (g4,_)=gen_degopt_poly(degopt4);
+    (g1,_)=gen_degopt_poly(degopt1);
     @test eval_graph(g4,0.3) == eval_graph(g1,2*0.3)
 
     # Test square!
@@ -54,6 +55,7 @@ using LinearAlgebra
 
     degopt8=normalize!(deepcopy(degopt1));
     (g8,_)=gen_degopt_poly(degopt8);
+    (g1,_)=gen_degopt_poly(degopt1);
     @test eval_graph(g8,pi) ≈ eval_graph(g1,pi)
 
 

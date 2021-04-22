@@ -68,19 +68,12 @@ end
 """
     grow!(degopt::Degopt)
 
-Increases the degopt by one multiplication.
+Increases the degopt by one multiplication without modifying the function values.
 
 """
 function grow!(degopt::Degopt{T}) where T
     k=size(degopt.x[end][1],1);
-    @show T
-    @show degopt.x
-    @show typeof((zeros(T,k+1), zeros(T,k+1)))
-    @show degopt.y
-
-    println("Push!");
     push!(degopt.x,(zeros(T,k+1), zeros(T,k+1)))
-    println("Push2");
     push!(degopt.y,zero(T));
 end
 
@@ -192,15 +185,12 @@ function normalize!(degopt::Degopt,tp=:row1)
         d=degopt.x[1][2][2]
 
         for (i,x)=enumerate(degopt.x)
-            @show i
-            @show x
             if (i>1)
                 for k=1:2
                     row1_normalize!(x[k],a,b,c,d);
                 end
             end
         end
-        @show degopt.y
         row1_normalize!(degopt.y,a,b,c,d);
 
 
