@@ -37,5 +37,10 @@ using LinearAlgebra
     (g4,_)=gen_degopt_poly(degopt4);
     @test eval_graph(g4,0.3) == eval_graph(g1,2*0.3)
 
+    # Test square!
+    degopt5=deepcopy(degopt1);
+    square!(degopt5);
+    (g5,_)=gen_degopt_poly(degopt5);
+    @test eval_graph(g5,2+2im) == eval_graph(g1,2+2im)^2
 
 end
