@@ -1,5 +1,6 @@
 # Degree optimal polynomials
 export Degopt, grow!, get_degopt_crefs, scale!, square!;
+
 struct Degopt{T}
     x::Vector{Tuple{Vector{T},Vector{T}}}
     y::Vector{T}
@@ -164,4 +165,52 @@ function square!(degopt::Degopt)
     push!(degopt.x,(deepcopy(y0),deepcopy(y0)));
     degopt.y[:]=zero(y0);
     push!(degopt.y,1);
+end
+
+
+function row1_normalize!(xx,a,b,c,d)
+    q3=xx[3];
+    xx[1] += q3*a*c;
+    xx[2] += q3*(a*d+b*c);
+    xx[3]=q3*b*d;
+end
+import LinearAlgebra.normalize!; # for overloading
+"""
+    normalize!(degopt,tp=:row1)
+
+Normalizes the degopt coefficients, in the way specified by `tp`.
+If the `rp==:row1` the degopt will be transformed
+to an equivalent degopt with first row equal to `(0 1) (0 1)`.
+
+"""
+function normalize!(degopt::Degopt,tp=:row1)
+    if (tp==:row1)
+
+        a=degopt.x[1][1][1]
+        b=degopt.x[1][1][2]
+        c=degopt.x[1][2][1]
+        d=degopt.x[1][2][2]
+
+        for (i,x)=enumerate(degopt.x)
+            @show i
+            @show x
+            if (i>1)
+                for k=1:2
+                    row1_normalize!(x[k],a,b,c,d);
+                end
+            end
+        end
+        @show degopt.y
+        row1_normalize!(degopt.y,a,b,c,d);
+
+
+        degopt.x[1][1][1]=0
+        degopt.x[1][1][2]=1;
+        degopt.x[1][2][1]=0
+        degopt.x[1][2][2]=1;
+
+        return degopt;
+    else
+        error("Unknown normalization");
+    end
 end

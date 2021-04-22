@@ -49,4 +49,12 @@ using LinearAlgebra
     (g6,_)=gen_degopt_poly(degopt6);
     @test eval_graph(g6,10.0) == eval_graph(g1,10.0);
 
+
+    # Normalization
+
+    degopt8=normalize!(deepcopy(degopt1));
+    (g8,_)=gen_degopt_poly(degopt8);
+    @test eval_graph(g8,pi) ≈ eval_graph(g1,pi)
+
+
 end
