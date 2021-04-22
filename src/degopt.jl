@@ -18,9 +18,16 @@ Increases the degopt by one multiplication.
 
 """
 function grow!(degopt::Degopt{T}) where T
-    k=size(degopt.x[end][1]);
+    k=size(degopt.x[end][1],1);
+    @show T
+    @show degopt.x
+    @show typeof((zeros(T,k+1), zeros(T,k+1)))
+    @show degopt.y
+
+    println("Push!");
     push!(degopt.x,(zeros(T,k+1), zeros(T,k+1)))
-    push!(degopt.y,zeros(T,k+2));
+    println("Push2");
+    push!(degopt.y,zero(T));
 end
 
 

@@ -8,6 +8,7 @@ using Test
     include("compress.jl");
     include("denman_beavers.jl");
     include("exp.jl");
+    include("degopt.jl");
     include("gauss_newton.jl");
     include("graph_ops.jl");
     include("import_export.jl");
