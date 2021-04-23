@@ -1,4 +1,4 @@
-using MAT,GraphMatFun,BenchmarkTools;
+using GraphMatFun,BenchmarkTools;
 include("setup_graphs.jl");
 
 
@@ -25,6 +25,7 @@ for (i,n)=enumerate(names)
     fname_openblas="/tmp/$(n)_OpenBLAS";
 
     println("$fname_mkl");
+    println("echo -n sleeping; sleep 2; echo n"); # Avoid overheating
     println("$fname_openblas");
-
+    println("echo -n sleeping; sleep 2; echo n"); # Avoid overheating
 end

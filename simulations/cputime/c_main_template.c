@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<time.h>
-#define NOF_SAMPLES 3
+#define NOF_SAMPLES 10
 
 int main (int argc, char *argv[]){
   double *A;

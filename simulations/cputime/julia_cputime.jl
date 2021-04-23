@@ -1,24 +1,48 @@
-using MAT,GraphMatFun,BenchmarkTools,LinearAlgebra;
+using GraphMatFun,BenchmarkTools,LinearAlgebra;
 include("setup_graphs.jl");
 
+@show names
+function get_cost(graph::Compgraph)
+    return count(values(graph.operations) .== :mult)+
+           (4/3)*count(values(graph.operations) .== :ldiv)
 
+end
 
+println("Matrix norm: $(opnorm(A0,1))");
+println("BLAS: ",BLAS.get_config())
+graphs=Vector{Any}(graphs);
+pushfirst!(graphs,:exp);
+pushfirst!(names,"exp");
 
-println("BLAS: ",BLAS.vendor())
 for (i,g)=enumerate(graphs)
     local n;
+
     n=names[i];
-
-    println("Generating $n");
-
-    gen_code("/tmp/exp_$n.jl",g,funname="exp_$n",priohelp=priohelp);
-    gen_code("/tmp/exp_$n.m",g,funname="exp_$n",lang=LangMatlab(),priohelp=priohelp);
-
-    include("/tmp/exp_$n.jl");
-
-    println("Timing $n");
-    s=Symbol("exp_$n");
     A=deepcopy(A0);
-    bb=@benchmark eval(Expr(:call,$s,:A0))
-    println("median: $(bb.times[2]*1e-9) mem: $(bb.memory)");
+
+    print("$n ");
+    if (g isa Compgraph)
+        print("cost $(get_cost(g)) ");
+
+        gen_code("/tmp/exp_$n.jl",g,funname="exp_$n",priohelp=priohelp);
+        gen_code("/tmp/exp_$n.m",g,funname="exp_$n",lang=LangMatlab(),priohelp=priohelp);
+
+        include("/tmp/exp_$n.jl");
+
+        print("time: ");
+        s=Symbol("exp_$n");
+        bb=@benchmark eval(Expr(:call,$s,$A))
+    else
+        print("time: ");
+        bb=@benchmark exp($A);
+    end
+
+
+    #@show bb.times*1e-9
+    mm=median(bb.times)*1e-9;
+    println("$(mm) mem: $(bb.memory)");
+    print("      ")
+    @show bb.times*1e-9
+
+    #println("median: mem: $(bb.memory)");
 end
