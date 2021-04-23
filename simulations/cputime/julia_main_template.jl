@@ -42,6 +42,7 @@ else
 end
 
 println("Matrix norm: $(opnorm(A0,1))");
+println("Matrix size: ", n ," x ", n);
 if (!isdefined(BLAS,:get_config))
     println("BLAS vendor: ",BLAS.vendor())
 else
