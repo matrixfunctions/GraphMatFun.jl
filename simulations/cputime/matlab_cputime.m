@@ -7,9 +7,9 @@
 % # echo "0" > /sys/devices/system/cpu/intel_pstate/no_turbo
 % from https://askubuntu.com/questions/619875/disabling-intel-turbo-boost-in-ubuntu
 
-disp("Note that the turbo should preferrably be disable.");
+disp("Note that the turbo should preferrably be disabled.");
 disp("  Next line = 1 => Disabled.")
-disp("  Next line =0 => Enabled.");
+disp("  Next line = 0 => Enabled.");
 type('/sys/devices/system/cpu/intel_pstate/no_turbo')
 
 
@@ -27,12 +27,10 @@ end
 
 A=A0;
 
-%norm(A)
-%max(abs(eig(A)))
 
+disp(strcat("norm(A,1)=", num2str(norm(A,1))))
 
 m=6;tv=zeros(m,1);
-
 
 "expm native"
 for k=1:m
