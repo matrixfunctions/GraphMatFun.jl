@@ -379,7 +379,10 @@ way, i.e., an order it can be computed. The `priohelp`
 kwarg can be used to obtain a different topological
 ordering, by changing the node priority.
 
-The code uses a heuristic to minimize pathwidth. The `free_mem_bonus`
+The code uses a heuristic to minimize pathwidth. It is based on a
+point system. You can influence the computation order by providing
+a `priohelp`. If you want node `:B4` to be computed earlier,
+ you can set `priohelp[:B4]=-5000.0`.  The `free_mem_bonus`
 is used in the heuristic to prioritize the computation
 of nodes which release other nodes.
 
@@ -442,11 +445,11 @@ function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
                 # Prioritize if parent can be deallocated
                 if  can_dealloc_parent1 && can_dealloc_parent2 && !(parent1==parent2)
                     # Set to -2*free_mem_bonus if two memory slots can deallocate after this.
-                    now_computable[node] = -2*free_mem_bonus;
+                    now_computable[node] += -2*free_mem_bonus;
                 elseif can_dealloc_parent1 || can_dealloc_parent2
                     # Set to -free_mem_bonus one memory slot can deallocate after this.
 
-                    now_computable[node] = -free_mem_bonus
+                    now_computable[node] += -free_mem_bonus
                 end
             end
         end
