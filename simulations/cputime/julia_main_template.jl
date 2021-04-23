@@ -1,4 +1,4 @@
-using LinearAlgebra,BenchmarkTools
+using LinearAlgebra,BenchmarkTools,Printf;
 USING
 
 # Check CPU-turbo state.
