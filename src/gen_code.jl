@@ -61,9 +61,15 @@ slotname(::LangMatlab,i)="memslots{$i}"
 slotname(::LangC,i)="memslots+($i-1)*n*n"
 
 # Language specific variable declaration, initialization, and assignment
-# For Julia more parsing may be required TODO
 assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v");
-assign_coeff(::LangMatlab,v,i)=("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
+function assign_coeff(::LangMatlab,v,i)
+    if imag(v) == 0
+        ("coeff$i","coeff$i=$(v)");
+    else
+        ("coeff$i","coeff$i=$(real(v)) + 1i*$(imag(v))");
+    end
+end
+
 # In C, complex types are structures and are passed by reference.
 function assign_coeff(::LangC_MKL,val::T,i) where T<:Complex
     assignment_string = "coeff$i.real = "*string(real(val))*";\n"*
