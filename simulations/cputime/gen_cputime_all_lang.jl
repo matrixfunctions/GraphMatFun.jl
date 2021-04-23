@@ -39,7 +39,9 @@ function gen_julia_main(N,col,graphs,names,mkl)
             this_sim_code=deepcopy(repeated_code);
             for (j,line)=enumerate(this_sim_code)
                 if (g isa Compgraph)
-                    line=replace(line,"INCLUDE" => string("include(\"",replace(tempdir(), "\\" => "\\\\"),"/NAME.jl\");"));
+                    line=replace(line,"INCLUDE" => string("include(\"",
+                                                          replace(tempdir(), "\\" => "\\\\"), #Hack to escape enough characters on windows
+                                                          "/NAME.jl\");"));
                 else
                     line=replace(line,"INCLUDE" => "exp_julia=exp");
                 end
