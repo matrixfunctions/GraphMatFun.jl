@@ -9,7 +9,11 @@ function get_cost(graph::Compgraph)
 end
 
 println("Matrix norm: $(opnorm(A0,1))");
-println("BLAS: ",BLAS.get_config())
+if (!isdefined(BLAS,:get_config))
+    println("BLAS vendor: ",BLAS.vendor())
+else
+    println("BLAS config: ",BLAS.get_config())
+end
 graphs=Vector{Any}(graphs);
 pushfirst!(graphs,:exp);
 pushfirst!(names,"exp");
@@ -24,10 +28,10 @@ for (i,g)=enumerate(graphs)
     if (g isa Compgraph)
         print("cost $(get_cost(g)) ");
 
-        gen_code("/tmp/exp_$n.jl",g,funname="exp_$n",priohelp=priohelp);
-        gen_code("/tmp/exp_$n.m",g,funname="exp_$n",lang=LangMatlab(),priohelp=priohelp);
+        gen_code(string(tempdir(),"/exp_$n.jl"),g,funname="exp_$n",priohelp=priohelp);
+        gen_code(string(tempdir(),"/exp_$n.m"),g,funname="exp_$n",lang=LangMatlab(),priohelp=priohelp);
 
-        include("/tmp/exp_$n.jl");
+        include(string(tempdir(),"/exp_$n.jl"));
 
         print("time: ");
         s=Symbol("exp_$n");

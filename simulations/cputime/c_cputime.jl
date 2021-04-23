@@ -6,8 +6,8 @@ for (i,g)=enumerate(graphs)
     n=names[i];
     println("# Generating c-files for $n");
     println("# (Ubuntu installation of LAPACKE: sudo apt install liblapacke-dev)");
-    fname_mkl="/tmp/$(n)_MKL";
-    fname_openblas="/tmp/$(n)_OpenBLAS";
+    fname_mkl=string(tempdir(),"/$(n)_MKL");
+    fname_openblas=string(tempdir(),"/$(n)_OpenBLAS");
     gen_code("$(fname_mkl).c",g,funname="$(n)_MKL",lang=GraphMatFun.LangC_MKL(),priohelp=priohelp);
     gen_code("$(fname_openblas).c",g,funname="$(n)_OpenBLAS",lang=GraphMatFun.LangC_OpenBLAS(),priohelp=priohelp);
 
@@ -21,8 +21,8 @@ println("");
 println("# Run the timing as follows")
 
 for (i,n)=enumerate(names)
-    fname_mkl="/tmp/$(n)_MKL";
-    fname_openblas="/tmp/$(n)_OpenBLAS";
+    fname_mkl=string(tempdir(),"/$(n)_MKL");
+    fname_openblas=string(tempdir(),"/$(n)_OpenBLAS");
 
     println("$fname_mkl");
     println("echo -n sleeping; sleep 2; echo n"); # Avoid overheating
