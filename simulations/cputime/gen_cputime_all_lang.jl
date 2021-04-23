@@ -81,24 +81,32 @@ for (i,g)=enumerate(graphs)
 
     n=names[i];
 
-    print("$n ");
+    print("Generating code for $n ");
     if (g isa Compgraph)
         print("cost $(get_cost(g)) ");
         gen_code("/tmp/$n.jl",g,funname="$n",priohelp=priohelp);
         gen_code("/tmp/$n.m",g,funname="$n",lang=LangMatlab(),priohelp=priohelp);
+
+        # Distinguish between MKL and OpenBLAS in the graph generators
+        # already for C. Since includes etc are different.
+        fname_mkl="/tmp/$(n)_MKL";
+        fname_openblas="/tmp/$(n)_OpenBLAS";
+        gen_code("$(fname_mkl).c",g,funname="$(n)_MKL",lang=GraphMatFun.LangC_MKL(),priohelp=priohelp);
+        gen_code("$(fname_openblas).c",g,funname="$(n)_OpenBLAS",lang=GraphMatFun.LangC_OpenBLAS(),priohelp=priohelp);
+
     end
     println();
 end
 
 lines=gen_julia_main(2000,1,graphs,names,true);
-open("/tmp/run_cputime_julia_mkl.jl","w") do io
+open("/tmp/run_cputime_julia_MKL.jl","w") do io
     for line=lines
         write(io,line,"\n");
     end
 end
 
 lines=gen_julia_main(2000,1,graphs,names,false);
-open("/tmp/run_cputime_julia_openblas.jl","w") do io
+open("/tmp/run_cputime_julia_OpenBLAS.jl","w") do io
     for line=lines
         write(io,line,"\n");
     end

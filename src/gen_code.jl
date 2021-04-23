@@ -178,7 +178,13 @@ end
 # Adding of an identity matrix in julia code
 function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
     push_comment!(code,"Add lincomb with identity. Use view of diaganal.");
-    push_code!(code,"copy!($(nodemem),$(non_I_parent_mem))");
+
+    if (nodemem != non_I_parent_mem)
+        push_code!(code,"copy!($(nodemem),$(non_I_parent_mem))");
+    else
+        push_comment!(code,"No copy necessary. Inline identity multiple add")
+    end
+
     push_code!(code,"$(nodemem) .*= $non_I_parent_coeff");
     push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0));");
     push_code!(code,"D .+= $I_parent_coeff");
