@@ -63,6 +63,7 @@ mm=median(bb.times)*1e-9;
 println("$(mm) mem: $(bb.memory)");
 print("                       ")
 @show bb.times
+sleep(3);
 
 ### END REPEATED CODE
 
