@@ -33,13 +33,13 @@ end
 col=COLUMN;
 
 
-n=2000;
+n=MATSIZE;
 A0=triu(tril(ones(n,n),3),-3)*1.0 +1.0*I;
 A0[5,3] += 0.0001; # Break symmetry to avoid special case code
 if col==1
-    A0=2.5*A0/8
+    A0=2.5*A0/norm(A0,1)
 else
-    A0=5.5*A0/8
+    A0=5.5*A0/norm(A0,1);
 end
 
 println("Matrix norm: $(opnorm(A0,1))");
@@ -61,7 +61,7 @@ A=deepcopy(A0);
 INCLUDE
 bb=@benchmark FUNCTION($A);
 mm=median(bb.times)*1e-9;
-println("$(mm) mem: $(bb.memory)");
+println("median: $(mm) mem: $(bb.memory)");
 print("                       ")
 @show bb.times
 sleep(3);

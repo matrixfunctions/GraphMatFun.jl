@@ -7,22 +7,11 @@ graph_m6_SID=import_compgraph("simulations/graphs/exp_m6_SID_2_22.cgr");;
 graph_m7=import_compgraph("simulations/graphs/exp_m7_mono_taylor_6_0.cgr");;
 graph_m7_SID=import_compgraph("simulations/graphs/exp_m7_SID+_6_0.cgr");;
 
-# Test matrix
-n=2000;
-A0=triu(tril(ones(n,n),3),-3)*1.0 +1.0*I;
-A0[5,3] += 0.0001; # Break symmetry to avoid special case code
-col=2;
-if col==1
-    A0=2.5*A0/8
-else
-    A0=5.5*A0/8
-end
 
-# opnorm(A0,1)=1;
-
-
-(graph_native,_)=gen_exp_native_jl(A0);
-(graph_native2,_)=gen_exp_native_jl(ones(1,1)*5.5);
+# To create the corresponding gen_exp_native
+AA=ones(Float64,1,1)
+(graph_native,_)=gen_exp_native_jl(AA*2.5);
+(graph_native2,_)=gen_exp_native_jl(AA*5.5);
 
 names=["expm_matlab", "exp_julia", "expmpoly_matlab", "m6_mono_taylor_2_7","m6_SID_2_22","m7_mono_taylor_6_0", "m7_SIDplus_6_0","native_73_jl","native_83_jl"];
 graphs=[:expm_matlab,:exp_julia,:expmpoly_matlab,graph_m6,graph_m6_SID,graph_m7,graph_m7_SID,graph_native,graph_native2]

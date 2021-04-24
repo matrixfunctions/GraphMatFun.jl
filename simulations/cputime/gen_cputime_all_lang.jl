@@ -3,18 +3,20 @@ include("setup_graphs.jl");
 
 
 
-
-function gen_julia_main(N,col,graphs,names,mkl)
-    fname="simulations/cputime/julia_main_template.jl";
+# Process code from template. In common for
+# both matlab and Julia
+function gen_main(fname,N,col,graphs,names,mkl,commentsign="#",skip=[:expm_matlab,:expmpoly_matlab])
+    #fname="";
     lines=readlines(fname);
     start_repeated_line=0;
     end_repeated_line=0;
     for (i,line)=enumerate(lines)
         line=replace(line, "COLUMN" => string(col));
+        line=replace(line, "MATSIZE" => string(N));
         if (mkl)
             line=replace(line, "USING" => "using MKL;");
         else
-            line=replace(line, "USING" => "# NO MKL");
+            line=replace(line, "USING" => "$commentsign NO MKL");
         end
 
         lines[i]=line
@@ -34,7 +36,7 @@ function gen_julia_main(N,col,graphs,names,mkl)
     lines=lines[1:(start_repeated_line-1)]
     for (i,g)=enumerate(graphs)
         local n;
-        if (g isa Compgraph || (g == :exp_julia))
+        if (!(g in skip))
             n=names[i];
             this_sim_code=deepcopy(repeated_code);
             for (j,line)=enumerate(this_sim_code)
@@ -55,7 +57,7 @@ function gen_julia_main(N,col,graphs,names,mkl)
             # Append
             map(code->push!(lines,code), this_sim_code)
         else
-            push!(lines,"# SKIPPING $g");
+            push!(lines,"$commentsign SKIPPING $g");
             push!(lines,"");
         end
 
@@ -99,16 +101,25 @@ for (i,g)=enumerate(graphs)
     end
     println();
 end
-
-lines=gen_julia_main(2000,1,graphs,names,true);
+println("Generating julia/MKL");
+julia_template="simulations/cputime/julia_main_template.jl";
+lines=gen_main(julia_template,2000,1,graphs,names,true);
 open(string(tempdir(),"/run_cputime_julia_MKL.jl"),"w") do io
     for line=lines
         write(io,line,"\n");
     end
 end
-
-lines=gen_julia_main(2000,1,graphs,names,false);
+println("Generating julia/OpenBLAS");
+lines=gen_main(julia_template,2000,1,graphs,names,false);
 open(string(tempdir(),"/run_cputime_julia_OpenBLAS.jl"),"w") do io
+    for line=lines
+        write(io,line,"\n");
+    end
+end
+
+println("Generating matlab/MKL");
+lines=gen_main("simulations/cputime/matlab_main_template.m",2000,1,graphs,names,false,"%",[:exp_julia]);
+open(string(tempdir(),"/run_cputime_matlab_OpenBLAS.m"),"w") do io
     for line=lines
         write(io,line,"\n");
     end
