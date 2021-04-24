@@ -1,6 +1,6 @@
 include("gen_code_mem.jl");
 
-export gen_code,LangJulia,LangMatlab,LangC
+export gen_code,LangJulia,LangMatlab,LangC_MKL,LangC_OpenBLAS
 
 struct LangMatlab end;
 struct LangJulia
