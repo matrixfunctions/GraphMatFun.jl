@@ -40,7 +40,7 @@ function gen_julia_main(N,col,graphs,names,mkl)
             for (j,line)=enumerate(this_sim_code)
                 if (g isa Compgraph)
                     line=replace(line,"INCLUDE" =>
-                      string("include(joinpath(tempdir(),\"NAME.jl\");"));
+                      string("include(joinpath(tempdir(),\"NAME.jl\"));"));
 
                 else
                     line=replace(line,"INCLUDE" => "exp_julia=exp");
