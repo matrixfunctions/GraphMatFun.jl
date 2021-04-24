@@ -64,7 +64,7 @@ function compute_fwd_theta(graph::Compgraph{T},f;
     # Find point where the relative forward error equals tolerance.
     p=Polynomial(abs.(coeff),:x)
     e_fwd(z)=abs.(f.(z)-p.(z)) ./ abs.(z)
-    g(z)=e_fwd(z)-unitroundoff
+    g(z)=e_fwd(z)-tolerance
     theta_fwd=fzero(g,theta_init,verbose=true)
     return e_fwd,convert(coefftype,theta_fwd)
 end
