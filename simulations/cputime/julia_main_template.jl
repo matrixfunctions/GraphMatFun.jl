@@ -1,5 +1,7 @@
-using LinearAlgebra,BenchmarkTools,Printf;
+using LinearAlgebra,BenchmarkTools,Printf,Statistics;
 USING
+
+BenchmarkTools.DEFAULT_PARAMETERS.samples=10; # NOF SAMPLES
 
 versioninfo(verbose=true);
 # Check CPU-turbo state.
@@ -37,9 +39,9 @@ n=MATSIZE;
 A0=triu(tril(ones(n,n),3),-3)*1.0 +1.0*I;
 A0[5,3] += 0.0001; # Break symmetry to avoid special case code
 if col==1
-    A0=2.5*A0/norm(A0,1)
+    A0=2.5*A0/opnorm(A0,1)
 else
-    A0=5.5*A0/norm(A0,1);
+    A0=5.5*A0/opnorm(A0,1);
 end
 
 println("Matrix norm: $(opnorm(A0,1))");
@@ -59,11 +61,13 @@ end
 print(@sprintf("%20.20s: ","NAME"));
 A=deepcopy(A0);
 INCLUDE
-bb=@benchmark FUNCTION($A);
+bb=@benchmark FUNCTION($A) samples=5 seconds=20;
 mm=median(bb.times)*1e-9;
-println("median: $(mm) mem: $(bb.memory)");
+stdval=std(bb.times)*1e-9
+println("$(mm) ± $stdval mem: $(bb.memory)");
 print("                       ")
 @show bb.times
+GC.gc();
 sleep(3);
 
 ### END REPEATED CODE

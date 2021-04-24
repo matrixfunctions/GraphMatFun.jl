@@ -5,7 +5,7 @@ using LinearAlgebra;
 graph_m6=import_compgraph("simulations/graphs/exp_m6_mono_taylor_2_7.cgr");;
 graph_m6_SID=import_compgraph("simulations/graphs/exp_m6_SID_2_22.cgr");;
 graph_m7=import_compgraph("simulations/graphs/exp_m7_mono_taylor_6_0.cgr");;
-graph_m7_SID=import_compgraph("simulations/graphs/exp_m7_SID+_6_0.cgr");;
+graph_m7_SID=import_compgraph("simulations/graphs/exp_m7_SID_3_59.cgr");;
 
 
 # To create the corresponding gen_exp_native
@@ -13,7 +13,7 @@ AA=ones(Float64,1,1)
 (graph_native,_)=gen_exp_native_jl(AA*2.5);
 (graph_native2,_)=gen_exp_native_jl(AA*5.5);
 
-names=["expm_matlab", "exp_julia", "expmpoly_matlab", "m6_mono_taylor_2_7","m6_SID_2_22","m7_mono_taylor_6_0", "m7_SIDplus_6_0","native_73_jl","native_83_jl"];
+names=["expm_matlab", "exp_julia", "expmpoly_matlab", "m6_mono_taylor_2_7","m6_SID_2_22","m7_mono_taylor_6_0", "m7_SID_3_59","native_73_jl","native_83_jl"];
 graphs=[:expm_matlab,:exp_julia,:expmpoly_matlab,graph_m6,graph_m6_SID,graph_m7,graph_m7_SID,graph_native,graph_native2]
 for (i,g)=enumerate(graphs)
     if (g isa Compgraph)
