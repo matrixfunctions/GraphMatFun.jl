@@ -70,12 +70,12 @@ function compute_fwd_theta(graph::Compgraph{T},f;
 end
 
 """
-    (e_bwd,theta)=compute_bwd_theta(graph::Compgraph,
-                                    nterms=100,
-                                    ndigits=100,
-                                    coefftype=T,
-                                    tolerance=eps(coefftype)/2,
-                                    theta_init=big"0.1") where T
+    (e_bwd,theta)=compute_bwd_theta_exponential(graph::Compgraph{T},
+                                                nterms=100,
+                                                ndigits=100,
+                                                coefftype=T,
+                                                tolerance=eps(coefftype)/2,
+                                                theta_init=big"0.1") where T
 
 Bound on relative backward error of the exponential with corresponding theta.
 
@@ -105,7 +105,7 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
                                        nterms=100,
                                        ndigits=100,
                                        tolerance=eps(coefftype)/2,
-                                       theta_init=big("0.2")) where T
+                                       theta_init=big"0.2") where T
     # Set precision to ndigits decimal digits.
     setprecision(Integer(ceil(log2(10. ^ndigits))));
 
@@ -113,7 +113,7 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
     coeff=get_polynomial_coefficients(graph)
 
     # Convert coefficients of p to required type.
-    coeff=convert(typeof(coeff),convert(Array{Complex{coefftype}},coeff))
+    coeff=convert(coefftype,convert(Array{Complex{coefftype}},coeff))
     if isreal(coeff)
         coeff=real(coeff)
     end
