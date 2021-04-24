@@ -1,4 +1,3 @@
-
 export eval_graph,eval_jac,eval_runerr
 
 
@@ -139,7 +138,7 @@ function init_vals_eval_graph!(graph, x::AbstractMatrix, vals)
 end
 
 
-## Compute derifvatives w.r.t. coefficients in the graph
+## Compute derivatives w.r.t. coefficients in the graph
 
 # Computes Jacobian J = dZ(x_i)/dc, with respect to the coefficients
 # c given in the vector cref, and points x_i in the vector x.
@@ -233,8 +232,8 @@ end
                            add_relerr=eps())
 
 Provides the running error of the graph evaluated in `x`.
-See `eval_graph` for meaning of `vals`. The kwarg
-`relerrs` is an anologous variable for the running
+See `eval_graph` for meaning of `vals` and `output`. The
+kwarg `relerrs` is an anologous variable for the running
 error estimates in each node. The kwarg `mode`
 can be `:bounds`, `:rand`, `:estimate`, specifying
 if the code should make estimates or bounds, or
