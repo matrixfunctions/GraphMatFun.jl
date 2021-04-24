@@ -1,6 +1,7 @@
 using LinearAlgebra,BenchmarkTools,Printf;
 USING
 
+versioninfo(verbose=true);
 # Check CPU-turbo state.
 # from https://askubuntu.com/questions/619875/disabling-intel-turbo-boost-in-ubuntu
 # Disable:
