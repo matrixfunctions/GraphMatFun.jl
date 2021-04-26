@@ -3,6 +3,9 @@ include("setup_graphs.jl");
 
 
 for (i,g)=enumerate(graphs)
+    if !isa(g,Compgraph)
+        continue
+    end
     n=names[i];
     println("# Generating c-files for $n");
     println("# (Ubuntu installation of LAPACKE: sudo apt install liblapacke-dev)");
