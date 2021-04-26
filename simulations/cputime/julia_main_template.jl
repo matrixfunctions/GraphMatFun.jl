@@ -1,4 +1,4 @@
-using LinearAlgebra,BenchmarkTools,Printf,Statistics;
+using InteractiveUtils,LinearAlgebra,BenchmarkTools,Printf,Statistics;
 USING
 
 BenchmarkTools.DEFAULT_PARAMETERS.samples=10; # NOF SAMPLES
