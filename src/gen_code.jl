@@ -723,7 +723,7 @@ compilation_string(::LangC_OpenBLAS,fname)=
 compilation_string(::LangC_MKL,fname)=
     "gcc -o main_compiled $fname -lmkl_rt"
 
-function gen_main(lang::LangC,T,fname,funname)
+function gen_main(lang::LangC,T,fname,funname;A=10::Union{Integer,Matrix})
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang);
     push_code!(code,"")
@@ -742,15 +742,25 @@ function gen_main(lang::LangC,T,fname,funname)
     push_code!(code,"size_t i;")
 
     # Generate matrix.
-    n=3 # Size of dummy matrix.
-    push_code!(code,"size_t n = $n;")
-    push_code!(code,"blas_type A[$(n*n)] = {")
-    A=randn(T,n,n)
-    print_indented_matrix(lang,code,A,ind_lvl=2)
-    push_code!(code,"};")
+    if isa(A,Matrix)
+        n=LinearAlgebra.checksquare(A)
+        push_code!(code,"size_t n = $n;")
+        push_code!(code,"blas_type A[$(n*n)] = {")
+        print_indented_matrix(lang,code,A,ind_lvl=2)
+        push_code!(code,"};")
+    else # A is an integer
+        n=A
+        push_code!(code,"size_t n = $n;")
+        push_code!(code,"srand(0);")
+        push_code!(code,"blas_type *A = malloc(n*n*sizeof(*A));")
+        push_code!(code,"for(i=0; i<n*n; i++){")
+        push_code!(code,"A[i] = rand() / RAND_MAX;",ind_lvl=2)
+        push_code!(code,"}")
+    end
 
     # Call polynomial evaluation function.
-    push_code!(code,"$blas_prefix$funname(A,n,A);")
+    push_code!(code,"blas_type *B = malloc(n*n*sizeof(*A));")
+    push_code!(code,"$blas_prefix$funname(A,n,B);")
     push_code!(code,"}",ind_lvl=0)
     return code
 end
