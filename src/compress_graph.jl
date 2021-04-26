@@ -11,6 +11,10 @@ export compress_graph_redundant!
 export compress_graph_passthrough!
 export compress_graph!
 
+function conditional_println(out_string,verbose)
+    verbose && println(out_string)
+end
+
 
 function delete_crefs!(cref,n)
 
@@ -26,13 +30,13 @@ function delete_crefs!(cref,n)
 end
 
 """
-    compress_graph_dangling!(graph,cref=[])
+    compress_graph_dangling!(graph,cref=[];verbose=false)
 
 Removes dangling nodes in the graph. If a node is not used anywhere
 and it is not in the output, it can safely be removed.
 
     """
-function compress_graph_dangling!(graph,cref=[])
+function compress_graph_dangling!(graph,cref=[];verbose=false)
     # Remove dangling nodes
     modified=true
     while modified
@@ -47,7 +51,7 @@ function compress_graph_dangling!(graph,cref=[])
             end
 
             if (nof_children==0 && !(key in graph.outputs))
-                println("Delete dangling:",key);
+                conditional_println("Delete dangling: $key",verbose);
                 delete!(graph.parents,key)
                 delete!(graph.operations,key)
                 if (haskey(graph.coeffs,key))
@@ -63,13 +67,13 @@ end
 
 
 """
-    compress_graph_zero_coeff!(graph,cref=[];droptol=0)
+    compress_graph_zero_coeff!(graph,cref=[];droptol=0;verbose=false)
 
 Searches for linear combinations with zero coeff value and tries to compress
 by redirecting node references.
 
     """
-function compress_graph_zero_coeff!(graph,cref=[];droptol=0)
+function compress_graph_zero_coeff!(graph,cref=[];droptol=0,verbose=false)
 
     modified=true;
     while (modified)
@@ -83,7 +87,7 @@ function compress_graph_zero_coeff!(graph,cref=[];droptol=0)
                     other_s=3-s;
                     if (abs(v[s]) <= droptol)
 
-                        println("Zero coeff can be removed: $key because of coeff $s is "*string(v[s]));
+                        conditional_println("Remove node: $key because coeff $s is "*string(v[s])*" ≈ 0",verbose);
 
                         # Redirect all lincombs we can find
                         for (pkey,op) in graph.operations
@@ -92,7 +96,7 @@ function compress_graph_zero_coeff!(graph,cref=[];droptol=0)
                                 (pp[1]==key || pp[2]==key))
                                 # It can be merged
 
-                                println("Delete connection:",key,"->",pkey)
+                                conditional_println("Delete connection: $key -> $pkey",verbose)
                                 # z: the parent connected to the node we want to remove
                                 z=1;
                                 if (pp[2]==key)
@@ -125,13 +129,13 @@ function compress_graph_zero_coeff!(graph,cref=[];droptol=0)
     end
 end
 """
-    compress_graph_output_cleaning!(graph,cref=[])
+    compress_graph_output_cleaning!(graph,cref=[];verbose=false)
 
 Checks if the output is computed from the linear combination
 that can be compressed.
 
     """
-function compress_graph_output_cleaning!(graph,cref=[])
+function compress_graph_output_cleaning!(graph,cref=[];verbose=false)
 
     ismodified=false;
     while ismodified
@@ -235,13 +239,13 @@ function has_trivial_nodes(graph)
 end
 
 """
-    compress_graph_trivial!(graph,cref=[])
+    compress_graph_trivial!(graph,cref=[];verbose=false)
 
 Removes from the graph trivial nodes, that is, multiplications by the identity
 or linear systems whose coefficient is the identity matrix.
 
     """
-function compress_graph_trivial!(graph,cref=[])
+function compress_graph_trivial!(graph,cref=[];verbose=false)
     # cref is not used as this function does not remove lincomb nodes.
     ismodified=true
     while ismodified
@@ -249,7 +253,7 @@ function compress_graph_trivial!(graph,cref=[])
         for (key,parents) in graph.parents
             replacement=find_replacement_node(graph,key)
             if replacement!=[]
-                println("Replace node ",key," by ",replacement);
+                conditional_println("Replace node: $key by $replacement",verbose);
                 replace_node!(graph,key,replacement,cref)
                 ismodified=true
             end
@@ -308,15 +312,15 @@ function find_redundant_nodes(graph,node,compress_lincomb)
 end
 
 # Merge redundant nodes into node.
-function merge_redundant_nodes!(graph,node,redundant_nodes,cref)
+function merge_redundant_nodes!(graph,node,redundant_nodes,cref,verbose)
     for key in redundant_nodes
-        println("Merge node ",key," with ",node);
+        conditional_println("Merge node: $key with $node",verbose);
         replace_node!(graph,key,node,cref)
     end
 end
 
 """
-    compress_graph_redundant!(graph,compress_lincomb=false,cref=[])
+    compress_graph_redundant!(graph,compress_lincomb=false,cref=[];verbose=false)
 
 Removes from the graph redundant nodes, that is, nodes that repeat a computaion
 that is already present in the graph. Nodes corresponding to a linear
@@ -324,7 +328,7 @@ combination are removed only if the coefficients are the same and
 `compress_lincomb` is set to `true`.
 
     """
-function compress_graph_redundant!(graph,cref=[];compress_lincomb=true)
+function compress_graph_redundant!(graph,cref=[];compress_lincomb=true,verbose=false)
     # cref is not used as this function does not remove lincomb nodes.
     ismodified=true
     while ismodified
@@ -332,7 +336,7 @@ function compress_graph_redundant!(graph,cref=[];compress_lincomb=true)
         for (key,parents) in graph.parents # No need to check input nodes.
             redundant_nodes=find_redundant_nodes(graph,key,compress_lincomb)
             if !isempty(redundant_nodes)
-                merge_redundant_nodes!(graph,key,redundant_nodes,cref)
+                merge_redundant_nodes!(graph,key,redundant_nodes,cref,verbose)
                 ismodified=true
             end
         end
@@ -341,14 +345,14 @@ end
 
 
 """
-    compress_graph_passthrough!(graph,cref=[]);
+    compress_graph_passthrough!(graph,cref=[];verbose=false);
 
 Identifies lincombs that have coefficients (0 1) or (1 0)
 which correspond to identity operations. It redirect
 appropriately.
 
 """
-function compress_graph_passthrough!(graph,cref=[]);
+function compress_graph_passthrough!(graph,cref=[];verbose=false);
     ismodified=true
     while ismodified
         ismodified=false;
@@ -365,8 +369,8 @@ function compress_graph_passthrough!(graph,cref=[]);
             end
             # k_one is to keep
             # k_zero connection not important
+            conditional_println("Redirect node: $key to $k_one.",verbose)
 
-            #
             p_passthrough=graph.parents[key][k_one];
 
             # Find all nodes that use key and redirect them
@@ -387,17 +391,17 @@ function compress_graph_passthrough!(graph,cref=[]);
 end
 
 """
-    compress_graph!(graph,cref=[])
+    compress_graph!(graph,cref=[];verbose=false)
 
 Searches for nodes which can be removed or reorganized without changing
 the function it represents. Corresponding references in the `cref`-vector
 are removed.
 
     """
-function compress_graph!(graph,cref=[])
-    compress_graph_output_cleaning!(graph,cref)
-    compress_graph_zero_coeff!(graph,cref)
-    compress_graph_trivial!(graph,cref)
-    compress_graph_passthrough!(graph,cref);
-    compress_graph_dangling!(graph,cref)
+function compress_graph!(graph,cref=[];verbose=false)
+    compress_graph_output_cleaning!(graph,cref,verbose=verbose)
+    compress_graph_zero_coeff!(graph,cref,verbose=verbose)
+    compress_graph_trivial!(graph,cref,verbose=verbose)
+    compress_graph_passthrough!(graph,cref,verbose=verbose)
+    compress_graph_dangling!(graph,cref,verbose=verbose)
 end
