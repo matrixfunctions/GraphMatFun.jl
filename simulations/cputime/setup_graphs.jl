@@ -13,9 +13,10 @@ graph_m8_mono=import_compgraph("simulations/graphs/exp_m8_mono_taylor_13_5.cgr")
 AA=ones(Float64,1,1)
 (graph_native,_)=gen_exp_native_jl(AA*2.5);
 (graph_native2,_)=gen_exp_native_jl(AA*5.5);
+(graph_native3,_)=gen_exp_native_jl(AA*13.5);
 
-names=["expm_matlab", "exp_julia", "expmpoly_matlab", "m6_mono_taylor_2_7","m6_SID_2_22","m7_mono_taylor_6_0", "m7_SID_3_59","native_73_jl","native_83_jl","m8_mono_13_5"];
-graphs=[:expm_matlab,:exp_julia,:expmpoly_matlab,graph_m6,graph_m6_SID,graph_m7,graph_m7_SID,graph_native,graph_native2,graph_m8_mono]
+names=["expm_matlab", "exp_julia", "expmpoly_matlab", "m6_mono_taylor_2_7","m6_SID_2_22","m7_mono_taylor_6_0", "m7_SID_3_59","native_73_jl","native_83_jl","m8_mono_13_5","native_93_jl"];
+graphs=[:expm_matlab,:exp_julia,:expmpoly_matlab,graph_m6,graph_m6_SID,graph_m7,graph_m7_SID,graph_native,graph_native2,graph_m8_mono,graph_native3]
 for (i,g)=enumerate(graphs)
     if (g isa Compgraph)
         if (count(values(g.operations) .== :ldiv) == 0)
