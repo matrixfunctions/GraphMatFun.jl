@@ -56,7 +56,7 @@ function compute_fwd_theta(graph::Compgraph{T},f;
     coeff=get_polynomial_coefficients(graph)
 
     # Convert coefficients to required type.
-    coeff=convert(typeof(coeff),convert(Array{Complex{coefftype}},coeff))
+    coeff=convert.(coefftype,coeff);
     if isreal(coeff)
         coeff=real(coeff)
     end
@@ -113,7 +113,7 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
     coeff=get_polynomial_coefficients(graph)
 
     # Convert coefficients of p to required type.
-    coeff=convert(coefftype,convert(Array{Complex{coefftype}},coeff))
+    coeff=convert.(coefftype,coeff);
     if isreal(coeff)
         coeff=real(coeff)
     end
