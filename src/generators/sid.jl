@@ -300,6 +300,16 @@ function gen_sid_exp(k;T=Float64)
         y = convert.(T,y);
 
         (graph,cref)=gen_degopt_poly(xv,y);
+    elseif (k>7)
+        (graph,cref)=gen_sid_exp(7;T=T)
+        # Square it 7-k times
+        for j=8:k
+
+            degopt=Degopt(graph);
+            square!(degopt);
+            scale!(degopt,convert(T,1/2));
+            (graph,cref)=gen_degopt_poly(degopt);
+        end
     else
         error("Not implemented for k=$k");
     end
