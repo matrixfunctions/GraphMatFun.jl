@@ -41,6 +41,11 @@ function initsim(s,prev_graph,prev_cref)
     end
 
 
+    if (s.graph isa Tuple)
+        # Starting graph is hardcoded
+        return (s.graph[1],s.graph[2],discr)
+    end
+
     c=Vector();
     graph=Nothing;
     cref=Nothing;
@@ -55,10 +60,11 @@ function initsim(s,prev_graph,prev_cref)
             elseif (s.graph == :bbc)
                 (graph,cref)=gen_bbc_basic_exp(m)
             elseif (s.graph == :sastre)
-                (graph,cref)=gen_sastre_basic_exp(m)
+                (graph,cref)=GraphMatFun.gen_sastre_basic_exp(m)
             end
         else
             deg0=m-1;
+            @show deg0
             graph_mult=0;
             oldgraph=Nothing
             oldcref=Nothing;
@@ -70,7 +76,7 @@ function initsim(s,prev_graph,prev_cref)
                     c=get_lsqr(deg0+1,bdiscr)
                     c=convert.(s.eltype,c);
                 elseif (s.init==:taylor)
-                    c=get_taylor(s.eltype,deg0+1)
+                    c=get_taylor(s.eltype,deg0)
                 elseif (s.init == :prev)
                 else
                     error("Unknown init $(s.init)")
@@ -80,6 +86,9 @@ function initsim(s,prev_graph,prev_cref)
                 oldcref=cref;
                 if (s.graph == :mono)
                     (graph,cref)=gen_monomial_degopt(c)
+                elseif (s.graph == :mono2)
+                    (graph_org,cref_org)=gen_monomial_degopt(c[1:end-1])
+                    (graph,cref)=gen_degopt_by_squaring(graph_org);
                 elseif (s.graph == :horner)
                     (graph,cref)=gen_horner_degopt(c)
                 elseif (s.graph == :ps)
@@ -113,7 +122,10 @@ end
 
 function runsim(s::Simulation,prev_graph,prev_cref)
     (graph,cref,discr)=initsim(s,prev_graph,prev_cref)
-    if (s.graph != :prev)
+    if (s.graph isa Tuple)
+        println("Running graph initialized with pre-computed graph with $(s.m) multiplications rho=$(s.rho) ");
+
+    elseif (s.graph != :prev)
         println("Running graph \"$(s.graph)\" initialized as \"$(s.init)\" with $(s.m) multiplications rho=$(s.rho) ");
     else
         d=s.opt_kwargs[:droptol];
@@ -220,11 +232,16 @@ function interactive_simulations(init_sim,sim0,predefsims="")
     graphlist[1]=graph;
     commandlist[1]="I";
     err=showerr(target,graph);
+    println("Initialerr:$err");
     (graph,cref)=runsim(sim0,graph,cref);
     simlist[2]=sim0;
     graphlist[2]=graph;
     commandlist[2]="s";
     j=2;
+    command="";
+
+
+
     while (command != "q")
         graph=graphlist[j];
         err=showerr(target,graph);
@@ -261,6 +278,19 @@ function interactive_simulations(init_sim,sim0,predefsims="")
                 set_coeffs!(graph,real.(v));
                 println("Realify (removing $(Float64(norm(imag.(v)))) )");
                 sim=deepcopy(simlist[j]);
+            elseif (x=="l")
+                # Linear squares on degopt coeffs
+                graph=deepcopy(graph)
+                y_cref=get_degopt_coeffs(simlist[j].m)[2];
+
+                yy0=get_coeffs(graph,y_cref);
+                opt_linear_fit!(graph, exp, discr, y_cref;
+                                droptol=simlist[j].opt_kwargs[:droptol],
+                                linlsqr=simlist[j].opt_kwargs[:linlsqr]                                )
+                yy1=get_coeffs(graph,y_cref);
+                println("Linear fit degopt (change: $(Float64(norm(yy0-yy1))) )");
+                sim=deepcopy(simlist[j]);
+
             elseif (x=="q");
                 println("Quit!");
                 break;
@@ -290,4 +320,32 @@ function interactive_simulations(init_sim,sim0,predefsims="")
 
     return (graph,simlist[1:j],graphlist[1:j],join(commandlist[1:j]))
 
+end
+
+
+
+function scale_and_square_degopt(fname,sim,kickstart=1)
+    graph_org=import_compgraph(fname);;
+    (graph,cref)=gen_degopt_by_squaring(graph_org);
+    (x,y)=get_degopt_coeffs(graph);
+    if (kickstart>0)
+        x[end][1][1] = 0.001 # Kickstart
+    end
+    if (kickstart>1)
+        x[1][1][1] = 0.001 # Kickstart
+    end
+    (graph2,cref)=gen_degopt_poly(x,y);
+
+    graph2=Compgraph(Complex{BigFloat},graph2)
+
+    y_cref=get_degopt_coeffs(count(values(graph.operations) .== :mult))[2];
+
+    discr=sim.rho*exp.(1im*range(0,2*pi,length=sim.n)[1:end-1]);
+    discr=convert.(Complex{BigFloat},discr);
+    opt_linear_fit!(graph2, exp, discr, y_cref;
+                    errtype = :relerr,
+                    linlsqr = :real_svd,
+                    droptol = 1e-17)
+    graph=deepcopy(graph2);
+    return (graph,cref)
 end
