@@ -1,4 +1,3 @@
-
 n=MATSIZE;
 A0=triu(tril(ones(n,n),3),-3)*1.0 +1.0*eye(n,n);
 A0(4,7)=A0(4,7)+eps()*100; % Break symmetry to avoid special case code
@@ -17,7 +16,7 @@ addpath('/tmp');
 fprintf("Matrix norm: %d \n",norm(A0,1));
 fprintf("Matrix size: %d x %d \n", n , n);
 version -blas ; blas=ans;
-fprintf("BLAS version: %s",blas);
+fprintf("BLAS version: %s\n\n",blas);
 
 nof_samples=10; tv=zeros(nof_samples,1);
 
@@ -26,10 +25,17 @@ expm_matlab=@(x) expm(x);
 expmpoly_matlab=@(x) expmpol(x);
 
 if (~(exist("expmpol")>0))
-    fprintf("expmpol.m doesnt exist in the path. Download from ");
-    fprintf("http://personales.upv.es/~jorsasma/software/expmpol.m \n");
-    fprintf("expmpoly simulation set to identity.\n");
-    expmpoly_matlab=@(x) x; % Dummy
+    fprintf("Function expmpol() not in PATH. Trying to download from\n");
+    fprintf("    http://personales.upv.es/~jorsasma/software/expmpol.m\n");
+    fprintf("and save in current directory.... ");
+    try
+        urlwrite("http://personales.upv.es/~jorsasma/software/expmpol.m","expmpol.m");
+        fprintf("done.\n\n");
+    catch
+        fprintf("failed.\n")
+        fprintf("Unable to download. expmpoly simulation set to identity.\n\n");
+        expmpoly_matlab=@(x) x; % Dummy
+    end
 end
 
 
