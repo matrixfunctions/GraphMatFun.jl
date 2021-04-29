@@ -30,6 +30,6 @@ include("generators/sastre.jl")
 include("error_bounds.jl")
 
 # Code generations
-include("gen_code.jl")
+include("code_gen/gen_code.jl")
 
 end
