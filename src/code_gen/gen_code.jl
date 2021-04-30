@@ -4,6 +4,7 @@ include("gen_code_snippets.jl")
 include("gen_c_code.jl")
 include("gen_julia_code.jl")
 include("gen_matlab_code.jl")
+include("gen_degopt_code.jl")
 
 export gen_code
 
