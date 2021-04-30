@@ -19,4 +19,5 @@ using Test
     include("polynomials.jl");
     include("polynomials_degopt.jl");
     include("rational.jl");
+    include("topo_order.jl");
 end

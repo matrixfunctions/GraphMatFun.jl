@@ -372,7 +372,7 @@ function nof_uncomputed_children(graph,node,vals)
 end
 
 """
-    (order,can_be_deallocated,max_nodes)=get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),free_mem_bonus=1000)
+    (order,can_be_deallocated,max_nodes)=get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),free_mem_bonus=1000,will_not_deallocate=[:I])
 
 Computes a vector of all nodes sorted in a topological
 way, i.e., an order it can be computed. The `priohelp`
@@ -384,7 +384,9 @@ point system. You can influence the computation order by providing
 a `priohelp`. If you want node `:B4` to be computed earlier,
  you can set `priohelp[:B4]=-5000.0`.  The `free_mem_bonus`
 is used in the heuristic to prioritize the computation
-of nodes which release other nodes.
+of nodes which release other nodes. The vector `will_not_deallocate`
+influences the order specifying nodes that will not be deallocated
+and therefore gets no `free_mem_bonus`.
 
 The return value `order` is a `Vector` of Symbols, and
 `can_be_deallocated` is a `Vector{Vector{Symbol}}` where
@@ -394,7 +396,7 @@ the pathwidth.
 
     """
 function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
-                        free_mem_bonus=1000)
+                        free_mem_bonus=1000,will_not_dealloc=[:I])
     # Assumed to be true for the computed nodes, and not exist for other nodes
     is_computed=Dict{Symbol,Bool}();
     is_computed[:I]=true;
@@ -442,6 +444,11 @@ function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
                                         && !(any(outputs.==parent1)) );
                 can_dealloc_parent2 = ( (nof_uncomputed_children(graph,parent2,is_computed)==1)
                                         && !(any(outputs.==parent2)) );
+
+                # Update can_deallocate depending on `will_not_dealloc`
+                can_dealloc_parent1 = can_dealloc_parent1 && !(parent1 in will_not_dealloc)
+                can_dealloc_parent2 = can_dealloc_parent2 && !(parent2 in will_not_dealloc)
+
                 # Prioritize if parent can be deallocated
                 if  can_dealloc_parent1 && can_dealloc_parent2 && !(parent1==parent2)
                     # Set to -2*free_mem_bonus if two memory slots can deallocate after this.
