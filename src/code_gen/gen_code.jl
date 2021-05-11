@@ -88,7 +88,7 @@ function gen_code(fname,graph;
     println(file,to_string(function_init(lang,T,mem,graph)))
 
     println(file,comment(lang,
-                         "Computation order: "*join(string.(order)," ")))
+                         "    Computation order: "*join(string.(order)," ")))
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
                                                        T,graph,node,
