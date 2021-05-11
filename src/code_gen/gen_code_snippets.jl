@@ -12,6 +12,11 @@ function push_code!(code,str;ind_lvl=1,ind_str="    ")
     indented_string=isempty(str) ? "" : indentation*str
     push!(code.code_lines,indented_string)
 end
+function push_code_verbatim_string!(code,str)
+    for line in split(str,"\n")
+        push!(code.code_lines,line)
+    end
+end
 function push_comment!(code,str;ind_lvl=1,ind_str="    ")
     # Convert empty comments to empty lines.
     push_code!(code, isempty(str) ? "" : comment(code.lang,str),

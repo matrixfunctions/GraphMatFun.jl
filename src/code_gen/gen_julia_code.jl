@@ -16,13 +16,48 @@ comment(::LangJulia,s)="# $s"
 
 slotname(::LangJulia,i)="memslots[$i]"
 
-assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i=$v")
-
+assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i="*(v==1 ? "ValueOne()" : "$v"))
 
 # Code generation.
+function push_code_matfun_axpy!(code)
+
+    # Add code for matfun_axpby! functions.
+    matfun_axpby_functions="
+struct ValueOne; end
+ValueOne()
+
+# Compute X <- a X + b Y.
+function matfun_axpby!(X,a,b,Y::UniformScaling)
+    m,n=size(X)
+    if ~(a isa ValueOne)
+        rmul!(X,a)
+    end
+    @inbounds for i=1:n
+        X[i,i]+=(b isa ValueOne) ? 1 : b
+    end
+end
+function matfun_axpby!(X,a,b,Y)
+    m,n=size(X)
+    if ~(a isa ValueOne)
+        rmul!(X,a)
+    end
+    @inbounds for i=1:m
+        @inbounds for j=1:n
+            if (b isa ValueOne)
+                X[i,j]+=Y[i,j]
+            else
+                X[i,j]+=b*Y[i,j]
+            end
+        end
+    end
+end"
+    push_code_verbatim_string!(code,matfun_axpby_functions)
+end
+
 function function_definition(lang::LangJulia,T,funname)
     code=init_code(lang)
     push_code!(code,"using LinearAlgebra",ind_lvl=0)
+    push_code_matfun_axpy!(code)
     push_code!(code,"function $funname(A)",ind_lvl=0)
     return code
 end
@@ -32,8 +67,9 @@ function function_init(lang::LangJulia,T,mem,graph)
     max_nodes=size(mem.slots,1)
 
     # Allocation
-    push_code!(code,"max_memslots=$max_nodes;")
-    push_code!(code,"T=promote_type(eltype(A),$T); "*comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
+    push_code!(code,"max_memslots=$max_nodes")
+    push_code!(code,"T=promote_type(eltype(A),$T) "*
+        comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)")
     push_code!(code,"n=size(A,1)")
     start_j=2
@@ -44,7 +80,7 @@ function function_init(lang::LangJulia,T,mem,graph)
     end
     push_code!(code,"for  j=$start_j:max_memslots")
 
-    push_code!(code,"memslots[j]=Matrix{T}(undef,n,n);",ind_lvl=2)
+    push_code!(code,"memslots[j]=Matrix{T}(undef,n,n)",ind_lvl=2)
     push_code!(code,"end")
     # Initialize I
     I_slot_name=get_slot_name(mem,:I)
@@ -82,14 +118,14 @@ function function_end(lang::LangJulia,graph,mem)
     retval_node=graph.outputs[end]
     retval=get_slot_name(mem,retval_node)
 
-    push_code!(code,"return $retval; "*comment(lang,"Returning $retval_node"))
+    push_code!(code,"return $retval "*comment(lang,"Returning $retval_node"))
     push_code!(code,"end",ind_lvl=0)
     return code
 end
 
-# Adding of an identity matrix in julia code.
+# Adding of a scaled identity matrix in julia code.
 function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
-    push_comment!(code,"Add lincomb with identity. Use view of diaganal.")
+    push_comment!(code,"Add lincomb with identity.")
 
     if (nodemem != non_I_parent_mem)
         push_code!(code,"copy!($(nodemem),$(non_I_parent_mem))")
@@ -97,9 +133,10 @@ function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_p
         push_comment!(code,"No copy necessary. Inline identity multiple add")
     end
 
-    push_code!(code,"$(nodemem) .*= $non_I_parent_coeff")
-    push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0));")
-    push_code!(code,"D .+= $I_parent_coeff")
+    # push_code!(code,"$(nodemem) .*= $non_I_parent_coeff")
+    # push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0))")
+    # push_code!(code,"D .+= $I_parent_coeff")
+    push_code!(code,"matfun_axpby!($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)")
 end
 
 
@@ -125,7 +162,7 @@ function execute_operation!(lang::LangJulia,
         (nodemem_i,nodemem)=get_free_slot(mem)
         alloc_slot!(mem,nodemem_i,node)
 
-        push_code!(code,"mul!($nodemem,$parent1mem,$parent2mem);")
+        push_code!(code,"mul!($nodemem,$parent1mem,$parent2mem)")
 
     elseif op == :ldiv
         # Left division
@@ -166,9 +203,11 @@ function execute_operation!(lang::LangJulia,
                 execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
             else
                 if (recycle_parent == parent1)
-                    push_code!(code,"BLAS.axpby!($coeff2,$parent2mem,$coeff1,$nodemem);")
+                    # push_code!(code,"BLAS.axpby!($coeff2,$parent2mem,$coeff1,$nodemem);")
+                    push_code!(code,"matfun_axpby!($nodemem,$coeff1,$coeff2,$parent2mem)")
                 else
-                    push_code!(code,"BLAS.axpby!($coeff1,$parent1mem,$coeff2,$nodemem);")
+                    # push_code!(code,"BLAS.axpby!($coeff1,$parent1mem,$coeff2,$nodemem);")
+                    push_code!(code,"matfun_axpby!($nodemem,$coeff2,$coeff1,$parent1mem)")
                 end
             end
 
@@ -195,8 +234,11 @@ function execute_operation!(lang::LangJulia,
                 I_parent_coeff=coeff2
                 execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
             else
-                push_code!(code,
-                           "$(nodemem)[:]=$coeff1*$parent1mem + $coeff2*$parent2mem")
+                # push_code!(code,
+                #            "$(nodemem)[:]=$coeff1*$parent1mem +
+                # $coeff2*$parent2mem")
+                push_code!(code,"$(nodemem)[:]=copy($parent1mem)") # Arbitrary choice
+                push_code!(code,"matfun_axpby!($(nodemem),$coeff1,$coeff2,$parent2mem)")
             end
 
         end
