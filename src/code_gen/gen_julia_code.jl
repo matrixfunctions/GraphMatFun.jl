@@ -97,7 +97,7 @@ function function_init(lang::LangJulia,T,mem,graph)
         push_code!(code,"$A_slot_name=A "*comment(lang,"overwrite A"))
     else
         # Otherwise make a copy
-        push_code!(code,"$A_slot_name[:]=A ")
+        push_code!(code,"copy!($A_slot_name,A)")
     end
 
     return code
@@ -237,7 +237,7 @@ function execute_operation!(lang::LangJulia,
                 # push_code!(code,
                 #            "$(nodemem)[:]=$coeff1*$parent1mem +
                 # $coeff2*$parent2mem")
-                push_code!(code,"$(nodemem)[:]=copy($parent1mem)") # Arbitrary choice
+                push_code!(code,"copy!($(nodemem),$parent1mem)") # Arbitrary choice
                 push_code!(code,"matfun_axpby!($(nodemem),$coeff1,$coeff2,$parent2mem)")
             end
 
