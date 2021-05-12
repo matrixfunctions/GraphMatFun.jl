@@ -10,7 +10,7 @@ LangC=Union{LangC_MKL,LangC_OpenBLAS}
 # Language specific operations.
 comment(::LangC,s)="/* $s */"
 
-slotname(::LangC,i)="memslots+($i-1)*n*n"
+slotname(::LangC,i)="memslots[$i-1]"
 
 # Variable declaration, initialization, and reference.
 # In C, complex types are structures and are passed by reference.
@@ -127,8 +127,12 @@ function function_init(lang::LangC,T,mem,graph)
         push_code!(code, "lapack_int *ipiv = malloc(n*sizeof(*ipiv));")
     end
     if max_nodes > 0
-        push_code!(code,"$blas_type *memslots = malloc(n*n*max_memslots"*
-            "*sizeof(*memslots));")
+        push_code!(code,"$blas_type *master_mem = malloc(n*n*max_memslots"*
+                   "*sizeof(*master_mem));")
+        push_code!(code,"$blas_type *memslots[$max_nodes];")
+        push_code!(code,"int j; // Generate pointers ")
+
+        push_code!(code,"for (j=0; j<$max_nodes; j++) memslots[j] = master_mem+j*n*n;")
     end
 
     # Store identity explicitly only if graph has a linear combination of I.
@@ -155,7 +159,7 @@ function function_end(lang::LangC,graph,mem)
         push_code!(code,"free(ipiv);")
     end
     if size(mem.slots,1) > 0
-        push_code!(code,"free(memslots);")
+        push_code!(code,"free(master_mem);")
     end
     push_code!(code,"}",ind_lvl=0)
     return code
