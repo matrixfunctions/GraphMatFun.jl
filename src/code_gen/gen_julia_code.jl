@@ -16,7 +16,11 @@ comment(::LangJulia,s)="# $s"
 
 slotname(::LangJulia,i)="memslots[$i]"
 
-assign_coeff(::LangJulia,v,i)=("coeff$i","coeff$i="*(v==1 ? "ValueOne()" : "$v"))
+assign_coeff(lang::LangJulia,v,i)=
+    v==1 ?
+    ("value_one",
+     comment(lang,"Saving scalar multiplications using ValueOne().")) :
+         ("coeff$i","coeff$i=$v")
 
 # Code generation.
 function push_code_matfun_axpy!(code)
@@ -82,6 +86,12 @@ function function_init(lang::LangJulia,T,mem,graph)
 
     push_code!(code,"memslots[j]=Matrix{T}(undef,n,n)",ind_lvl=2)
     push_code!(code,"end")
+
+    # If needed, initialize variable of type ValueOne for axpby with a=1 or b=1.
+    if (any(map(x->any(x .== 1),values(graph.coeffs))))
+        push_code!(code,"value_one=ValueOne()")
+    end
+
     # Initialize I
     I_slot_name=get_slot_name(mem,:I)
     if (!lang.exploit_uniformscaling)
