@@ -422,7 +422,7 @@ function gen_main(lang::LangC,T,fname,funname;A=10::Union{Integer,Matrix})
         push_code!(code,"srand(0);")
         push_code!(code,"blas_type *A = malloc(n*n*sizeof(*A));")
         push_code!(code,"for(i=0; i<n*n; i++){")
-        push_code!(code,"A[i] = rand() / RAND_MAX;",ind_lvl=2)
+        push_code!(code,"A[i] = rand() / (1.0*RAND_MAX);",ind_lvl=2)
         push_code!(code,"}")
     end
 
