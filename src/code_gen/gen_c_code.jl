@@ -91,7 +91,7 @@ function function_definition(lang::LangC,T,funname)
     push_code!(code,"#include<string.h>",ind_lvl=0)
     push_code!(code,"")
     push_comment!(code, "Code for polynomial evaluation.",ind_lvl=0)
-    push_code!(code,"void $blas_prefix$funname(const $blas_type *A, "*
+    push_code!(code,"void $blas_prefix$funname($blas_type *A, "*
         "const size_t n, $blas_type *output) {",ind_lvl=0)
     return code
 end
@@ -108,7 +108,7 @@ function function_init(lang::LangC,T,mem,graph)
 
     # Initialization.
     graph_ops=values(graph.operations)
-    push_code!(code,"size_t max_memslots = $max_nodes;")
+    push_code!(code,"size_t max_memslots = $(max_nodes-1);")
     push_code!(code,"")
     push_comment!(code,"Initializations.")
     # Allocate coefficients for linear combinations, if needed.
@@ -126,19 +126,23 @@ function function_init(lang::LangC,T,mem,graph)
     if :ldiv in graph_ops
         push_code!(code, "lapack_int *ipiv = malloc(n*sizeof(*ipiv));")
     end
-    if max_nodes > 0
-        push_code!(code,"$blas_type *master_mem = malloc(n*n*max_memslots"*
-                   "*sizeof(*master_mem));")
-        push_code!(code,"$blas_type *memslots[$max_nodes];")
-        push_code!(code,"int j; // Generate pointers ")
+    push_code!(code,"$blas_type *master_mem = malloc(n*n*max_memslots"*
+               "*sizeof(*master_mem));")
+    push_code!(code,"int j;")
+    alloc_slot!(mem,1,:A)
+    push_code!(code,"$blas_type *memslots[$max_nodes]; // One more than max_memslots")
+    push_code!(code,"memslots[0] = A; // First slot is A (and can be recycled)");
+    push_code!(code,"/* The other slots are pointers to allocated memory */");
+    push_code!(code,"for (j=0; j<max_memslots; j++) memslots[j+1] = master_mem+j*n*n;")
 
-        push_code!(code,"for (j=0; j<$max_nodes; j++) memslots[j] = master_mem+j*n*n;")
-    end
+
+
 
     # Store identity explicitly only if graph has a linear combination of I.
     if has_identity_lincomb(graph)
-        (nodemem_i,nodemem)=get_free_slot(mem)
-        alloc_slot!(mem,nodemem_i,:I)
+        #(nodemem_i,nodemem)=get_free_slot(mem)
+        alloc_slot!(mem,2,:I)
+        nodemem=slotname(lang,2);
         push_code!(code,"size_t j;")
         push_code!(code,"memset($nodemem, 0, n*n*sizeof(*memslots));")
         push_code!(code,"for(j=0; j<n*n; j+=n+1)")
@@ -174,7 +178,6 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
 
     # Keep deallocation list (used for smart memory management).
     dealloc_list=deepcopy(dealloc_list)
-    setdiff!(dealloc_list,[:A]) # A is not stored explicitly.
     setdiff!(dealloc_list,keys(mem.special_names))
 
     # Check if parents have a memory slot.
