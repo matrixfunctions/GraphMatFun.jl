@@ -144,7 +144,7 @@ function function_init(lang::LangC,T,mem,graph)
         alloc_slot!(mem,2,:I)
         nodemem=slotname(lang,2);
         push_code!(code,"size_t j;")
-        push_code!(code,"memset($nodemem, 0, n*n*sizeof(*memslots));")
+        push_code!(code,"memset($nodemem, 0, n*n*sizeof(*master_mem));")
         push_code!(code,"for(j=0; j<n*n; j+=n+1)")
         push_code!(code,"memslots[j] = ONE;",ind_lvl=2)
     end
@@ -227,7 +227,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             (lhsmem_i,lhsmem)=get_free_slot(mem)
             alloc_slot!(mem,lhsmem_i,:dummy)
             push_code!(code,"memcpy($lhsmem, $parent1mem, "*
-                "n*n*sizeof(*memslots));")
+                "n*n*sizeof(*master_mem));")
         end
 
         # Compute LU decomposition of parent1.
@@ -262,7 +262,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                 (nodemem_i,nodemem)=get_free_slot(mem)
                 alloc_slot!(mem,nodemem_i,node)
                 push_code!(code,"memcpy($nodemem, $parent2mem, "*
-                    "n*n*sizeof(*memslots));")
+                    "n*n*sizeof(*master_mem));")
             end
 
             # Solve linear system.
@@ -334,7 +334,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Compute linear combination.
             if p1_is_identity
                 push_code!(code,"memcpy($nodemem, $parent2mem, "*
-                    "n*n*sizeof(*memslots));")
+                    "n*n*sizeof(*master_mem));")
                 push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff2, "*
                     "$nodemem, 1);")
                 push_code!(code,"cblas_$blas_prefix"*"axpby(n, "*
@@ -342,7 +342,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                     "             $rone, $nodemem, n+1);")
             elseif p2_is_identity
                 push_code!(code,"memcpy($nodemem, $parent1mem, "*
-                    "n*n*sizeof(*memslots));")
+                    "n*n*sizeof(*master_mem));")
                 push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
                     "$nodemem, 1);")
                 push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
@@ -350,7 +350,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
                     "             $rone, $nodemem, n+1);")
             else
                 push_code!(code,"memcpy($nodemem, $parent2mem, "*
-                    "n*n*sizeof(*memslots));")
+                    "n*n*sizeof(*master_mem));")
                 push_code!(code,"cblas_$blas_prefix"*"axpby(n*n, "*
                     "$coeff1, $parent1mem, 1,\n"*
                     "             $coeff2, $nodemem, 1);")
