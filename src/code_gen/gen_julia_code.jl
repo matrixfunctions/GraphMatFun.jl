@@ -3,10 +3,9 @@ export LangJulia
 # Data structure for the language.
 struct LangJulia
     overwrite_input # Overwrite input
-    exploit_uniformscaling  # I=UniformScaling. Should it be exploited?
 end
 function LangJulia()
-    return LangJulia(true,true)
+    return LangJulia(true)
 end
 
 
@@ -24,7 +23,6 @@ assign_coeff(lang::LangJulia,v,i)=
 
 # Code generation.
 function push_code_matfun_axpy!(code)
-
     # Add code for matfun_axpby! functions.
     matfun_axpby_functions="
 struct ValueOne; end
@@ -78,11 +76,11 @@ function function_init(lang::LangJulia,T,mem,graph)
         comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)")
     push_code!(code,"n=size(A,1)")
-    start_j=2
+    start_j=1
 
-    push_comment!(code,"The first slots are I and A")
+    push_comment!(code,"The first slot is A")
     if (lang.overwrite_input)
-        start_j=3
+        start_j=2
     end
     push_code!(code,"for  j=$start_j:max_memslots")
 
@@ -94,13 +92,7 @@ function function_init(lang::LangJulia,T,mem,graph)
         push_code!(code,"value_one=ValueOne()")
     end
 
-    # Initialize I
-    I_slot_name=get_slot_name(mem,:I)
-    if (!lang.exploit_uniformscaling)
-        push_code!(code,"$I_slot_name=Matrix{T}(I,n,n)")
-    else
-        push_comment!(code,"Uniform scaling is exploited. No I matrix explicitly allocated")
-    end
+    push_comment!(code,"Uniform scaling is exploited. No I matrix explicitly allocated")
 
     # Initialize A.
     A_slot_name=get_slot_name(mem,:A)
@@ -117,11 +109,7 @@ end
 
 function init_mem(lang::LangJulia,max_nof_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
-    alloc_slot!(mem,1,:I)
-    alloc_slot!(mem,2,:A)
-    if (lang.exploit_uniformscaling)
-        mem.special_names[:I]="I"
-    end
+    alloc_slot!(mem,1,:A)
     return mem
 end
 
@@ -135,7 +123,7 @@ function function_end(lang::LangJulia,graph,mem)
     return code
 end
 
-# Adding of a scaled identity matrix in julia code.
+# Add a scaled identity to a matrix in julia code.
 function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
     push_comment!(code,"Add lincomb with identity.")
 
@@ -164,8 +152,12 @@ function execute_operation!(lang::LangJulia,
     # Don't overwrite the list
     dealloc_list=deepcopy(dealloc_list)
     setdiff!(dealloc_list,keys(mem.special_names))
-    parent1mem=get_slot_name(mem,parent1)
-    parent2mem=get_slot_name(mem,parent2)
+    if parent1 != :I
+        parent1mem=get_slot_name(mem,parent1)
+    end
+    if parent2 != :I
+        parent2mem=get_slot_name(mem,parent2)
+    end
 
     code=init_code(lang)
     push_comment!(code,"Computing $node with operation: $op")
@@ -180,7 +172,11 @@ function execute_operation!(lang::LangJulia,
         # Left division
         (nodemem_i,nodemem)=get_free_slot(mem)
         alloc_slot!(mem,nodemem_i,node)
-        push_code!(code,"$nodemem=$parent1mem\\$parent2mem")
+        if parent2 == :I
+            push_code!(code,"$nodemem=inv($parent1mem)")
+        else
+            push_code!(code,"$nodemem=$parent1mem\\$parent2mem")
+        end
 
     elseif op == :lincomb
         coeff_vars=Vector{String}(undef,2)
@@ -201,7 +197,7 @@ function execute_operation!(lang::LangJulia,
 
             nodemem=get_slot_name(mem,recycle_parent)
 
-            if (lang.exploit_uniformscaling &&  (parent1 == :I || parent2 == :I))
+            if parent1 == :I || parent2 == :I
                 # BLAS does not work with unform scaling use inplace instead
                 if (parent1 == :I)
                     non_I_parent_mem=parent2mem
@@ -261,10 +257,11 @@ function execute_operation!(lang::LangJulia,
 
     # Deallocate
     for n=dealloc_list
-        i=get_slot_number(mem,n)
-
-        push_comment!(code,"Deallocating $n in slot $i")
-        free!(mem,i)
+        if n != :I # No memory is ever allocated for the identity matrix.
+            i=get_slot_number(mem,n)
+            push_comment!(code,"Deallocating $n in slot $i")
+            free!(mem,i)
+        end
     end
 
     return (code,nodemem)
