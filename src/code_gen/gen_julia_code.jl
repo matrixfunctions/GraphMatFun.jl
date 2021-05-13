@@ -58,10 +58,12 @@ end"
     push_code_verbatim_string!(code,matfun_axpby_functions)
 end
 
-function function_definition(lang::LangJulia,T,funname)
+function function_definition(lang::LangJulia,graph,T,funname)
     code=init_code(lang)
     push_code!(code,"using LinearAlgebra",ind_lvl=0)
-    push_code_matfun_axpy!(code)
+    if any(values(graph.operations) .== :lincomb)
+        push_code_matfun_axpy!(code)
+    end
     push_code!(code,"function $funname(A)",ind_lvl=0)
     return code
 end

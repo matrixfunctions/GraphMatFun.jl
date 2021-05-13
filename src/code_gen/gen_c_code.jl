@@ -82,7 +82,7 @@ function langc_get_slot_name(mem,key)
     return key==:A ? "A" : get_slot_name(mem,key)
 end
 
-function function_definition(lang::LangC,T,funname)
+function function_definition(lang::LangC,graph,T,funname)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang)
     push_code!(code,get_blas_includes(lang),ind_lvl=0)

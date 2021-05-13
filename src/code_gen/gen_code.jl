@@ -12,7 +12,7 @@ export gen_code
 # comment(::Lang,s)
 # slotname(::Lang,i) #
 # assign_coeff(::Lang,v,i)
-# function_definition(::Lang,T,funname)
+# function_definition(::Lang,graph,T,funname)
 # function_init(lang::Lang,T,mem,graph)
 # init_mem(lang::Lang,max_nof_nodes)
 # function_end(lang::Lang,graph,mem)
