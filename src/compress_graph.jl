@@ -404,4 +404,5 @@ function compress_graph!(graph,cref=[];verbose=false)
     compress_graph_trivial!(graph,cref,verbose=verbose)
     compress_graph_passthrough!(graph,cref,verbose=verbose)
     compress_graph_dangling!(graph,cref,verbose=verbose)
+    return graph;
 end
