@@ -6,16 +6,13 @@ using LinearAlgebra
 
     # Test julia code generation
     for t1 in (true,false)
-        for t2 in (true,false)
-            lang=LangJulia(t1,t2);
-            fname=tempname()*".jl";
-            gen_code(fname,graph,lang=lang)
-            # and execution
-            include(fname);
-            @test eval_graph(graph,A)≈dummy(A)
-            rm(fname);
-
-        end
+        lang=LangJulia(t1);
+        fname=tempname()*".jl";
+        gen_code(fname,graph,lang=lang)
+        # and execution
+        include(fname);
+        @test eval_graph(graph,A)≈dummy(A)
+        rm(fname);
     end
 
 
