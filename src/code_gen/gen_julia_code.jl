@@ -152,6 +152,7 @@ function execute_operation!(lang::LangJulia,
     # Don't overwrite the list
     dealloc_list=deepcopy(dealloc_list)
     setdiff!(dealloc_list,keys(mem.special_names))
+    setdiff!(dealloc_list,[:I])
     if parent1 != :I
         parent1mem=get_slot_name(mem,parent1)
     end
