@@ -58,7 +58,7 @@ function gen_code(fname,graph;
     # max_nof_slots is the path width which gives
     # a bound on the number memory slots needed.
 
-    println(file,to_string(function_definition(lang,T,funname)))
+    println(file,to_string(function_definition(lang,graph,T,funname)))
 
     # We do a double sweep in order to determine exactly
     # how many memory slots are needed. The first sweep
