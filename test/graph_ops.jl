@@ -32,6 +32,8 @@ using LinearAlgebra, Polynomials
 
 
     del_node!(graph,:D) #Remove rational part
+    del_output!(graph,:out)
+    @test isempty(graph.outputs)
     del_node!(graph,:out)
     add_output!(graph,:N)
     rename_node!(graph,:N,:N)
@@ -40,6 +42,9 @@ using LinearAlgebra, Polynomials
     E=eval_graph(graph,A);
     Z = (1 + 1/2 *(1 + A/5)^2);
     @test Z≈E
+    del_output!(graph,:N_new)
+    @test isempty(graph.outputs)
+
 
 
 
@@ -65,5 +70,8 @@ using LinearAlgebra, Polynomials
     graph1=deepcopy(graph)
     rename_node!(graph1,:Pout,:B)
     @test eval_graph(graph1,A)==eval_graph(graph,A)
+
+    del_output!(graph,:Pout)
+    @test isempty(graph.outputs)
 
 end
