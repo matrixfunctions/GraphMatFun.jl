@@ -54,7 +54,10 @@ using LinearAlgebra, Polynomials
         add_lincomb!(graph,name, 1.0, :I, 1/5, :A);
         add_mult!(graph,name,:I,:A);
         add_ldiv!(graph,name,:D,:N);
+        add_output!(graph,name)
     end
+    clear_outputs!(graph)
+    @test isempty(graph.outputs)
 
     # Node renaming
     graph=Compgraph()

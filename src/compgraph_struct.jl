@@ -15,6 +15,7 @@ export add_ldiv!
 export add_sum!
 export add_output!
 export del_output!
+export clear_outputs!
 export rename_node!
 export del_node!
 
@@ -131,6 +132,16 @@ This function does not remove the node from the graph.
 """
 function del_output!(graph,node)
     deleteat!(graph.outputs,findall(x->x==node,graph.outputs));
+end
+
+"""
+    clear_outputs!(graph)
+
+Clears the list of output nodes of the graph.
+This function does not remove the node nodes from the graph.
+"""
+function clear_outputs!(graph)
+    empty!(graph.outputs)
 end
 
 """
