@@ -30,7 +30,6 @@ using LinearAlgebra, Polynomials
     Z = (I+2*(I+A/5))\(I + 1/2 *(I + A/5)^2);
     @test Z≈E
 
-
     del_node!(graph,:D) #Remove rational part
     del_output!(graph,:out)
     @test isempty(graph.outputs)
@@ -47,9 +46,9 @@ using LinearAlgebra, Polynomials
 
 
 
-
-    #Valid names
-    names = [:Acoeff_type, :coeff1A, :Bcoeff2, :My_output, :output1_My, :output1MY2]
+    # Valid names and manipulation of the output list
+    names = [:Acoeff_type, :coeff1A, :Bcoeff2,
+             :My_output, :output1_My, :output1MY2]
     for name in names
         add_lincomb!(graph,name, 1.0, :I, 1/5, :A);
         add_mult!(graph,name,:I,:A);
@@ -59,12 +58,13 @@ using LinearAlgebra, Polynomials
     clear_outputs!(graph)
     @test isempty(graph.outputs)
 
+
+
     # Node renaming
     graph=Compgraph()
     add_lincomb!(graph,:AI,2.0,:A,2.0,:I)
     add_mult!(graph,:Pout,:AI,:A)
     add_output!(graph,:Pout)
-
 
     graph1=deepcopy(graph)
     rename_node!(graph1,:AI,:B)
@@ -73,6 +73,12 @@ using LinearAlgebra, Polynomials
     graph1=deepcopy(graph)
     rename_node!(graph1,:Pout,:B)
     @test eval_graph(graph1,A)==eval_graph(graph,A)
+
+    graph1=deepcopy(graph)
+    rename_node!(graph1,:A,:A2tmp)
+    add_mult!(graph1,:A2tmp,:A,:A)
+    A = [0.4 0.2; 1.1 0.3]
+    @test eval_graph(graph1,A)==eval_graph(graph,A^2)
 
     del_output!(graph,:Pout)
     @test isempty(graph.outputs)

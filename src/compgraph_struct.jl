@@ -156,9 +156,20 @@ function rename_node!(graph,src,dest,cref=Vector())
         return
     end
 
+    # Check whether node exists in the graph, and whether is an input node
+    if src in keys(graph.parents)
+        node_type=:full_node
+    elseif src in getindex.(values(graph.parents),1) ||
+        src in getindex.(values(graph.parents),2)
+        node_type=:input_node
+    else
+        error("Node $src not present in the graph.")
+    end
     # Parents
-    graph.parents[dest]=graph.parents[src];
-    delete!(graph.parents,src);
+    if node_type==:full_node
+        graph.parents[dest]=graph.parents[src];
+        delete!(graph.parents,src);
+    end
     # Update also parent pointers
     for (key,value)=graph.parents
         newval=[value[1];value[2]]
@@ -168,6 +179,9 @@ function rename_node!(graph,src,dest,cref=Vector())
             end
         end
         graph.parents[key]=Tuple(newval);
+    end
+    if node_type==:input_node
+        return
     end
 
     # Operations
