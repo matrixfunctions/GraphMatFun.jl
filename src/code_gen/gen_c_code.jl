@@ -1,9 +1,40 @@
 export LangC_MKL,LangC_OpenBLAS
 
 # Data structures for the language.
-struct LangC_MKL end
-struct LangC_OpenBLAS end
+"""
+     LangC_MKL(gen_main::Bool)
+
+Code generation in C using MKL implementation of BLAS.
+
+"""
+struct LangC_MKL
+    gen_main
+end
+
+"""
+     LangC_OpenBLAS(gen_main::Bool)
+
+Code generation in C using OpenBLAS implementation of BLAS.
+
+"""
+struct LangC_OpenBLAS
+    gen_main
+end
 LangC=Union{LangC_MKL,LangC_OpenBLAS}
+
+
+# Generated constructors
+# https://docs.julialang.org/en/v1/manual/metaprogramming/#Code-Generation
+# to default to gen_main=false
+for L in [:LangC_MKL, :LangC_OpenBLAS]
+    eval(quote
+            function $L(gen_main=false)
+               return $L(gen_main)
+            end
+         end
+         )
+end
+
 
 
 
@@ -399,43 +430,47 @@ compilation_string(::LangC_MKL,fname)=
     "gcc -o main_compiled $fname -lmkl_rt"
 
 function gen_main(lang::LangC,T,fname,funname;A=10::Union{Integer,Matrix})
-    (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang)
-    push_code!(code,"")
-    push_code!(code,"")
-    push_code!(code,"")
-    push_code!(code,"typedef $blas_type blas_type;",ind_lvl=0)
-    push_code!(code,"")
+    if (lang.gen_main)
+        (blas_type,blas_prefix)=get_blas_type(lang,T)
+        push_code!(code,"")
+        push_code!(code,"")
+        push_code!(code,"")
+        push_code!(code,"typedef $blas_type blas_type;",ind_lvl=0)
+        push_code!(code,"")
 
-    # Main function starts here.
-    push_comment!(code,"Code snippet that calls $blas_prefix$funname().",
-                  ind_lvl=0)
-    push_comment!(code,"With the GNU Compiler Collection, compile with:",
-                  ind_lvl=0)
-    push_comment!(code,compilation_string(lang,fname),ind_lvl=0)
-    push_code!(code,"int main() {",ind_lvl=0)
-    push_code!(code,"size_t i;")
+        # Main function starts here.
+        push_comment!(code,"Code snippet that calls $blas_prefix$funname().",
+        ind_lvl=0)
+        push_comment!(code,"With the GNU Compiler Collection, compile with:",
+        ind_lvl=0)
+        push_comment!(code,compilation_string(lang,fname),ind_lvl=0)
+        push_code!(code,"int main() {",ind_lvl=0)
+        push_code!(code,"size_t i;")
 
-    # Generate matrix.
-    if isa(A,Matrix)
-        n=LinearAlgebra.checksquare(A)
-        push_code!(code,"size_t n = $n;")
-        push_code!(code,"blas_type A[$(n*n)] = {")
-        print_indented_matrix(lang,code,A,ind_lvl=2)
-        push_code!(code,"};")
-    else # A is an integer
-        n=A
-        push_code!(code,"size_t n = $n;")
-        push_code!(code,"srand(0);")
-        push_code!(code,"blas_type *A = malloc(n*n*sizeof(*A));")
-        push_code!(code,"for(i=0; i<n*n; i++){")
-        push_code!(code,"A[i] = rand() / (1.0*RAND_MAX);",ind_lvl=2)
-        push_code!(code,"}")
+        # Generate matrix.
+        if isa(A,Matrix)
+            n=LinearAlgebra.checksquare(A)
+            push_code!(code,"size_t n = $n;")
+            push_code!(code,"blas_type A[$(n*n)] = {")
+            print_indented_matrix(lang,code,A,ind_lvl=2)
+            push_code!(code,"};")
+        else # A is an integer
+            n=A
+            push_code!(code,"size_t n = $n;")
+            push_code!(code,"srand(0);")
+            push_code!(code,"blas_type *A = malloc(n*n*sizeof(*A));")
+            push_code!(code,"for(i=0; i<n*n; i++){")
+            push_code!(code,"A[i] = rand() / (1.0*RAND_MAX);",ind_lvl=2)
+            push_code!(code,"}")
+        end
+
+        # Call polynomial evaluation function.
+        push_code!(code,"blas_type *B = malloc(n*n*sizeof(*A));")
+        push_code!(code,"$blas_prefix$funname(A,n,B);")
+        push_code!(code,"}",ind_lvl=0)
     end
 
-    # Call polynomial evaluation function.
-    push_code!(code,"blas_type *B = malloc(n*n*sizeof(*A));")
-    push_code!(code,"$blas_prefix$funname(A,n,B);")
-    push_code!(code,"}",ind_lvl=0)
     return code
+
 end

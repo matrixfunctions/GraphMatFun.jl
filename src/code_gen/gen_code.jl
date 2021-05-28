@@ -19,6 +19,13 @@ export gen_code
 # execute_operation!(lang::Lang,T,graph,node,
 #                    dealloc_list,   mem)
 
+
+# Fallback. Default to no main function
+function gen_main(lang,T,fname,funname)
+    return init_code(lang);
+end
+
+
 """
     gen_code(fname,graph; priohelp=Dict{Symbol,Float64}(),
              lang=LangJulia(),funname="dummy")
@@ -37,8 +44,7 @@ Currently supported languages: `LangC_MKL`, `LangC_OpenBLAS`,
 function gen_code(fname,graph;
                   priohelp=Dict{Symbol,Float64}(),
                   lang=LangJulia(),
-                  funname="dummy",
-                  generate_main=false)
+                  funname="dummy")
 
     if has_trivial_nodes(graph)
         error("Please run compress_graph!() on the graph first.")
@@ -99,10 +105,8 @@ function gen_code(fname,graph;
     println(file,to_string(function_end(lang,graph,mem)))
 
     # Generate main function, if necessary.
-    if generate_main && typeof(lang) <: LangC
-        exec_code=gen_main(lang,T,fname,funname)
-        println(file,to_string(exec_code))
-    end
+    exec_code=gen_main(lang,T,fname,funname)
+    println(file,to_string(exec_code))
 
     if (fname isa String)
         close(file)

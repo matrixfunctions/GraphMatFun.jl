@@ -21,5 +21,23 @@ using LinearAlgebra
     gen_code(fname,graph,lang=LangMatlab())
     rm(fname);
 
+    # Test C code generation
+
+    fname=tempname()*".c";
+    gen_code(fname,graph,lang=LangC_MKL())
+    rm(fname);
+
+    fname=tempname()*".c";
+    gen_code(fname,graph,lang=LangC_MKL(true))
+    rm(fname);
+
+    fname=tempname()*".c";
+    gen_code(fname,graph,lang=LangC_OpenBLAS())
+    rm(fname);
+
+    fname=tempname()*".c";
+    gen_code(fname,graph,lang=LangC_OpenBLAS(true))
+    rm(fname);
+
 
 end
