@@ -9,7 +9,13 @@ export LangDegoptJulia
 struct LangDegoptJulia
     lang::LangJulia
 end
+"""
+    LangDegoptJulia(lang)
 
+Code generation specifically optimized for `Degopt` objects. Language
+specific parameters are given in the underlying `lang` object.
+
+"""
 function LangDegoptJulia()
     return LangDegoptJulia(LangJulia());
 end

@@ -4,6 +4,12 @@ export LangJulia
 struct LangJulia
     overwrite_input # Overwrite input
 end
+"""
+    LangJulia(overwrite_input)
+
+Code generation in julia language, with optional overwriting of input.
+
+"""
 function LangJulia()
     return LangJulia(true)
 end

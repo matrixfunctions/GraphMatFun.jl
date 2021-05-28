@@ -1,6 +1,12 @@
 export LangMatlab
 
 # Data structure for the language.
+"""
+    LangMatlab()
+
+Code generation for the Matlab language.
+
+"""
 struct LangMatlab end
 
 # Language specific operations

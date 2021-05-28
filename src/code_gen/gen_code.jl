@@ -50,6 +50,7 @@ function gen_code(fname,graph;
 end
 
 
+# Most gen code calls will call this. Can be overloaded with lang
 function _gen_code(fname,graph,
                    lang,
                    priohelp,
