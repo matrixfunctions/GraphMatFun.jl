@@ -101,10 +101,11 @@ function _gen_code(fname,graph,
 
     # Sweep 2:
     mem=init_mem(lang,nof_slots)
-    println(file,to_string(function_init(lang,T,mem,graph)))
+    function_init_code=function_init(lang,T,mem,graph);
+    push_comment!(function_init_code,
+                  "Computation order: "*join(string.(order)," "))
+    println(file,to_string(function_init_code))
 
-    println(file,"    "*comment(lang,
-                                "Computation order: "*join(string.(order)," ")))
     for (i,node) in enumerate(order)
         (exec_code,result_variable)=execute_operation!(lang,
                                                        T,graph,node,
