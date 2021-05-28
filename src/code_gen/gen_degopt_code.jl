@@ -17,8 +17,8 @@ end
 comment(x::LangDegoptJulia,s)=comment(x.lang,s);
 
 # Code generation.
-function_definition(lang::LangDegoptJulia,T,funname)=
-    function_definition(lang.lang,T,funname);
+function_definition(lang::LangDegoptJulia,graph,T,funname)=
+    function_definition(lang.lang,graph,T,funname);
 
 
 function function_end(lang::LangDegoptJulia,graph,mem)
@@ -47,7 +47,7 @@ function gen_code(fname,graph,lang::LangDegoptJulia;
         file=Base.stdout
     end
 
-    println(file,to_string(function_definition(lang.lang,T,funname)))
+    println(file,to_string(function_definition(lang.lang,graph,T,funname)))
 
 
     code=init_code(lang)

@@ -63,6 +63,8 @@ function function_definition(lang::LangJulia,graph,T,funname)
         push_code_matfun_axpy!(code)
     end
     push_code!(code,"function $funname(A)",ind_lvl=0)
+    push_code!(code,"T=promote_type(eltype(A),$T) "*
+        comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     return code
 end
 
@@ -72,8 +74,6 @@ function function_init(lang::LangJulia,T,mem,graph)
 
     # Allocation
     push_code!(code,"max_memslots=$max_nodes")
-    push_code!(code,"T=promote_type(eltype(A),$T) "*
-        comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)")
     push_code!(code,"n=size(A,1)")
     start_j=1
