@@ -38,13 +38,22 @@ Topological order of the nodes is comptued using
 influence the order.
 
 Currently supported languages: `LangC_MKL`, `LangC_OpenBLAS`,
- `LangJulia`, `LangMatlab`.
+ `LangJulia`, `LangMatlab`, `LangDegoptJulia`.
 
 """
 function gen_code(fname,graph;
                   priohelp=Dict{Symbol,Float64}(),
                   lang=LangJulia(),
                   funname="dummy")
+    # Make dispatch possible for lang
+    _gen_code(fname,graph,lang,priohelp,funname)
+end
+
+
+function _gen_code(fname,graph,
+                   lang,
+                   priohelp,
+                   funname)
 
     if has_trivial_nodes(graph)
         error("Please run compress_graph!() on the graph first.")

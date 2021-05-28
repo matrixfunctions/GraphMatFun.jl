@@ -33,10 +33,10 @@ function fix_I_op(str::String)
 end
 
 
-function gen_code(fname,graph,lang::LangDegoptJulia;
-                  funname="dummy",
-                  generate_main=false)
-
+function _gen_code(fname,graph,
+                  lang::LangDegoptJulia,
+                  priohelp,
+                  funname)
     degopt=Degopt(graph);
     T=eltype(eltype(typeof(graph.coeffs.vals)))
 
