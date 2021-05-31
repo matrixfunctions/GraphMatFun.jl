@@ -20,6 +20,7 @@ export rename_node!
 export del_node!
 
 export get_all_cref
+export extract_sums
 
 export get_coeffs
 export set_coeffs!
@@ -331,12 +332,69 @@ function get_all_cref(graph)
 end
 
 """
+    v=extract_sums(graph)
+
+::Vector{Tuple{Vector{Float64},Vector{Symbol},Vector{Symbol}}}`
+
+Returns a representation of sums in `graph` which may potentially be merged.
+The vector `v` contains a tuple for each of these sums. The three entries of
+the tuple are:
+
+* a vector of `Float64` values which contains the coefficients of the symbols to
+be merged;
+* a vector of `Symbol`s corresponding to the nodes that can be merged; and
+* a vector of intermediate `Symbol`s (i.e, nodes) that can be freed.
+
+The first two vectors have the same number of entries, one for each element that
+can be merged in the sum. The last vector can potentially have fewer elements,
+as we assume that nodes that can be merged cannot be freed.
+ """
+function extract_sums(graph)
+    coeff,nodes,intermediate,v=find_mergeable_sums(graph,graph.outputs[1])
+    # Remove mergeable nodes from intermediate nodes.
+    for i=1:length(v)
+        deleteat!(v[i][3], findall(x->x in v[i][2],v[i][3]))
+    end
+    return v
+end
+
+function find_mergeable_sums(graph,node,curr_coeff=1)
+    if !(node in keys(graph.operations)) # Leaf node
+        return Float64[],Symbol[],Symbol[],[]
+    else # Call recursively on parents.
+        (parent1,parent2)=graph.parents[node]
+        curr_lincomb=graph.operations[node] == :lincomb
+        (coeff1,coeff2)=curr_lincomb ? graph.coeffs[node] : (1,1)
+        pcoeffs1,pnodes1,pfreed1,v1=find_mergeable_sums(graph,parent1,coeff1)
+        pcoeffs2,pnodes2,pfreed2,v2=find_mergeable_sums(graph,parent2,coeff2)
+        if curr_lincomb
+            new_coeffs=vcat(curr_coeff*pcoeffs1,curr_coeff*pcoeffs2,
+                            curr_coeff*coeff1, curr_coeff*coeff1);
+            new_nodes=vcat(pnodes1,pnodes2,parent1,parent2)
+            new_freeds=vcat(pfreed1,pfreed2,node)
+            if node in graph.outputs
+                return Float64[],Symbol[],Symbol[],
+                vcat(v1,v2,(new_coeffs,new_nodes,new_freeds))
+            else
+                return new_coeffs,new_nodes,new_freeds,vcat(v1,v2)
+            end
+        else
+            v=vcat(v1,v2)
+            # If one of the parents was lincomb, add corresponding sum to v.
+            v=!isempty(pcoeffs1) ? vcat(v,(pcoeffs1,pnodes1,pfreed1)) : v
+            v=!isempty(pcoeffs2) ? vcat(v,(pcoeffs2,pnodes2,pfreed2)) : v
+            return Float64[],Symbol[],Symbol[],v
+        end
+    end
+end
+
+"""
     set_coeffs!(graph, x, cref=get_all_cref(graph))
 
 Sets the coefficient values in the coefficients specified in `cref::Vector` to the values in the vector in `x::Vector`.
     """
 function set_coeffs!(graph, x, cref=get_all_cref(graph))
-    if (cref isa Tuple) #Workaround for single coefficient
+            if (cref isa Tuple) #Workaround for single coefficient
         cref=[cref]
     end
     if !(length(x)==length(cref))
