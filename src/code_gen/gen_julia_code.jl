@@ -98,8 +98,6 @@ function function_init(lang::LangJulia,T,mem,graph)
         push_code!(code,"value_one=ValueOne()")
     end
 
-    push_comment!(code,"Uniform scaling is exploited. No I matrix explicitly allocated")
-
     # Initialize A.
     A_slot_name=get_slot_name(mem,:A)
     if (lang.overwrite_input)
@@ -110,8 +108,20 @@ function function_init(lang::LangJulia,T,mem,graph)
         push_code!(code,"copy!($A_slot_name,A)")
     end
 
+    if has_identity_lincomb(graph)
+        alloc_slot!(mem,2,:I)
+        I_slot_name=get_slot_name(mem,:I)
+        push_code!(code,"$I_slot_name=Matrix{Float64}(I,n,n)")
+        push_comment!(code,"Graph has linear combination of identities.")
+        push_comment!(code,"The matrix I is explicitly allocated.")
+    else
+        push_comment!(code,"Uniform scaling is exploited.");
+        push_comment!(code,"No matrix I explicitly allocated.")
+    end
+
     return code
 end
+
 
 function init_mem(lang::LangJulia,max_nof_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
@@ -159,10 +169,10 @@ function execute_operation!(lang::LangJulia,
     dealloc_list=deepcopy(dealloc_list)
     setdiff!(dealloc_list,keys(mem.special_names))
     setdiff!(dealloc_list,[:I])
-    if parent1 != :I
+    if parent1 != :I || has_identity_lincomb(graph)
         parent1mem=get_slot_name(mem,parent1)
     end
-    if parent2 != :I
+    if parent2 != :I || has_identity_lincomb(graph)
         parent2mem=get_slot_name(mem,parent2)
     end
 
@@ -249,9 +259,7 @@ function execute_operation!(lang::LangJulia,
                 I_parent_coeff=coeff2
                 execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
             else
-                # push_code!(code,
-                #            "$(nodemem)[:]=$coeff1*$parent1mem +
-                # $coeff2*$parent2mem")
+                # push_code!(code,"$(nodemem)[:]=$coeff1*$parent1mem + $coeff2*$parent2mem")
                 push_code!(code,"copy!($(nodemem),$parent1mem)") # Arbitrary choice
                 push_code!(code,"matfun_axpby!($(nodemem),$coeff1,$coeff2,$parent2mem)")
             end
