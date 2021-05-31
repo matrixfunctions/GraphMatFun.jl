@@ -56,6 +56,10 @@ function _gen_code(fname,graph,
                    priohelp,
                    funname)
 
+    # Error if graph is trivial (no operations) or has trivial nodes.
+    if isempty(graph.operations)
+        error("Unable to generate code for graphs without operations.")
+    end
     if has_trivial_nodes(graph)
         error("Please run compress_graph!() on the graph first.")
     end
