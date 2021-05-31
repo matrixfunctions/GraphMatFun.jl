@@ -28,13 +28,10 @@ assign_coeff(lang::LangJulia,v,i)=
          ("coeff$i","coeff$i=$v")
 
 # Code generation.
-function push_code_matfun_axpy!(code)
-    # Add code for matfun_axpby! functions.
-    matfun_axpby_functions="
-struct ValueOne; end
-ValueOne()
-
-# Compute X <- a X + b Y.
+function push_code_matfun_axpby_I!(code)
+    # Add code for matfun_axpby! using UniformScaling.
+    push_code_verbatim_string!(code,"
+# Compute X <- a X + b I.
 function matfun_axpby!(X,a,b,Y::UniformScaling)
     m,n=size(X)
     if ~(a isa ValueOne)
@@ -43,7 +40,13 @@ function matfun_axpby!(X,a,b,Y::UniformScaling)
     @inbounds for i=1:n
         X[i,i]+=(b isa ValueOne) ? 1 : b
     end
+end")
 end
+
+function push_code_matfun_axpby!(code)
+    # Add code for generic matfun_axpby! function.
+    push_code_verbatim_string!(code,"
+# Compute X <- a X + b Y.
 function matfun_axpby!(X,a,b,Y)
     m,n=size(X)
     if ~(a isa ValueOne)
@@ -58,15 +61,23 @@ function matfun_axpby!(X,a,b,Y)
             end
         end
     end
-end"
-    push_code_verbatim_string!(code,matfun_axpby_functions)
+end")
 end
 
 function function_definition(lang::LangJulia,graph,T,funname)
     code=init_code(lang)
     push_code!(code,"using LinearAlgebra",ind_lvl=0)
+    # If graph has linear combinations, add corresponding axpby functions.
     if any(values(graph.operations) .== :lincomb)
-        push_code_matfun_axpy!(code)
+        push_code!(code,"\nstruct ValueOne; end\nValueOne()",ind_lvl=0)
+    end
+    lincomb_nodes=filter(x->graph.operations[x]==:lincomb,keys(graph.operations))
+    lincomb_with_I=filter(y->any(map(x->x==:I,graph.parents[y])),lincomb_nodes)
+    if(!isempty(lincomb_with_I))
+        push_code_matfun_axpby_I!(code)
+    end
+    if(!isempty(setdiff!(lincomb_nodes,lincomb_with_I)))
+        push_code_matfun_axpby!(code)
     end
     push_code!(code,"function $funname(A)",ind_lvl=0)
     push_code!(code,"T=promote_type(eltype(A),$T) "*
@@ -154,7 +165,6 @@ function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_p
     # push_code!(code,"D .+= $I_parent_coeff")
     push_code!(code,"matfun_axpby!($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)")
 end
-
 
 function execute_operation!(lang::LangJulia,
                             T,graph,node,
