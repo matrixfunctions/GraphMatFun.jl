@@ -72,7 +72,7 @@ function solve_linlsqr!(A, b, linlsqr, droptol)
         dinv[II] .= 0
         # No explicit construction, only multiplication
         # JJ0=Sfact.U*Diagonal(d)*Sfact.Vt
-        d = Sfact.V*((Diagonal(dinv))*(Sfact.U'*b));
+        d = Sfact.V*(dinv.*(Sfact.U'*b));
     end
     return d
 end
