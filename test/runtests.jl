@@ -3,10 +3,10 @@ using Test
 
 @testset "GraphMatFun.jl" begin
     include("bbc_sid_exp.jl");
-    include("bbc.jl");
     include("bbc_cheb_exp.jl");
     include("code_gen_test.jl");
     include("compress.jl");
+    include("degopt_poly.jl");
     include("degopt.jl");
     include("denman_beavers.jl");
     include("exp.jl");

@@ -16,7 +16,7 @@ include("optimization/linear_fit.jl")
 # Generators
 include("generators/denman_beavers_gen.jl")
 include("generators/ps_poly.jl")
-include("generators/bbc.jl")
+include("generators/degopt_poly.jl")
 include("generators/bbc_exp.jl")
 include("generators/bbcs_cheb_exp.jl")
 include("generators/sid.jl")
