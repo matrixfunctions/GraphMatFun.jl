@@ -4,7 +4,7 @@ using Test
 @testset "GraphMatFun.jl" begin
     include("bbc_sid_exp.jl");
     include("bbc.jl");
-    #include("bbc_cheb_exp.jl");
+    include("bbc_cheb_exp.jl");
     include("code_gen_test.jl");
     include("compress.jl");
     include("degopt.jl");
