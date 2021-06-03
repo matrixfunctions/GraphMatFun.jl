@@ -11,10 +11,7 @@ using LinearAlgebra
                 Ak = k*I + [0 1e-8; 0 0]
                 (graph,cref) = eval(exp_gens[key])(Ak)
                 @test eval_graph(graph,Ak) ≈ exp(Ak)
-                if key != "expm 2009"
-                    @test sum(values(graph.operations) .== :mult) == i+1
-                end
-
+                @test sum(values(graph.operations) .== :mult) == i+1
             end
         end
     end
