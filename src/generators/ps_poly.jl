@@ -8,9 +8,13 @@ Generates the graph for the Paterson–Stockmayer procedure with monomial basis 
 
     p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1).
 
-Reference: The code follows the description in
+Reference:
 
-M. Fasi, Optimality of the Paterson–Stockmeyer method for evaluating matrix polynomials and rational matrix functions, Linear Algebra Appl. (2019)
+* On the number of nonscalar multiplications necessary to evaluate polynomials, M. Paterson, L. Stockmeyer, SIAM J. Comput., 2(1), 1973.
+
+The code follows the description in:
+
+* Optimality of the Paterson–Stockmeyer method for evaluating matrix polynomials and rational matrix functions, M. Fasi, Linear Algebra Appl., 574, 2019.
 
     """
 function gen_ps(a; input=:A,

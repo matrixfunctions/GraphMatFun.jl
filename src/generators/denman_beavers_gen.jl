@@ -11,7 +11,7 @@ or just Y (`cref_mode=-1`) or just X (`cref_mode=1`).
 
 Reference:
 
-  Denman, Eugene D.; Beavers, Alex N. (1976), "The matrix sign function and computations in systems", Applied Mathematics and Computation, 2 (1): 63–94, doi:10.1016/0096-3003(76)90020-5
+* The matrix sign function and computations in systems, E. Denman,  A. Beavers, Applied Mathematics and Computation, 2(1), 1976, https://doi.org/10.1016/0096-3003(76)90020-5
     """
 function gen_denman_beavers(k;T=ComplexF64,cref_mode=0)
 

@@ -28,7 +28,7 @@ all coeffs will be set to one.
 
 Reference: The general recursion is mentioned in equation (9) in this paper:
 
-* Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
+* Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
 """
 function gen_degopt_poly(x,z;compress_keys=true,input=:A)
     T = promote_type(eltype(eltype(eltype(x))), eltype(z))

@@ -13,7 +13,7 @@ in the reference. The coefficients are directly copied from the paper.
 
 Reference:
 
-* Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
+* Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
 
     """
 function gen_bbc_basic_exp(k;T=Float64)

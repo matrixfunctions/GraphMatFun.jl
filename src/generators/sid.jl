@@ -11,7 +11,7 @@ in the reference. The coefficients are directly copied from the paper.
 
 Reference:
 
-* Boosting the computation of the matrix exponential, Sastre, Ibanez, Defez, Appl. Math. Computation, 340, 2019, 206-220.
+* Boosting the computation of the matrix exponential, J. Sastre, J. Ibáñez, E. Defez, Appl. Math. Computation, 340, 2019, 206-220.
 
     """
 function gen_sid_exp(k;T=Float64)
