@@ -86,9 +86,10 @@ Increases the degopt by one multiplication without modifying the function values
 
 """
 function grow!(degopt::Degopt{T}) where T
-    k=size(degopt.x[end][1],1);
+    k=size(degopt.x[end][1],1)
     push!(degopt.x,(zeros(T,k+1), zeros(T,k+1)))
-    push!(degopt.y,zero(T));
+    push!(degopt.y,zero(T))
+    return nothing
 end
 
 
@@ -157,7 +158,8 @@ function scale!(degopt::Degopt,α)
         x[1][2] *= α
         x[2][2] *= α
     end
-    degopt.y[2] *= α;
+    degopt.y[2] *= α
+    return nothing
 end
 
 
@@ -168,18 +170,20 @@ Effectively square a `Degopt` in the sense that the output is square. If `p` is 
 
 """
 function square!(degopt::Degopt)
-    y0=degopt.y;
-    push!(degopt.x,(deepcopy(y0),deepcopy(y0)));
-    degopt.y[:]=zero(y0);
-    push!(degopt.y,1);
+    y0=degopt.y
+    push!(degopt.x,(deepcopy(y0),deepcopy(y0)))
+    degopt.y[:]=zero(y0)
+    push!(degopt.y,1)
+    return nothing
 end
 
 
 function row1_normalize!(xx,a,b,c,d)
-    q3=xx[3];
-    xx[1] += q3*a*c;
-    xx[2] += q3*(a*d+b*c);
-    xx[3]=q3*b*d;
+    q3 = xx[3]
+    xx[1] += q3*a*c
+    xx[2] += q3*(a*d+b*c)
+    xx[3] = q3*b*d
+    return nothing
 end
 import LinearAlgebra.normalize!; # for overloading
 """
@@ -201,17 +205,17 @@ function normalize!(degopt::Degopt,tp=:row1)
         for (i,x)=enumerate(degopt.x)
             if (i>1)
                 for k=1:2
-                    row1_normalize!(x[k],a,b,c,d);
+                    row1_normalize!(x[k],a,b,c,d)
                 end
             end
         end
-        row1_normalize!(degopt.y,a,b,c,d);
+        row1_normalize!(degopt.y,a,b,c,d)
 
 
         degopt.x[1][1][1]=0
-        degopt.x[1][1][2]=1;
+        degopt.x[1][1][2]=1
         degopt.x[1][2][1]=0
-        degopt.x[1][2][2]=1;
+        degopt.x[1][2][2]=1
 
         return degopt;
     else
