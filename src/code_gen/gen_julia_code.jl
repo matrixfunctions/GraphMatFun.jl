@@ -165,8 +165,34 @@ function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_p
     # push_code!(code,"D .+= $I_parent_coeff")
     push_code!(code,"matfun_axpby!($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)")
 end
+function exectute_operation!(lang::LangJulia,
+                            T,graph::MultiLincombCompgraph,node,
+                            dealloc_list,
+                            mem)
+    op = graph.operations[node]
+    if (op != :lincomb)
+        return exectute_operation_basic!(lang,
+                                         T,graph,node,
+                                         dealloc_list,
+                                         mem)
+    else
+        # Multiple additions goes here
+    end
+
+end
 
 function execute_operation!(lang::LangJulia,
+                            T,graph,node,
+                            dealloc_list,
+                            mem)
+    return exectute_operation_basic!(lang,
+                                     T,graph,node,
+                                     dealloc_list,
+                                     mem)
+end
+
+# The general base case. Separated for dispatch.
+function execute_operation_basic!(lang::LangJulia,
                             T,graph,node,
                             dealloc_list,
                             mem)
