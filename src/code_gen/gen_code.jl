@@ -1,6 +1,8 @@
 include("gen_code_mem.jl")
 include("gen_code_snippets.jl")
 
+include("multilincomb.jl");
+
 include("gen_c_code.jl")
 include("gen_julia_code.jl")
 include("gen_matlab_code.jl")
