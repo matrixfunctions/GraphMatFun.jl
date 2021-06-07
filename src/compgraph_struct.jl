@@ -466,7 +466,7 @@ Returns the (direct) children of `node`.
 function get_children(graph,node)
     c=Vector{Symbol}();
     for (child,parents) in graph.parents
-        for s=1:2
+        for s=1:size(parents,1)
             if (parents[s]==node)
                 push!(c,child);
                 break;
@@ -537,10 +537,10 @@ function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
         # make list of computable now
         now_computable=Dict{Symbol,Float64}();
         for node in uncomputed;
+            nof_parents = size(graph.parents[node],1);
             parent1=graph.parents[node][1];
             parent2=graph.parents[node][2];
-            if (haskey(is_computed,parent1) &&
-                haskey(is_computed,parent2))
+            if (all(map(x->haskey(is_computed,x),graph.parents[node])))
                 # Parents are computed, i.e., this node is currently computable
 
                 # Greedy heuristic pt 1: Check how many (uncomputed) children a
@@ -552,23 +552,27 @@ function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
                 end
                 now_computable[node] = nof_uc;
 
-                # Greedy heuristic pt 2: Adjust for deallocation possibilities of parents.
-                can_dealloc_parent1 = ( (nof_uncomputed_children(graph,parent1,is_computed)==1)
-                                        && !(any(outputs.==parent1)) );
-                can_dealloc_parent2 = ( (nof_uncomputed_children(graph,parent2,is_computed)==1)
-                                        && !(any(outputs.==parent2)) );
+                can_dealloc_parent=Vector{Bool}(undef,nof_parents);
+                for i = 1:nof_parents
+                    # Greedy heuristic pt 2: Adjust for deallocation possibilities of parents.
+                    p=graph.parents[node][i];
+                    can_dealloc_parent[i] =
+                        ( (nof_uncomputed_children(graph,p,is_computed)==1)
+                          && !(any(outputs.==p)) );
+                    # Update can_deallocate depending on `will_not_dealloc`
 
-                # Update can_deallocate depending on `will_not_dealloc`
-                can_dealloc_parent1 = can_dealloc_parent1 && !(parent1 in will_not_dealloc)
-                can_dealloc_parent2 = can_dealloc_parent2 && !(parent2 in will_not_dealloc)
+                    can_dealloc_parent[i] = can_dealloc_parent[i] && !(p in will_not_dealloc)
 
-                # Prioritize if parent can be deallocated
-                if  can_dealloc_parent1 && can_dealloc_parent2 && !(parent1==parent2)
+
+                end
+
+
+                if all(can_dealloc_parent) && !(parent1==parent2)
+                    # Prioritize if parent can be deallocated
                     # Set to -2*free_mem_bonus if two memory slots can deallocate after this.
                     now_computable[node] += -2*free_mem_bonus;
-                elseif can_dealloc_parent1 || can_dealloc_parent2
+                elseif any(can_dealloc_parent)
                     # Set to -free_mem_bonus one memory slot can deallocate after this.
-
                     now_computable[node] += -free_mem_bonus
                 end
             end
@@ -577,6 +581,8 @@ function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
         if !isempty(now_computable)
             # "compute" the node, i.e., update what is computed and uncomputed
             compute_node=findmin(now_computable)[2]; #Locally greedy selection
+            nof_parents = size(graph.parents[compute_node],1);
+
             is_computed[compute_node]=true;
             setdiff!(uncomputed,[compute_node]);
             push!(computation_order,compute_node);
@@ -584,7 +590,7 @@ function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
             # Keep track of number of nodes alive.
             # Only parents to currently "computed" node are affected
             is_still_needed[compute_node] = true;
-            for i = 1:2
+            for i = 1:nof_parents
                 parent=graph.parents[compute_node][i];
                 if (nof_uncomputed_children(graph,parent,is_computed)==0) &&
                   !(any(outputs.==parent)) #Parent has no children left and is not an output
