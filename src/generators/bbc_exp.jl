@@ -5,7 +5,7 @@
 export gen_bbc_basic_exp
 
 """
-    (graph,cref)=gen_bbc_basic_exp(k)
+    (graph,cref)=gen_bbc_basic_exp(k;T=Float64)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
