@@ -27,6 +27,8 @@ assign_coeff(lang::LangJulia,v,i)=
      comment(lang,"Saving scalar multiplications using ValueOne().")) :
          ("coeff$i","coeff$i=$v")
 
+assign_coeff_basic(lang::LangJulia,v,i)=("coeff$i","coeff$i=$v")
+
 # Code generation.
 function push_code_matfun_axpby_I!(code)
     # Add code for matfun_axpby! using UniformScaling.
@@ -165,7 +167,7 @@ function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_p
     # push_code!(code,"D .+= $I_parent_coeff")
     push_code!(code,"matfun_axpby!($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)")
 end
-function exectute_operation!(lang::LangJulia,
+function execute_operation!(lang::LangJulia,
                             T,graph::MultiLincombCompgraph,node,
                             dealloc_list,
                             mem)
@@ -175,8 +177,89 @@ function exectute_operation!(lang::LangJulia,
                                         T,graph,node,
                                         dealloc_list,
                                         mem)
-    else
-        # Multiple additions goes here
+    else        # Multiple additions goes here
+
+
+        # Don't overwrite the list
+        dealloc_list=deepcopy(dealloc_list)
+        setdiff!(dealloc_list,keys(mem.special_names))
+        setdiff!(dealloc_list,[:I])
+
+        code=init_code(lang)
+
+        push_comment!(code,"Dot fused with nof terms: "*string(size(graph.coeffs[node],1)))
+
+
+        # Write the coeffs
+        coeff_names=Vector();
+        coeff_list=graph.coeffs[node]
+        parent_mems=Vector();
+        id_coeffs=Vector(); # Vector of identity additions
+        for (i,v) in enumerate(coeff_list)
+            (coeff_i,coeff_i_code)=assign_coeff_basic(lang,v,i);
+            push_code!(code,coeff_i_code);
+            n=graph.parents[node][i];
+            if (n != :I)
+                push!(coeff_names,coeff_i);
+                push!(parent_mems,get_slot_name(mem,n))
+            else  # The identites are added in a different vector
+                push!(id_coeffs,coeff_i);
+            end
+        end
+
+        # Determine a target mem: nodemem
+        nodemem=nothing
+        recycle_parent=nothing
+        for n in graph.parents[node]
+            if (n in dealloc_list) # If it's about to deallocated
+                nodemem=get_slot_name(mem,n);
+                recycle_parent=n;
+                break
+            end
+        end
+        if (isnothing(recycle_parent))
+            (nodemem_i,nodemem)=get_free_slot(mem)
+            alloc_slot!(mem,nodemem_i,node)
+        else
+            push_comment!(code,"Smart lincomb recycle $recycle_parent")
+        end
+
+
+        # Print the code
+        rhs=join((coeff_names.*".*").*parent_mems," .+ ")
+        lhs=nodemem;
+
+        push_code!(code,lhs*" .= "*rhs);
+        # Adjust the result with inplace additions of identity
+        for c in id_coeffs
+            push_code!(code,"mul!($nodemem,true,I*$c,true,true)");
+        end
+
+
+        if !(isnothing(recycle_parent))
+            # Avoid deallocate recycled parent
+            setdiff!(dealloc_list,[recycle_parent])
+
+            # Set the memory pointer
+            j=get_slot_number(mem,recycle_parent)
+            set_slot_number!(mem,j,node)
+        end
+
+
+
+        # Deallocate
+        for n=dealloc_list
+            if n != :I # No memory is ever allocated for the identity matrix.
+                i=get_slot_number(mem,n)
+                push_comment!(code,"Deallocating $n in slot $i")
+                free!(mem,i)
+            end
+        end
+
+
+        return (code,nodemem)
+
+
     end
 
 end
