@@ -1,5 +1,5 @@
 using LinearAlgebra
-@testset "bbc" begin
+@testset "degopt_poly" begin
 
 
     x1a=[3; 4.0]
