@@ -3,7 +3,7 @@
 export gen_sid_exp;
 
 """
-    (graph,cref)=gen_sid_exp(k;T=Float64)
+    (graph,cref)=gen_sid_exp(k;T=Float64,compress_keys=true)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
@@ -14,7 +14,7 @@ Reference:
 * Boosting the computation of the matrix exponential, J. Sastre, J. Ibáñez, E. Defez, Appl. Math. Computation, 340, 2019, 206-220.
 
     """
-function gen_sid_exp(k;T=Float64)
+function gen_sid_exp(k;T=Float64,compress_keys=true)
 
     if (k==4)
 
@@ -68,7 +68,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_degopt_poly(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
 
 
     elseif (k==5)
@@ -140,7 +140,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_degopt_poly(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
 
 
     elseif (k==6)
@@ -215,7 +215,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_degopt_poly(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
 
 
     elseif (k==7)
@@ -299,7 +299,7 @@ function gen_sid_exp(k;T=Float64)
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
 
-        (graph,cref)=gen_degopt_poly(xv,y);
+        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
     elseif (k>7)
         (graph,cref)=gen_sid_exp(7;T=T)
         # Square it 7-k times
@@ -308,7 +308,7 @@ function gen_sid_exp(k;T=Float64)
             degopt=Degopt(graph);
             square!(degopt);
             scale!(degopt,convert(T,1/2));
-            (graph,cref)=gen_degopt_poly(degopt);
+            (graph,cref)=gen_degopt_poly(degopt,compress_keys=compress_keys);
         end
     else
         error("Not implemented for k=$k");

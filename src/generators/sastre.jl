@@ -9,7 +9,7 @@ export gen_sastre_basic_exp, gen_sastre_basic;
 
 
 """
-    (graph,cref)=gen_sastre_basic_exp(k)
+    (graph,cref)=gen_sastre_basic_exp(k,compress_keys=true)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
@@ -19,7 +19,7 @@ Reference:
 
 *  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function gen_sastre_basic_exp(k)
+function gen_sastre_basic_exp(k,compress_keys=true)
     graph=Compgraph(Float64);
     cref=[];
     if (k==3)
@@ -34,7 +34,7 @@ function gen_sastre_basic_exp(k)
         f = [1.0, 1.0, 0.5, 0.1168293067115003]
 
         s=3;
-        return gen_sastre_degopt(s,c,d,e,f)
+        return gen_sastre_degopt(s,c,d,e,f,compress_keys)
     elseif (k==6)
         c10=-6.140022498994532E-17
         c9=-9.210033748491798E-16
@@ -65,7 +65,7 @@ function gen_sastre_basic_exp(k)
         f=[f0;f1;f2;f3;f4;f5];
 
         s=5;
-        return gen_sastre_degopt(s,c,d,e,f)
+        return gen_sastre_degopt(s,c,d,e,f,compress_keys)
     else
         error("Not implemented k=$k")
     end
@@ -76,7 +76,7 @@ function gen_sastre_basic_exp(k)
 end
 
 
-function gen_sastre_basic(b)
+function gen_sastre_basic(b,compress_keys)
 
     if (size(b,1) !=9)
         error("Not implemented");
@@ -120,7 +120,7 @@ function gen_sastre_basic(b)
     d=[d1;d2];
 
     s=2;
-    return gen_sastre_degopt(s,c,d,e,f)
+    return gen_sastre_degopt(s,c,d,e,f,compress_keys)
     #gen_degopt_poly(x,z);
 
 
@@ -136,7 +136,7 @@ end
 # e=[e0;NaN;e2;...e_s]  # size = s+1
 # f=[f0;...f_s] # size = s+1
 # Nof mult: s+1
-function gen_sastre_degopt(s,c,d,e,f)
+function gen_sastre_degopt(s,c,d,e,f,compress_keys)
     T=eltype(c)
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 
@@ -153,5 +153,5 @@ function gen_sastre_degopt(s,c,d,e,f)
     # y1s
     z=[f[1:s+1];e[1];1.0];
 
-    return gen_degopt_poly(x,z);
+    return gen_degopt_poly(x,z,compress_keys=compress_keys);
 end

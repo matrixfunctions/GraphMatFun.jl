@@ -162,7 +162,7 @@ function gen_ps_degopt(a; input=:A, compress_keys=true)
             for i = 1:(k-1)
                 x[i] = (vcat(zero(T),one(T),zeros(i-1)), vcat(zeros(i),one(T)))
             end
-            return gen_degopt_poly(x, a)
+            return gen_degopt_poly(x, a, compress_keys=compress_keys)
         end
     end
 
