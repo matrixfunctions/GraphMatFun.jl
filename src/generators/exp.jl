@@ -183,28 +183,28 @@ end
 
 
 """
-     (graph,crefs)=gen_exp_native_jl_degopt(A; input=:A, compress_keys=true)
+     (graph,crefs)=gen_exp_native_jl_degopt(A; input=:A)
 
 Same as `gen_exp_native_jl` but with calls to `gen_degopt_poly` for contruction of
 numerator and denominator polynomials.
     """
-function gen_exp_native_jl_degopt(A; input=:A, compress_keys=true)
+function gen_exp_native_jl_degopt(A; input=:A)
     T = eltype(A)
     nA = opnorm(A, 1)
     d = get_expm_pade_degree_native_lj(nA)
     if d < 13
         C = get_expm_pade_coeffs(d, T)
-        return gen_exp_native_jl_low_degopt(C, input, compress_keys)
+        return gen_exp_native_jl_low_degopt(C, input)
     else
         C = get_expm_pade_coeffs(d, T)
         s  = log2(nA/5.4) # power of 2 later reversed by squaring
-        return gen_exp_native_jl_high_degopt(C, s, input, compress_keys)
+        return gen_exp_native_jl_high_degopt(C, s, input)
     end
 end
 
 
 # For sufficiently small nA, use lower order Padé-Approximations
-function gen_exp_native_jl_low_degopt(C, input, compress_keys)
+function gen_exp_native_jl_low_degopt(C, input)
     T = eltype(C)
     graph = Compgraph(T)
 
@@ -222,7 +222,7 @@ function gen_exp_native_jl_low_degopt(C, input, compress_keys)
     a = view(C,4:2:n)
     xU[s+1] = ( vcat(zeros(T,1),one(T),zeros(T,s+1)), vcat(C[2],zero(T),a) )
     zU = vcat(zeros(T,s+2), one(T))
-    (graphU,crefU) = gen_degopt_poly(xU, zU, input=input, compress_keys=compress_keys)
+    (graphU,crefU) = gen_degopt_poly(xU, zU, input=input)
     rename_node!(graphU, Symbol("T2k$(4+s)") , :U, crefU)
 
     # V
@@ -230,7 +230,7 @@ function gen_exp_native_jl_low_degopt(C, input, compress_keys)
     xV[1:s]=xU[1:s]
     a = view(C,3:2:n-1)
     zV = vcat(C[1],zero(T),a)
-    (graphV,crefV) = gen_degopt_poly(xV, zV, input=input, compress_keys=compress_keys)
+    (graphV,crefV) = gen_degopt_poly(xV, zV, input=input)
     rename_node!(graphV, Symbol("T2k$(3+s)") , :V, crefV)
 
 
@@ -251,7 +251,7 @@ end
 
 
 # Full scaling and squaring
-function gen_exp_native_jl_high_degopt(CC, s, input, compress_keys)
+function gen_exp_native_jl_high_degopt(CC, s, input)
     T = eltype(CC)
     graph = Compgraph(T)
     C=input
@@ -279,7 +279,7 @@ function gen_exp_native_jl_high_degopt(CC, s, input, compress_keys)
     xU[5] = ( vcat(zero(T),one(T),zeros(T,4)), vcat(CC[2],zero(T),a,one(T)) )
 
     zU = vcat(zeros(T,6), one(T))
-    (graphU,crefU) = gen_degopt_poly(xU, zU, input=C, compress_keys=compress_keys)
+    (graphU,crefU) = gen_degopt_poly(xU, zU, input=C)
     rename_node!(graphU, :T2k8 , :U, crefU)
 
     # V  = A6 * (CC[13].*A6 .+ CC[11].*A4 .+ CC[9].*A2) .+
@@ -296,7 +296,7 @@ function gen_exp_native_jl_high_degopt(CC, s, input, compress_keys)
     # V = Vp + CC[7].*A6 .+ CC[5].*A4 .+ CC[3].*A2 .+ CC[1].*Inn
     a = view(CC,3:2:7)
     zV = vcat(CC[1],zero(T),a,one(T))
-    (graphV,crefV) = gen_degopt_poly(xV, zV, input=C, compress_keys=compress_keys)
+    (graphV,crefV) = gen_degopt_poly(xV, zV, input=C)
     rename_node!(graphV, :T2k7 , :V, crefV)
 
     graph = merge_graphs(graphU, graphV, prefix1="U", prefix2="V", skip_basic1=true, skip_basic2=true, cref1=crefU, cref2=crefV, input1=C, input2=C)
@@ -318,7 +318,7 @@ function gen_exp_native_jl_high_degopt(CC, s, input, compress_keys)
             xS[i] = ( vcat(zeros(T,i),one(T)), vcat(zeros(T,i),one(T)) )
         end
         zS = vcat(zeros(T,si+1), one(T))
-        (graphS,crefS) = gen_degopt_poly(xS, zS, input=:P, compress_keys=compress_keys)
+        (graphS,crefS) = gen_degopt_poly(xS, zS, input=:P)
 
         graph = merge_graphs(graph, graphS, prefix1="", prefix2="S", skip_basic1=true, skip_basic2=true, cref1=cref, cref2=crefS, input1=C, input2=:P)
         cref =vcat(cref, crefS)

@@ -11,7 +11,7 @@ using LinearAlgebra
 
     z=[1.0; -0.1; 0.1; 0.01];
 
-    (graph,crefs)=gen_degopt_poly(x,z,compress_keys=false)
+    (graph,crefs)=gen_degopt_poly(x,z)
 
     x0=3.1415;
     ev1=eval_graph(graph,x0,comporder=get_topo_order_degopt(2));

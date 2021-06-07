@@ -2,9 +2,9 @@ export gen_degopt_poly, get_topo_order_degopt
 
 
 """
-    (graph,crefs)=gen_degopt_poly(k;compress_keys=true,T=ComplexF64,input=:A)
-    (graph,crefs)=gen_degopt_poly(x,z;compress_keys=true,input=:A)
-    (graph,crefs)=gen_degopt_poly(d::Degopt;compress_keys=true,input=:A)
+    (graph,crefs)=gen_degopt_poly(k;T=ComplexF64,input=:A)
+    (graph,crefs)=gen_degopt_poly(x,z;input=:A)
+    (graph,crefs)=gen_degopt_poly(d::Degopt;input=:A)
 
 Corresponds to the (for a fixed numer of multiplications) degree-optimal polynomial
 
@@ -21,8 +21,6 @@ The `x`-values are given in the argument `x`, which is
 a `Vector{Tuple{Vector,Vector}}`, containing the elements
 of each sum. The `z`-vector contains the elements
 to form the output, and `input` determines the name of the matrix A above.
-If `compress_keys=true`, the references
-to `z[3],z[4],...` are not returned.
 If the parameter `k` is supplied instead of the coefficients,
 all coeffs will be set to one.
 
@@ -30,7 +28,7 @@ Reference: The general recursion is mentioned in equation (9) in this paper:
 
 * Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
 """
-function gen_degopt_poly(x,z;compress_keys=true,input=:A)
+function gen_degopt_poly(x,z;input=:A)
     T = promote_type(eltype(eltype(eltype(x))), eltype(z))
     (graph,crefs)=gen_degopt_poly_B(x,T,input=input);
 
@@ -45,14 +43,8 @@ function gen_degopt_poly(x,z;compress_keys=true,input=:A)
     key=Symbol("T2k$(k+3)");
     crefs_new=add_sum!(graph,key,
                        z,z_nodes,Symbol("T2k"));
+    append!(crefs,crefs_new);
 
-
-    if (compress_keys)
-        # Only take the I and A
-        append!(crefs,crefs_new[1:2]);
-    else
-        append!(crefs,crefs_new);
-    end
 
 
     # Set the output
@@ -62,7 +54,7 @@ function gen_degopt_poly(x,z;compress_keys=true,input=:A)
     return (graph,crefs);
 
 end
-function gen_degopt_poly(k;T=ComplexF64,compress_keys=true,input=:A)
+function gen_degopt_poly(k;T=ComplexF64,input=:A)
 
     x=Vector{Tuple{Vector{T},Vector{T}}}(undef,k);
     for i=1:k
@@ -71,10 +63,10 @@ function gen_degopt_poly(k;T=ComplexF64,compress_keys=true,input=:A)
 
     z=ones(T,k+2)
 
-    gen_degopt_poly(x,z;compress_keys=compress_keys,input=:A)
+    gen_degopt_poly(x,z;input=:A)
 end
-function gen_degopt_poly(degopt::Degopt;compress_keys=true,input=:A)
-    return gen_degopt_poly(degopt.x,degopt.y,compress_keys=compress_keys,input=input);
+function gen_degopt_poly(degopt::Degopt;input=:A)
+    return gen_degopt_poly(degopt.x,degopt.y,input=input);
 end
 
 
@@ -131,7 +123,7 @@ row by row. See also `get_degopt_crefs`.
 
 """
 function get_topo_order_degopt(k)
-    (x,z) = get_degopt_crefs(k,compress_keys=false)
+    (x,z) = get_degopt_crefs(k)
     computation_order=Vector{Symbol}(undef, 0)
     for i = 1:k
         for n = 1:2

@@ -57,7 +57,7 @@ end
 
 
 """
-     (graph,crefs)=gen_horner_degopt(a; scaling=1.0, input=:A, compress_keys=true)
+     (graph,crefs)=gen_horner_degopt(a; scaling=1.0, input=:A)
 
 Generates a polynomial using Horner's evaluation scheme. The polynomial
 
@@ -71,7 +71,7 @@ where α=`scaling`.
 However, the function uses a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`. See also `gen_horner`.
     """
-function gen_horner_degopt(a; scaling=1.0, input=:A, compress_keys=true)
+function gen_horner_degopt(a; scaling=1.0, input=:A)
 
     n = length(a)
     T = eltype(a)
@@ -89,6 +89,6 @@ function gen_horner_degopt(a; scaling=1.0, input=:A, compress_keys=true)
         x[i] = ( vcat(a[n-i],zeros(T,i-1),one(T)), vcat(zero(T),scaling,zeros(T,i-1)) )
     end
 
-    return gen_degopt_poly(x, vcat(a[1],zeros(T,n-2),one(T)), input=input, compress_keys=compress_keys)
+    return gen_degopt_poly(x, vcat(a[1],zeros(T,n-2),one(T)), input=input)
 
 end

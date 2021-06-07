@@ -95,7 +95,7 @@ end
 
 
 """
-    (x,z)=get_degopt_crefs(k;compress_keys=false)
+    (x,z)=get_degopt_crefs(k)
 
 Retruns crefs related to `gen_degopt_poly`. Specifically
 `x` is a `Vector{Tuple{Vector{Tuple{Symbol,Int}},Vector{Tuple{Symbol,Int}}}}`
@@ -108,7 +108,7 @@ i.e., the crefs corresponding to `[α_2_1, α_2_2]`. See `gen_degopt_poly`. Henc
 `get_coeffs(graph,x[2][1])` returns the corresponding numerical values of the coefficients.
 
 """
-function get_degopt_crefs(k;compress_keys=false)
+function get_degopt_crefs(k)
 
     TT = Tuple{Symbol,Int}
     x=Vector{Tuple{Vector{TT},Vector{TT}}}(undef,k)
@@ -132,16 +132,14 @@ function get_degopt_crefs(k;compress_keys=false)
         end
     end
 
-    zlength = compress_keys ? 2 : k+2
+    zlength = k+2
     z = Vector{TT}(undef,zlength)
     z[1] = (:T2k2, 1)
     z[2] = (:T2k2, 2)
     for i = 3:zlength-1
         z[i] = ( Symbol("T2k$(i)"), 2 )
     end
-    if !compress_keys
-        z[k+2] = ( Symbol("T2k$(k+3)"), 2 )
-    end
+    z[k+2] = ( Symbol("T2k$(k+3)"), 2 )
 
     return (x,z)
 end

@@ -5,7 +5,7 @@
 export gen_bbc_basic_exp
 
 """
-    (graph,cref)=gen_bbc_basic_exp(k,compress_keys=true)
+    (graph,cref)=gen_bbc_basic_exp(k)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
@@ -16,7 +16,7 @@ Reference:
 * Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
 
     """
-function gen_bbc_basic_exp(k;T=Float64,compress_keys=true)
+function gen_bbc_basic_exp(k;T=Float64)
 
     if (k==2)
 
@@ -40,7 +40,7 @@ function gen_bbc_basic_exp(k;T=Float64,compress_keys=true)
         # Force convert to type
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
-        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
 
     elseif (k==3)
@@ -73,7 +73,7 @@ function gen_bbc_basic_exp(k;T=Float64,compress_keys=true)
 
 
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b)];
-        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
 
     elseif (k==4)
@@ -111,7 +111,7 @@ function gen_bbc_basic_exp(k;T=Float64,compress_keys=true)
 
         #xv=[v1,v2,v3,v4];
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b)];
-        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
 
     elseif (k==5)
@@ -168,7 +168,7 @@ function gen_bbc_basic_exp(k;T=Float64,compress_keys=true)
         y=[b01;b11;b21;b31;b61;0;1];
 
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b)];
-        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
+        (graph,cref)=gen_degopt_poly(xv,y);
 
     elseif (k==6)
 
@@ -196,7 +196,7 @@ function gen_bbc_basic_exp(k;T=Float64,compress_keys=true)
         v6b=copy(v6a);
         y=t0*ones(8);
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b)];
-        (graph,cref)=gen_degopt_poly(xv,y,compress_keys=compress_keys);
+        (graph,cref)=gen_degopt_poly(xv,y);
     else
         error("Incorrect k");
     end

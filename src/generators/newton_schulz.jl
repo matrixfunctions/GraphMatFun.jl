@@ -52,7 +52,7 @@ end
 
 
 """
-     (graph,crefs)=gen_newton_schulz_degopt(k, T=ComplexF64; input=:A, compress_keys=true)
+     (graph,crefs)=gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
 
 Does `k` iterations of the Newton–Schulz iteration for approximating the inverse,
 using the recursion
@@ -64,7 +64,7 @@ The function makes a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`. See also `gen_newton_schulz`.
 
     """
-function gen_newton_schulz_degopt(k, T=ComplexF64; input=:A, compress_keys=true)
+function gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,2*k)
     # Z_i=A*V_i --- Odd numbers
@@ -76,5 +76,5 @@ function gen_newton_schulz_degopt(k, T=ComplexF64; input=:A, compress_keys=true)
         x[i] = ( vcat(zeros(T,i-1),one(T),zero(T)), vcat(2,zeros(T,i-1),-one(T)) )
     end
 
-    return gen_degopt_poly(x, vcat(zeros(T,2*k+1),one(T)), input=input, compress_keys=compress_keys)
+    return gen_degopt_poly(x, vcat(zeros(T,2*k+1),one(T)), input=input)
 end

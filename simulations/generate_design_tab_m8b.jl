@@ -42,7 +42,7 @@ mono21_init=deepcopy(base_sim);
 mono21_init.init=:taylor;
 graph_org=import_compgraph("simulations/graphs/exp_m7_mono_taylor_6_0.cgr");;
 (graph,cref)=gen_degopt_by_squaring(graph_org,kickstart=2);
-(graph,cref)=gen_degopt_poly(Degopt(graph),compress_keys=false); # Use all keys
+(graph,cref)=gen_degopt_poly(Degopt(graph));
 mono21_init.graph=(graph,cref);
 mono21_init.opt_kwargs[:droptol]=1e-20;
 mono21_init.opt_kwargs[:γ0]=0.5;
