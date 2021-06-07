@@ -1,4 +1,4 @@
-export gen_exp_native_jl, gen_exp_native_jl_degopt, gen_expm2009
+export gen_exp_native_jl, gen_exp_native_jl_degopt
 
 
 function get_expm_pade_coeffs(d, T)
@@ -183,7 +183,7 @@ end
 
 
 """
-     (graph,crefs)=gen_exp_native_jl_degopt(A; input=:A, compress_keys=true))
+     (graph,crefs)=gen_exp_native_jl_degopt(A; input=:A, compress_keys=true)
 
 Same as `gen_exp_native_jl` but with calls to `gen_degopt_poly` for contruction of
 numerator and denominator polynomials.
