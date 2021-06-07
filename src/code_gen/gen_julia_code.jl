@@ -3,15 +3,17 @@ export LangJulia
 # Data structure for the language.
 struct LangJulia
     overwrite_input # Overwrite input
+    dot_fusing  # Allow dot fusion
 end
 """
-    LangJulia(overwrite_input)
+    LangJulia(overwrite_input=true,dot_fusing=true)
 
-Code generation in julia language, with optional overwriting of input.
+Code generation in julia language, with optional overwriting of input
+and optional usage of dot fusion.
 
 """
-function LangJulia()
-    return LangJulia(true)
+function LangJulia(overwrite_output=true,dot_fusing=true)
+    return LangJulia(overwrite_output,dot_fusing)
 end
 
 
@@ -28,6 +30,17 @@ assign_coeff(lang::LangJulia,v,i)=
          ("coeff$i","coeff$i=$v")
 
 assign_coeff_basic(lang::LangJulia,v,i)=("coeff$i","coeff$i=$v")
+
+function preprocess_codegen(graph,lang::LangJulia)
+
+    if (lang.dot_fusing)
+        return MultiLincombCompgraph(graph); # Merge many lincombs for dot fusion
+    else
+        return graph;
+    end
+end
+
+
 
 # Code generation.
 function push_code_matfun_axpby_I!(code)
@@ -187,10 +200,10 @@ function execute_operation!(lang::LangJulia,
 
         code=init_code(lang)
 
-        push_comment!(code,"Dot fused with nof terms: "*string(size(graph.coeffs[node],1)))
+        push_comment!(code,"Dot fusing for sum of $(join(graph.parents[node],' '))");
 
 
-        # Write the coeffs
+        # Write the coeffs into appropriate vectors
         coeff_names=Vector();
         coeff_list=graph.coeffs[node]
         parent_mems=Vector();

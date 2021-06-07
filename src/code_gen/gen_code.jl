@@ -27,6 +27,10 @@ function gen_main(lang,T,fname,funname)
     return init_code(lang);
 end
 
+function preprocess_codegen(graph,lang)
+    return graph  # Fallback to no preprocessing
+end
+
 
 """
     gen_code(fname,graph; priohelp=Dict{Symbol,Float64}(),
@@ -73,6 +77,8 @@ function _gen_code(fname,graph,
         # Lazy: Print out to stdout if no filename
         file=Base.stdout
     end
+
+    graph=preprocess_codegen(graph,lang)
 
     (order, can_be_deallocated, max_nof_slots) =
         get_topo_order(graph; priohelp=priohelp)
