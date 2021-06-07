@@ -171,10 +171,10 @@ function exectute_operation!(lang::LangJulia,
                             mem)
     op = graph.operations[node]
     if (op != :lincomb)
-        return exectute_operation_basic!(lang,
-                                         T,graph,node,
-                                         dealloc_list,
-                                         mem)
+        return execute_operation_basic!(lang,
+                                        T,graph,node,
+                                        dealloc_list,
+                                        mem)
     else
         # Multiple additions goes here
     end
