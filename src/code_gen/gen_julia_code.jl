@@ -185,7 +185,7 @@ function execute_operation!(lang::LangJulia,
                             T,graph,node,
                             dealloc_list,
                             mem)
-    return exectute_operation_basic!(lang,
+    return execute_operation_basic!(lang,
                                      T,graph,node,
                                      dealloc_list,
                                      mem)
