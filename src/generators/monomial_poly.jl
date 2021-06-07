@@ -53,14 +53,14 @@ end
 
 
 """
-     (graph,crefs)=gen_monomial_degopt(a; input=:A)
+     (graph,crefs)=gen_monomial_degopt(a; input=:A, compress_keys=true)
 
 Generates the same polynomial as `gen_monomial`, in the monomial basis.
 However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_monomial_degopt(a; input=:A)
+function gen_monomial_degopt(a; input=:A, compress_keys=true)
 
     n = length(a)
     d = n-1
@@ -75,6 +75,6 @@ function gen_monomial_degopt(a; input=:A)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end
 
-    return gen_degopt_poly(x, a, input=input)
+    return gen_degopt_poly(x, a, input=input, compress_keys=compress_keys)
 
 end

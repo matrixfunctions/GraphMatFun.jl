@@ -138,7 +138,7 @@ end
 
 
 """
-     (graph,crefs)=gen_ps_degopt(a; input=:A)
+     (graph,crefs)=gen_ps_degopt(a; input=:A, compress_keys=true)
 
 Generates the same polynomial as `gen_ps`, i.e.,
 the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents.
@@ -146,7 +146,7 @@ However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_ps_degopt(a; input=:A)
+function gen_ps_degopt(a; input=:A, compress_keys=true)
 
     # Initial setup
     n = length(a)
@@ -205,6 +205,6 @@ function gen_ps_degopt(a; input=:A)
     end
 
     z = vcat(a[1:s],zero(T),zeros(T,v-1-i_adj),one(T))
-    return gen_degopt_poly(x, z, input=input)
+    return gen_degopt_poly(x, z, input=input, compress_keys=compress_keys)
 
 end
