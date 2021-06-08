@@ -118,9 +118,9 @@ function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
     push_code!(code,"n=size(A,1)")
     start_j=1
 
-    push_comment!(code,"The first slot is A")
+    push_comment!(code,"The first slots are precomputed nodes $precomputed_nodes")
     if (lang.overwrite_input)
-        start_j=2
+        start_j += size(precomputed_nodes,1)
     end
     push_code!(code,"for  j=$start_j:max_memslots")
 
@@ -132,15 +132,19 @@ function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
         push_code!(code,"value_one=ValueOne()")
     end
 
-    # Initialize A.
-    A_slot_name=get_slot_name(mem,:A)
-    if (lang.overwrite_input)
-        # Overwrite input A
-        push_code!(code,"$A_slot_name=A "*comment(lang,"overwrite A"))
-    else
-        # Otherwise make a copy
-        push_code!(code,"copy!($A_slot_name,A)")
+
+    for i,n in enumerate(precomputed_nodes)
+        # Initialize A.
+        Ak_slot_name=get_slot_name(mem,n)
+        if (lang.overwrite_input)
+            # Overwrite input A
+            push_code!(code,"$Ak_slot_name=$n "*comment(lang,"overwrite A"))
+        else
+            # Otherwise make a copy
+            push_code!(code,"copy!($Ak_slot_name,$k)")
+        end
     end
+
 
     if has_identity_lincomb(graph)
         alloc_slot!(mem,2,:I)
