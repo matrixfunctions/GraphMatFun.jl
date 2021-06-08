@@ -96,6 +96,7 @@ end
 
 """
     (x,z)=get_degopt_crefs(k)
+    (x,z)=get_degopt_crefs(graph)
 
 Retruns crefs related to `gen_degopt_poly`. Specifically
 `x` is a `Vector{Tuple{Vector{Tuple{Symbol,Int}},Vector{Tuple{Symbol,Int}}}}`
@@ -144,6 +145,9 @@ function get_degopt_crefs(k)
     return (x,z)
 end
 
+function get_degopt_crefs(graph::Compgraph)
+    return get_degopt_cregs(count( values(graph.operations) .== :mult))
+end
 
 """
     scale!(degopt::Degopt,α)
