@@ -133,15 +133,15 @@ function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
     end
 
 
-    for i,n in enumerate(precomputed_nodes)
-        # Initialize A.
+    # Initialize the inputs
+    for (i,n) in enumerate(precomputed_nodes)
         Ak_slot_name=get_slot_name(mem,n)
         if (lang.overwrite_input)
-            # Overwrite input A
-            push_code!(code,"$Ak_slot_name=$n "*comment(lang,"overwrite A"))
+            # Just assign a pointer to the slot to allow overwrite
+            push_code!(code,"$Ak_slot_name=$n "*comment(lang,"overwrite $n"))
         else
             # Otherwise make a copy
-            push_code!(code,"copy!($Ak_slot_name,$k)")
+            push_code!(code,"copy!($Ak_slot_name,$n)")
         end
     end
 
@@ -165,7 +165,7 @@ function init_mem(lang::LangJulia,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
 
     # Make sure the precomputed nodes have memslots
-    for i,n in enumerate(precomputed_nodes)
+    for (i,n) in enumerate(precomputed_nodes)
         alloc_slot!(mem,i,n)
     end
 
