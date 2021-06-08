@@ -1,12 +1,5 @@
 
-export gen_sastre_basic_exp, gen_sastre_basic;
-# Code related to the paper
-#
-# Efficient evaluation of matrix polynomials
-# J. Sastre. Linear Algebra and its Applications
-# Volume 539, 15 February 2018, Pages 229-250
-# https://doi.org/10.1016/j.laa.2017.11.010
-
+export gen_sastre_basic_exp, gen_sastre_basic
 
 """
     (graph,cref)=gen_sastre_basic_exp(k)
@@ -35,28 +28,28 @@ function gen_sastre_basic_exp(k)
 
         s=3;
         return gen_sastre_degopt(s,c,d,e,f)
-    elseif (k==6)
-        c10=-6.140022498994532E-17
-        c9=-9.210033748491798E-16
-        c8=-1.980157255925737E-14
-        c7=-4.508311519886735E-13
-        c6=-1.023660713518307E-11
-        d5=-1.227011356117036E-10
-        d4=-6.770221628797445E-9
-        d3=-1.502070379373464E-7
-        d2=-3.013961104055248E-6
-        d1=-5.893435534477677E-5
-        e5=-3.294026127901678E-10
-        e4=-2.785084196756015E-9
-        e3=-4.032817333361947E-8
-        e2=-5.100472475630675E-7
-        e0=-1.023463999572971E-3
-        f5=4.024189993755686E-13
-        f4=7.556768134694921E-12
-        f3=1.305311326377090E-10
-        f2=2.087675698786810E-9
-        f1=2.505210838544172E-8
-        f0=2.755731922398589E-7
+    elseif (k==6) # Table 7
+        c10=-6.140022498994532e-17
+        c9=-9.210033748491798e-16
+        c8=-1.980157255925737e-14
+        c7=-4.508311519886735e-13
+        c6=-1.023660713518307e-11
+        d5=-1.227011356117036e-10
+        d4=-6.770221628797445e-9
+        d3=-1.502070379373464e-7
+        d2=-3.013961104055248e-6
+        d1=-5.893435534477677e-5
+        e5=-3.294026127901678e-10
+        e4=-2.785084196756015e-9
+        e3=-4.032817333361947e-8
+        e2=-5.100472475630675e-7
+        e0=-1.023463999572971e-3
+        f5=4.024189993755686e-13
+        f4=7.556768134694921e-12
+        f3=1.305311326377090e-10
+        f2=2.087675698786810e-9
+        f1=2.505210838544172e-8
+        f0=2.755731922398589e-7
 
         c=[c6;c7;c8;c9;c10];
         d=[d1;d2;d3;d4;d5];
@@ -69,15 +62,24 @@ function gen_sastre_basic_exp(k)
     else
         error("Not implemented k=$k")
     end
-
-
-
-
 end
 
 
-function gen_sastre_basic(b)
+"""
+    (graph,cref)=gen_sastre_basic(b)
 
+Computes the degree-8 polynomial
+
+    p(z)=b[1]+z*b[2]+z^2*b[3]+...+z^8*b[9]
+
+according to Example 3.1 in the reference.
+
+Reference:
+
+*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
+    """
+function gen_sastre_basic(b)
+# Equations (16) - (32)
     if (size(b,1) !=9)
         error("Not implemented");
     end
