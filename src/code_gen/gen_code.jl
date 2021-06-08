@@ -101,6 +101,10 @@ function _gen_code(fname,graph,
     # Sweep 1: Determine exactly the number of slots needed
     nof_slots=0
     for (i,node) in enumerate(order)
+        if (node in precomputed_nodes) # No need to do computation of precomp nodes
+            continue
+        end
+
         (exec_code,result_variable)=execute_operation!(lang,
                                                        T,graph,node,
                                                        can_be_deallocated[i],
@@ -120,6 +124,9 @@ function _gen_code(fname,graph,
     println(file,to_string(function_init_code))
 
     for (i,node) in enumerate(order)
+        if (node in precomputed_nodes) # No need to do computation of precomp nodes
+            continue
+        end
         (exec_code,result_variable)=execute_operation!(lang,
                                                        T,graph,node,
                                                        can_be_deallocated[i],
