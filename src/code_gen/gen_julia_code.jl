@@ -96,13 +96,14 @@ function function_definition(lang::LangJulia,graph,T,funname,precomputed_nodes)
         push_code_matfun_axpby!(code)
     end
 
+    input_variables = join(precomputed_nodes, ", ");
     if (lang.inline)
-        push_code!(code,"@inline function $funname(A)",ind_lvl=0)
+        push_code!(code,"@inline function $funname($input_variables)",ind_lvl=0)
     else
-        push_code!(code,"function $funname(A)",ind_lvl=0)
+        push_code!(code,"function $funname($input_variables)",ind_lvl=0)
     end
 
-    push_code!(code,"T=promote_type(eltype(A),$T) "*
+    push_code!(code,"T=promote_type(eltype($(input_variables[1])),$T) "*
         comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     return code
 end
