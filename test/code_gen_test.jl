@@ -40,14 +40,6 @@ using LinearAlgebra
     rm(fname);
 
 
-    # Degopt filegen testing
-    fname=tempname()*".jl";
-    degopt=Degopt([3 3 0; 4 5.0 6.0], [5 6.0 0 ; 4.4 5.5 6.0],[2; 3; 4; 5.0])
-    (g,_)=gen_degopt_poly(degopt);
-    gen_code(fname,g,lang=LangDegoptJulia(),funname="myfunction")
-    include(fname);
-    @test eval_graph(g,0.1) == myfunction(0.1)
-    rm(fname);
 
 
 
