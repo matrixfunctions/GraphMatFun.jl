@@ -31,7 +31,7 @@ function function_definition(lang::LangMatlab,graph,T,funname,precomputed_nodes)
     return code
 end
 
-function function_init(lang::LangMatlab,T,mem,graph)
+function function_init(lang::LangMatlab,T,mem,graph,precomputed_nodes)
     code=init_code(lang)
     push_code!(code,"n=size(A,1);")
     push_code!(code,"I=eye(n,n);")

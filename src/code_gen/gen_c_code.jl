@@ -132,7 +132,7 @@ function init_mem(lang::LangC,max_nof_nodes,precomputed_nodes)
     return mem
 end
 
-function function_init(lang::LangC,T,mem,graph)
+function function_init(lang::LangC,T,mem,graph,precomputed_nodes)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang)
     max_nodes=size(mem.slots,1)

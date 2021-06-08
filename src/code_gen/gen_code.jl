@@ -95,8 +95,8 @@ function _gen_code(fname,graph,
     # maximum number of memory slots needed. The
     # second sweep generates the code.
 
-    mem=init_mem(lang,max_nof_slots+3)
-    function_init(lang,T,mem,graph)
+    mem=init_mem(lang,max_nof_slots+3,precomputed_nodes)
+    function_init(lang,T,mem,graph,precomputed_nodes)
 
     # Sweep 1: Determine exactly the number of slots needed
     nof_slots=0
@@ -118,7 +118,7 @@ function _gen_code(fname,graph,
 
     # Sweep 2:
     mem=init_mem(lang,nof_slots,precomputed_nodes)
-    function_init_code=function_init(lang,T,mem,graph);
+    function_init_code=function_init(lang,T,mem,graph,precomputed_nodes);
     push_comment!(function_init_code,
                   "Computation order: "*join(string.(order)," "))
     println(file,to_string(function_init_code))

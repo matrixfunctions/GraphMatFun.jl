@@ -108,7 +108,7 @@ function function_definition(lang::LangJulia,graph,T,funname,precomputed_nodes)
     return code
 end
 
-function function_init(lang::LangJulia,T,mem,graph)
+function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
     code=init_code(lang)
     max_nodes=size(mem.slots,1)
 
@@ -159,7 +159,12 @@ end
 
 function init_mem(lang::LangJulia,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
-    alloc_slot!(mem,1,:A)
+
+    # Make sure the precomputed nodes have memslots
+    for i,n in enumerate(precomputed_nodes)
+        alloc_slot!(mem,i,n)
+    end
+
     return mem
 end
 
