@@ -3,8 +3,8 @@ export LangJulia
 # Data structure for the language.
 struct LangJulia
     overwrite_input # Overwrite input
-    dot_fusing  # Allow dot fusion
     inline
+    dot_fusing  # Allow dot fusion
 end
 """
     LangJulia(overwrite_input=true,inline=true,dot_fusing=true)
