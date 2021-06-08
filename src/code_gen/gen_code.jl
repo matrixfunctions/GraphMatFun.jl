@@ -60,7 +60,7 @@ end
 function _gen_code(fname,graph,
                    lang,
                    priohelp,
-                   funname
+                   funname,
                    precomputed_nodes)
 
     # Error if graph is trivial (no operations) or has trivial nodes.
