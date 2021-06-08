@@ -4,16 +4,17 @@ export LangJulia
 struct LangJulia
     overwrite_input # Overwrite input
     dot_fusing  # Allow dot fusion
+    inline
 end
 """
-    LangJulia(overwrite_input=true,dot_fusing=true)
+    LangJulia(overwrite_input=true,inline=true,dot_fusing=true)
 
-Code generation in julia language, with optional overwriting of input
-and optional usage of dot fusion.
+Code generation in julia language, with optional overwriting of input,
+inlining the function and optional usage of dot fusion.
 
 """
-function LangJulia(overwrite_output=true,dot_fusing=true)
-    return LangJulia(overwrite_output,dot_fusing)
+function LangJulia(overwrite_output=true,inline=true,dot_fusing=true)
+    return LangJulia(overwrite_output,inline,dot_fusing)
 end
 
 
@@ -94,7 +95,13 @@ function function_definition(lang::LangJulia,graph,T,funname)
     if(!isempty(setdiff!(lincomb_nodes,lincomb_with_I)))
         push_code_matfun_axpby!(code)
     end
-    push_code!(code,"function $funname(A)",ind_lvl=0)
+
+    if (lang.inline)
+        push_code!(code,"@inline function $funname(A)",ind_lvl=0)
+    else
+        push_code!(code,"function $funname(A)",ind_lvl=0)
+    end
+
     push_code!(code,"T=promote_type(eltype(A),$T) "*
         comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     return code
