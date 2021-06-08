@@ -25,7 +25,7 @@ end
 
 
 # Code generation.
-function function_definition(lang::LangMatlab,graph,T,funname)
+function function_definition(lang::LangMatlab,graph,T,funname,precomputed_nodes)
     code=init_code(lang)
     push_code!(code,"function output=$funname(A)",ind_lvl=0)
     return code

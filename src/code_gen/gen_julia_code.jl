@@ -80,7 +80,7 @@ function matfun_axpby!(X,a,b,Y)
 end")
 end
 
-function function_definition(lang::LangJulia,graph,T,funname)
+function function_definition(lang::LangJulia,graph,T,funname,precomputed_nodes)
     code=init_code(lang)
     push_code!(code,"using LinearAlgebra",ind_lvl=0)
     # If graph has linear combinations, add corresponding axpby functions.
