@@ -117,7 +117,7 @@ function _gen_code(fname,graph,
     end
 
     # Sweep 2:
-    mem=init_mem(lang,nof_slots)
+    mem=init_mem(lang,nof_slots,precomputed_nodes)
     function_init_code=function_init(lang,T,mem,graph);
     push_comment!(function_init_code,
                   "Computation order: "*join(string.(order)," "))

@@ -127,7 +127,7 @@ function function_definition(lang::LangC,graph,T,funname,precomputed_nodes)
     return code
 end
 
-function init_mem(lang::LangC,max_nof_nodes;)
+function init_mem(lang::LangC,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
     return mem
 end

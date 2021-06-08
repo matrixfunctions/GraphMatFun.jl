@@ -38,7 +38,7 @@ function function_init(lang::LangMatlab,T,mem,graph)
     return code
 end
 
-function init_mem(lang::LangMatlab,max_nof_nodes)
+function init_mem(lang::LangMatlab,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
     return mem
 end

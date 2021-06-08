@@ -157,7 +157,7 @@ function function_init(lang::LangJulia,T,mem,graph)
 end
 
 
-function init_mem(lang::LangJulia,max_nof_nodes)
+function init_mem(lang::LangJulia,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
     alloc_slot!(mem,1,:A)
     return mem
