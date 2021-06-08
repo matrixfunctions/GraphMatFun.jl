@@ -46,19 +46,19 @@ slotname(::LangC,i)="memslots[$i-1]"
 # Variable declaration, initialization, and reference.
 # In C, complex types are structures and are passed by reference.
 function assign_coeff(::LangC_MKL,val::T,i) where T<:Complex
-    assignment_string = "coeff$i.real = "*string(real(val))*";\n"*
-        "coeff$i.imag = "*string(imag(val))*";"
+    assignment_string = ["coeff$i.real = "*string(real(val))*";",
+                         "coeff$i.imag = "*string(imag(val))*";"]
     variable_string = "&coeff$i"
     return (variable_string,assignment_string)
 end
 function assign_coeff(::LangC_OpenBLAS,val::T,i) where T<:Complex
-    assignment_string = "coeff$i = "*string(real(val))*" + "*
-        string(imag(val))*"*I;"
+    assignment_string = ["coeff$i = "*string(real(val))*" + "*
+        string(imag(val))*"*I;"]
     variable_string = "&coeff$i"
     return (variable_string,assignment_string)
 end
 function assign_coeff(::LangC,val::T,i) where T<:Real
-    assignment_string = "coeff$i = $val;"
+    assignment_string = ["coeff$i = $val;"]
     variable_string = "coeff$i"
     return (variable_string,assignment_string)
 end
@@ -313,9 +313,13 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
 
         # Coefficients of graph should have type T.
         (coeff1,coeff1_code)=assign_coeff(lang,graph.coeffs[node][1],1)
-        push_code!(code,coeff1_code)
+        for s in coeff1_code
+            push_code!(code,s)
+        end
         (coeff2,coeff2_code)=assign_coeff(lang,graph.coeffs[node][2],2)
-        push_code!(code,coeff2_code)
+        for s in coeff2_code
+            push_code!(code,s)
+        end
 
         # Reuse parent in deallocation list for output (saves memcopy).
         if ((parent1 in dealloc_list) || (parent2 in dealloc_list))
