@@ -49,9 +49,10 @@ Currently supported languages: `LangC_MKL`, `LangC_OpenBLAS`,
 function gen_code(fname,graph;
                   priohelp=Dict{Symbol,Float64}(),
                   lang=LangJulia(),
-                  funname="dummy")
+                  funname="dummy",
+                  precomputed_nodes=[:A])
     # Make dispatch possible for lang
-    _gen_code(fname,graph,lang,priohelp,funname)
+    _gen_code(fname,graph,lang,priohelp,funname,precomputed_nodes)
 end
 
 
@@ -59,7 +60,8 @@ end
 function _gen_code(fname,graph,
                    lang,
                    priohelp,
-                   funname)
+                   funname
+                   precomputed_nodes)
 
     # Error if graph is trivial (no operations) or has trivial nodes.
     if isempty(graph.operations)

@@ -146,7 +146,7 @@ function get_degopt_crefs(k)
 end
 
 function get_degopt_crefs(graph::Compgraph)
-    return get_degopt_cregs(count( values(graph.operations) .== :mult))
+    return get_degopt_crefs(count( values(graph.operations) .== :mult))
 end
 
 """
