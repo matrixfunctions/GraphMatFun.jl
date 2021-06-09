@@ -24,8 +24,9 @@ function gen_sastre_basic_exp(k)
         f = [1.0, 1.0, 0.5, 0.1168293067115003]
 
         s=3
-        return gen_sastre_degopt(s,c,d,e,f)
-    elseif (k==6) # Table 7
+        p=s
+        return gen_sastre_degopt(s,p,c,d,e,f,NaN)
+    elseif (k==8) # Table 7
         c10=-6.140022498994532e-17
         c9=-9.210033748491798e-16
         c8=-1.980157255925737e-14
@@ -58,7 +59,7 @@ function gen_sastre_basic_exp(k)
 
         s=5
         p=10
-        return gen_sastre_degopt(s,c,d,e,f)
+        return gen_sastre_degopt(s,p,c,d,e,f,a)
     else
         error("Not implemented k=$k")
     end
@@ -122,7 +123,8 @@ function gen_sastre_basic(b)
     d=[d1;d2]
 
     s=2
-    return gen_sastre_degopt(s,c,d,e,f)
+    p=s
+    return gen_sastre_degopt(s,p,c,d,e,f,NaN)
     #gen_degopt_poly(x,z);
 
 
@@ -130,36 +132,64 @@ end
 
 
 # Internal use only
-# Transforms formula (34)-(35) to degopt form
+# Transforms formula (34)-(35) + (52) to degopt form
 # Input are the coefficients given in the paper
 # s int
 # d=[d1,...ds]
 # c=[c_(s+1)...c_(2*s)]  # size = s
 # e=[e0;NaN;e2;...e_s]  # size = s+1
 # f=[f0;...f_s] # size = s+1
-# Nof mult: s+1
-function gen_sastre_degopt(s,c,d,e,f)
+# a=[a0;...a_(p-1)] # size = p   Can be NaN if p=s
+# Nof mult: s+1+p/s = s+1+v
+function gen_sastre_degopt(s,p,c,d,e,f,a)
     T=eltype(c)
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 
     for j=1:s-1
         push!(x,(vcat(zero(T),one(T),zeros(T,j-1))
-               ,vcat(zeros(T,j),one(T)))
+                ,vcat(zeros(T,j),one(T)))
              )
     end
 
     # y0s
     push!(x,(vcat(zeros(T,s),one(T))
-           ,vcat(zero(T),c[1:s]))
+            ,vcat(zero(T),c[1:s]))
          )
 
     # first term y1s
     push!(x,(vcat(zero(T),d[1:s],one(T))
-           ,vcat(zero(T),zero(T),e[3:(s+1)],one(T)))
+            ,vcat(zero(T),zero(T),e[3:(s+1)],one(T)))
          )
 
     # y1s
-    z=vcat(f[1:s+1],e[1],one(T))
+    ys1 = vcat(f[1:s+1],e[1],one(T))
+    if (p==s) # Only (32)-(34)
 
-    return gen_degopt_poly(x,z)
+        z=ys1
+        return gen_degopt_poly(x,z)
+    else #Apply PS-scheme as in (52)
+        v = convert(Int,p/s) # Assumed to be an integer, according to paper, p = v*s
+
+        # Evaluate y1s*x^s
+        push!(x,(ys1
+               ,vcat(zeros(T,s),one(T),zeros(T,2)))
+             )
+
+         # Evaluate rest of the multiplications with PS-scheme
+         for i = reverse(0:v-2)
+             lower_idx = (i+1)*s+1
+             upper_idx = lower_idx+s-1
+             idx = lower_idx:upper_idx
+             c = view(a, idx)
+             xl = vcat(c,zero(T),zeros(T,v-i),one(T)) # Coeffs for P_{v-i} + A^s*P_{v+1-i}
+             xr = vcat(zeros(T,s),one(T),zeros(T,v+1-i)) # Coeffs for A^s
+             push!(x, (xl,xr)) # A^s*( P_{v-i} + A^s*P_{v+1-i} )
+         end
+
+        z = vcat(a[1:s],zeros(T,2+v),one(T))
+        return gen_degopt_poly(x,z)
+    end
+
+
+
 end
