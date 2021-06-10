@@ -33,6 +33,7 @@ function gen_sastre_basic_exp(k)
         s=2
         p=0
         return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+
     elseif (k==4) # Not tabulated?
         e0 = 5.018851944498568
         e = [e0, NaN, 0.03806343180936604, 0.017732587443103232]
@@ -43,6 +44,39 @@ function gen_sastre_basic_exp(k)
         s=3
         p=0
         return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+
+    elseif (k==6) # Table 11 and equation (69)
+        e0 = 7.922322450524197
+        e2 = 5.317514832355802e-2
+        d1 = 2.868706220817633e-1
+        d2 = -3.289442879547955e-2
+        c3 = 1.052151783051235e-3
+        c4 = 4.675683454147702e-4
+        f0 = 3.096467971936040
+        f1 = 7.723603212944010e-1
+        f2 = 1.673139636901279e-1
+        c=[c3;c4]
+        d=[d1;d2]
+        e=[e0;NaN;e2]
+        f=[f0;f1;f2]
+
+        e0p = 1.930814505527068
+        e2p = 2.771400028062960e-2
+        d1p = 3.968985915411500e-1
+        d2p = 2.219811707032801e-2
+        c3p = 2.688394980266927e-3
+        c4p = 4.675683454147702e-4
+        f0p = 0.0
+        f1p = 2*1.614743005681339e-1 #Error in paper? Seems like we should use 2*f1'
+        f2p = 8.092036376147299e-2
+        cp=[c3p;c4p]
+        dp=[d1p;d2p]
+        ep=[e0p;NaN;e2p]
+        fp=[f0p;f1p;f2p]
+
+        s=2
+        gen_sastre_h2m_degopt(s,(c,cp),(d,dp),(e,ep),(f,fp))
+
     elseif (k==8) # Table 7
         c10=-6.140022498994532e-17
         c9=-9.210033748491798e-16
@@ -77,6 +111,7 @@ function gen_sastre_basic_exp(k)
         s=5
         p=10
         return gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
+
     else
         error("Not implemented k=$k")
     end
@@ -99,7 +134,7 @@ Reference:
 function gen_sastre_basic(b)
 # Equations (16) - (32)
     if (size(b,1) !=9)
-        error("Not implemented");
+        error("Not implemented for length(b)=$k")
     end
 
     b0=b[1]
@@ -197,7 +232,49 @@ function gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
         z = vcat(a[1:s],zeros(T,2+v),one(T))
         return gen_degopt_poly(x,z)
     end
+end
 
 
+# Internal use only
+# Transforms formula (34)-(35) + (69) to degopt form
+# Input is analogous to gen_sastre_z1ps_degopt() but with tuples of vectors
+# # Nof mult: s+4
+function gen_sastre_h2m_degopt(s,c,d,e,f)
+    T=eltype(eltype(c))
+    x = Vector{Tuple{Vector{T},Vector{T}}}()
 
+    for j=1:s-1
+        push!(x,(vcat(zero(T),one(T),zeros(T,j-1))
+                ,vcat(zeros(T,j),one(T)))
+             )
+    end
+
+    # y0s
+    push!(x,(vcat(zeros(T,s),one(T))
+            ,vcat(zero(T),c[1][1:s]))
+         )
+    # first term y1s
+    push!(x,(vcat(zero(T),d[1][1:s],one(T))
+            ,vcat(zero(T),zero(T),e[1][3:(s+1)],one(T)))
+         )
+    # y1s (adjusted for two more multiplications)
+    y1s = vcat(f[1][1:s+1],e[1][1],one(T),zeros(T,2))
+
+    # y0s_p
+    push!(x,(vcat(zeros(T,s),one(T),zeros(T,2))
+            ,vcat(zero(T),c[2][1:s],zeros(T,2)))
+         )
+    # first term y1s_p
+    push!(x,(vcat(zero(T),d[2][1:s],zeros(T,2),one(T))
+            ,vcat(zero(T),zero(T),e[2][3:(s+1)],zeros(T,2),one(T)))
+         )
+    # y1s_p (skipping two multiplications in the middle)
+    y1s_p = vcat(f[2][1:s+1],zeros(T,2),e[2][1],one(T))
+
+    push!(x,(vcat(y1s)
+            ,y1s_p)
+         )
+
+    z = vcat(one(T),zeros(s+4),one(T))
+    return gen_degopt_poly(x,z)
 end
