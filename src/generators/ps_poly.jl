@@ -4,7 +4,7 @@ export gen_ps, gen_ps_degopt
      (graph,crefs)=gen_ps(a; input=:A,
                           B_base=:B, C_base=:C, P_base=:P)
 
-Generates the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
+Generates the graph for the Paterson–Stockmeyer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
 
     p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1).
 
@@ -141,7 +141,7 @@ end
      (graph,crefs)=gen_ps_degopt(a; input=:A)
 
 Generates the same polynomial as `gen_ps`, i.e.,
-the graph for the Paterson–Stockmayer procedure with monomial basis coefficieents.
+the graph for the Paterson–Stockmeyer procedure with monomial basis coefficieents.
 However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
