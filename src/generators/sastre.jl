@@ -13,10 +13,27 @@ Reference:
 *  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
 function gen_sastre_basic_exp(k)
-    if (k==3)
-        b=1 ./factorial.(0:8)
-        return gen_sastre_basic(b)
-    elseif (k==4)
+    if (k==3) # Table 4
+        e0 = 2.974307204847627
+        e2 = 1.225521150112075e-1
+        d1 = 8.765009801785554e-1
+        d2 = 7.665265321119147e-2
+        c3 = 1.992047682223989e-2
+        c4 = 4.980119205559973e-3
+        f0 = 1.0
+        f1 = 1.0
+        f2 = 0.5
+
+        c=[c3;c4]
+        d=[d1;d2]
+        e=[e0;NaN;e2]
+
+        f=[f0;f1;f2]
+
+        s=2
+        p=0
+        return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+    elseif (k==4) # Not tabulated?
         e0 = 5.018851944498568
         e = [e0, NaN, 0.03806343180936604, 0.017732587443103232]
         c = [0.002193172316532563, 0.0002741465395665704, 4.569108992776174e-5]
@@ -24,8 +41,8 @@ function gen_sastre_basic_exp(k)
         f = [1.0, 1.0, 0.5, 0.1168293067115003]
 
         s=3
-        p=s
-        return gen_sastre_degopt(s,p,c,d,e,f,NaN)
+        p=0
+        return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
     elseif (k==8) # Table 7
         c10=-6.140022498994532e-17
         c9=-9.210033748491798e-16
@@ -59,7 +76,7 @@ function gen_sastre_basic_exp(k)
 
         s=5
         p=10
-        return gen_sastre_degopt(s,p,c,d,e,f,a)
+        return gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
     else
         error("Not implemented k=$k")
     end
@@ -95,12 +112,10 @@ function gen_sastre_basic(b)
     b7=b[8]
     b8=b[9]
 
-
     c4=sqrt(b8) # plus minus?
     c3=b7/(2*c4)
     d2_plus_e2=(b6-c3^2)/c4
     d1=(b5-c3*d2_plus_e2)/c4
-
 
     e2_num_sqrt=(d1-(c3/c4)*d2_plus_e2)^2+4*(c3/c4)*(b3+(c3^2/c4)*d1-(c3/c4)*b4)
 
@@ -111,11 +126,7 @@ function gen_sastre_basic(b)
     f1=b1
     f0=b0
 
-
     e0=(b3-d1*e2)/c3 # Not explicitly documented?
-
-
-
 
     e=[e0;NaN;e2]
     c=[c3;c4]
@@ -124,10 +135,7 @@ function gen_sastre_basic(b)
 
     s=2
     p=s
-    return gen_sastre_degopt(s,p,c,d,e,f,NaN)
-    #gen_degopt_poly(x,z);
-
-
+    return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
 end
 
 
@@ -141,7 +149,7 @@ end
 # f=[f0;...f_s] # size = s+1
 # a=[a0;...a_(p-1)] # size = p   Can be NaN if p=s
 # Nof mult: s+1+p/s = s+1+v
-function gen_sastre_degopt(s,p,c,d,e,f,a)
+function gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
     T=eltype(c)
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 
@@ -162,16 +170,16 @@ function gen_sastre_degopt(s,p,c,d,e,f,a)
          )
 
     # y1s
-    ys1 = vcat(f[1:s+1],e[1],one(T))
-    if (p==s) # Only (32)-(34)
+    y1s = vcat(f[1:s+1],e[1],one(T))
+    if (p==0) || (p==s) # Only (32)-(34) Evaluating y1s
 
-        z=ys1
+        z=y1s
         return gen_degopt_poly(x,z)
     else #Apply PS-scheme as in (52)
         v = convert(Int,p/s) # Assumed to be an integer, according to paper, p = v*s
 
         # Evaluate y1s*x^s
-        push!(x,(ys1
+        push!(x,(y1s
                ,vcat(zeros(T,s),one(T),zeros(T,2)))
              )
 
