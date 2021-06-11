@@ -358,6 +358,8 @@ function has_multiple_parents(graph,node)
 end
 
 function find_mergeable_sums(graph,node,processed,curr_coeff=1)
+    # Extract sums in the subgraph of `graph` with root `node`.
+    #
     # The function accepts four parameters:
     #     * `graph`: current graph.
     #     * `node`: current node.
@@ -369,6 +371,37 @@ function find_mergeable_sums(graph,node,processed,curr_coeff=1)
     #     * `pnodes`: corresponding nodes of sum currently being constructed.
     #     * `pmerged`: nodes merged in the current sum (these will disappear).
     #     * `sums`: completely extracted sums.
+    #
+    # The algorithm starts from the first output node, which is seen as the root
+    # of a spanning tree with edges defined in `graph.parents`. The graph may
+    # have cycles, but the vector `processed` ensures that each node is
+    # processed only once, the first time it is visited.
+    #
+    # If `node` is an input node, that is, a node without parents, then the
+    # algorithm returns four empty vectors, as 1) the subtree rooted at `node`,
+    # being empty, does not have extracted sums, and 2) no sum is being
+    # constructed.
+    #
+    # If the node is not a leaf, the function is called recursively on the
+    # two parents, and three cases are possible:
+    #
+    # 1) If `node` is not a `:lincomb`, then the function returns the union of
+    # the sums extracted in the two subgraphs rooted at the parents. If either
+    # parent is a `:lincomb` the sum that parent was constructing is added to
+    # the vector of extracted sums. The three other output vectors are empty.
+    #
+    # 2) If `node` is a `:lincomb`, is parent to only one node, and is not an
+    # output node, then the function merges the two sums being constructed by
+    # the parents, if any, adds `node` to it, and returns the data accordingly.
+    # The union of the vectors of extracted sums is also returned.
+    #
+    # 3) Otherwise, `node` is added to the union of the (possibly empty) sums
+    # being constructed by the parents. In particular, the algorithm will add
+    # `node` to the list of nodes to be merged, will updated the coefficients of
+    # the constructed sum accordingly, and will add the current sum to the
+    # vector of extracted sums, which will also include the union of the sum
+    # extracted in the subgraph rooted at the parents.
+
     if !(node in keys(graph.operations)) || (node in processed)
         # Nothing to do for leaf nodes and nodes already processed.
         return Float64[],Symbol[],Symbol[],[]
