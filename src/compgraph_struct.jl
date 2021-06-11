@@ -354,6 +354,11 @@ function extract_sums(graph)
     return v
 end
 
+# Return true if `node` has multiple parents. Such nodes cannot be freed.
+function has_multiple_parents(graph,node)
+    sum(map(x->any(x.==node),values(graph.parents))) > 1
+end
+
 function find_mergeable_sums(graph,node,processed,curr_coeff=1)
     # The parameters are as follows:
     # * `graph` and `node` have the obvious meaning.
@@ -379,19 +384,23 @@ function find_mergeable_sums(graph,node,processed,curr_coeff=1)
             # Lincomb parents are added to the freeable nodes.
             # Non-lincomb parents are added to the sum and put, and their
             # coefficients are added to the vector of coefficients.
-            if haskey(graph.operations,parent1) && graph.operations[parent1] == :lincomb
+            if haskey(graph.operations,parent1) &&
+                graph.operations[parent1] == :lincomb &&
+                !has_multiple_parentss(graph,parent1)
                 new_freeds=vcat(new_freeds,parent1)
             else
                 new_coeffs=vcat(new_coeffs,curr_coeff*coeff1);
                 new_nodes=vcat(new_nodes,parent1)
             end
-            if haskey(graph.operations,parent2) && graph.operations[parent2] == :lincomb
+            if haskey(graph.operations,parent2) &&
+                graph.operations[parent2] == :lincomb
+                has_multiple_parentss(graph,parent2)
                 new_freeds=vcat(new_freeds,parent2)
             else
                 new_coeffs=vcat(new_coeffs,curr_coeff*coeff2);
                 new_nodes=vcat(new_nodes,parent2)
             end
-            if node in graph.outputs
+            if node in graph.outputs || has_multiple_parents(graph,node)
                 return Float64[],Symbol[],Symbol[],
                 vcat(v1,v2,(new_coeffs,new_nodes,vcat(new_freeds,node)))
             else
