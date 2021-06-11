@@ -337,21 +337,19 @@ end
 ::Vector{Tuple{Vector{Float64},Vector{Symbol},Vector{Symbol}}}`
 
 Returns a representation of sums in `graph` which may potentially be merged.
-The vector `v` contains a tuple for each of these sums. The three entries of
+The vector `sums` contains a tuple for each of these sums. The three entries of
 the tuple are:
 
-* a vector of `Float64` values which contains the coefficients of the symbols to
-be merged;
-* a vector of `Symbol`s corresponding to the nodes that can be merged; and
-* a vector of intermediate `Symbol`s (i.e, nodes) that can be freed.
+* a vector of `Float64` values that represent the coefficients of the summands;
+* a vector of `Symbol`s that correspond to the summands; and
+* a vector of intermediate `Symbol`s (i.e, nodes) that can be merged.
 
 The first two vectors have the same number of entries, one for each element that
-can be merged in the sum. The last vector can potentially have fewer elements,
-as we assume that nodes that can be merged cannot be freed.
+can be merged in the sum.
  """
 function extract_sums(graph)
-    coeff,nodes,intermediate,v=find_mergeable_sums(graph,graph.outputs[1],[])
-    return v
+    coeff,nodes,merged,sums=find_mergeable_sums(graph,graph.outputs[1],[])
+    return sums
 end
 
 # Return true if `node` has multiple parents. Such nodes cannot be freed.
@@ -360,34 +358,40 @@ function has_multiple_parents(graph,node)
 end
 
 function find_mergeable_sums(graph,node,processed,curr_coeff=1)
-    # The parameters are as follows:
-    # * `graph` and `node` have the obvious meaning.
-    # * `processed` is a set of nodes that have already been seen.
-    # * `curr_coeff` is the coefficient of the current node if parent is
-    #   lincomb, and 1 otherwise.
+    # The function accepts four parameters:
+    #     * `graph`: current graph.
+    #     * `node`: current node.
+    #     * `processed`: set of nodes the algorithm has already processed..
+    #     * `curr_coeff`: coefficient `node` if parent is lincomb, 1 otherwise.
+    #
+    # The functions returns four vectors:
+    #     * `pcoeffs`: coefficients of sum currently being constructed.
+    #     * `pnodes`: corresponding nodes of sum currently being constructed.
+    #     * `pmerged`: nodes merged in the current sum (these will disappear).
+    #     * `sums`: completely extracted sums.
     if !(node in keys(graph.operations)) || (node in processed)
         # Nothing to do for leaf nodes and nodes already processed.
         return Float64[],Symbol[],Symbol[],[]
     else
-        # Recursive call on parents.
+        # Call function recursively on both parents.
         push!(processed,node)
         (parent1,parent2)=graph.parents[node]
         curr_lincomb=graph.operations[node] == :lincomb
         (coeff1,coeff2)=curr_lincomb ? graph.coeffs[node] : (1,1)
-        pcoeffs1,pnodes1,pfreed1,v1=find_mergeable_sums(graph,parent1,processed,coeff1)
-        pcoeffs2,pnodes2,pfreed2,v2=find_mergeable_sums(graph,parent2,processed,coeff2)
+        pcoeffs1,pnodes1,pmerged1,sums1=find_mergeable_sums(graph,parent1,processed,coeff1)
+        pcoeffs2,pnodes2,pmerged2,sums2=find_mergeable_sums(graph,parent2,processed,coeff2)
         if curr_lincomb
             # Grow the sum by adjoining terms coming from parents, if any.
             new_coeffs=vcat(curr_coeff*pcoeffs1,curr_coeff*pcoeffs2);
             new_nodes=vcat(pnodes1,pnodes2)
-            new_freeds=vcat(pfreed1,pfreed2)
-            # Lincomb parents are added to the freeable nodes.
+            new_merged=vcat(pmerged1,pmerged2)
+            # Lincomb parents are added to the mergeable nodes.
             # Non-lincomb parents are added to the sum and put, and their
             # coefficients are added to the vector of coefficients.
             if haskey(graph.operations,parent1) &&
                 graph.operations[parent1] == :lincomb &&
                 !has_multiple_parentss(graph,parent1)
-                new_freeds=vcat(new_freeds,parent1)
+                new_merged=vcat(new_merged,parent1)
             else
                 new_coeffs=vcat(new_coeffs,curr_coeff*coeff1);
                 new_nodes=vcat(new_nodes,parent1)
@@ -395,22 +399,25 @@ function find_mergeable_sums(graph,node,processed,curr_coeff=1)
             if haskey(graph.operations,parent2) &&
                 graph.operations[parent2] == :lincomb
                 has_multiple_parentss(graph,parent2)
-                new_freeds=vcat(new_freeds,parent2)
+                new_merged=vcat(new_merged,parent2)
             else
                 new_coeffs=vcat(new_coeffs,curr_coeff*coeff2);
                 new_nodes=vcat(new_nodes,parent2)
             end
             if node in graph.outputs || has_multiple_parents(graph,node)
                 return Float64[],Symbol[],Symbol[],
-                vcat(v1,v2,(new_coeffs,new_nodes,vcat(new_freeds,node)))
+                vcat(sums1,sums2,(new_coeffs,new_nodes,vcat(new_merged,node)))
             else
-                return new_coeffs,new_nodes,new_freeds,vcat(v1,v2)
+                return new_coeffs,new_nodes,new_merged,vcat(sums1,sums2)
             end
         else
-            v=vcat(v1,v2)
-            # Add sum of lincomb parents, if any, to v.
-            v=!isempty(pcoeffs1) ? vcat(v,(pcoeffs1,pnodes1,vcat(pfreed1,parent1))) : v
-            v=!isempty(pcoeffs2) ? vcat(v,(pcoeffs2,pnodes2,vcat(pfreed2,parent2))) : v
+            # Current node is not a lincomb node.
+            sums=vcat(sums1,sums2)
+            # Add sum of lincomb parents, if any, to sums.
+            sums=!isempty(pcoeffs1) ?
+                vcat(sums,(pcoeffs1,pnodes1,vcat(pmerged1,parent1))) : sums
+            sums=!isempty(pcoeffs2) ?
+                vcat(sums,(pcoeffs2,pnodes2,vcat(pmerged2,parent2))) : sums
             return Float64[],Symbol[],Symbol[],v
         end
     end
