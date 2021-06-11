@@ -2,18 +2,29 @@
 export gen_sastre_basic_exp, gen_sastre_basic
 
 """
-    (graph,cref)=gen_sastre_basic_exp(k)
+    (graph,cref)=gen_sastre_basic_exp(k,method)
 
 Computes a polynomial evaluation approximating the exponential
-using `k` matrix multiplications following the procedure
-in the reference.
+using `k` matrix multiplications following a `method` given
+in the reference. The schemes are embedded into `degop`-format.
+
+Methods are:
+* `:y1s`, given by equations (34)-(35)
+* `:z1ps`, given by equations (34)-(35) and (52)
+* `:h2m`, given by equations (34)-(35) and (69)
+
+Not all combinations of `k` and `method` are implemented. Available ones are:
+* `k`=3, `method`=`:y1s`, as per Table 4 in the reference
+* `k`=4, `method`=`:y1s`
+* `k`=6, `method`=`:h2m`, as per Table 11 in the reference
+* `k`=8, `method`=`:z1ps`, as per Table 7 in the reference
 
 Reference:
 
-*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
+* Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function gen_sastre_basic_exp(k)
-    if (k==3) # Table 4
+function gen_sastre_basic_exp(k,method)
+    if (k==3) && (method==:y1s) # Table 4
         e0 = 2.974307204847627
         e2 = 1.225521150112075e-1
         d1 = 8.765009801785554e-1
@@ -34,7 +45,7 @@ function gen_sastre_basic_exp(k)
         p=0
         return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
 
-    elseif (k==4) # Not tabulated?
+    elseif (k==4) && (method==:y1s) # Not tabulated?
         e0 = 5.018851944498568
         e = [e0, NaN, 0.03806343180936604, 0.017732587443103232]
         c = [0.002193172316532563, 0.0002741465395665704, 4.569108992776174e-5]
@@ -45,7 +56,7 @@ function gen_sastre_basic_exp(k)
         p=0
         return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
 
-    elseif (k==6) # Table 11 and equation (69)
+    elseif (k==6) && (method==:h2m) # Table 11 and equation (69)
         e0 = 7.922322450524197
         e2 = 5.317514832355802e-2
         d1 = 2.868706220817633e-1
@@ -77,7 +88,7 @@ function gen_sastre_basic_exp(k)
         s=2
         gen_sastre_h2m_degopt(s,(c,cp),(d,dp),(e,ep),(f,fp))
 
-    elseif (k==8) # Table 7
+    elseif (k==8)  && (method==:z1ps) # Table 7
         c10=-6.140022498994532e-17
         c9=-9.210033748491798e-16
         c8=-1.980157255925737e-14
@@ -113,7 +124,7 @@ function gen_sastre_basic_exp(k)
         return gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
 
     else
-        error("Not implemented k=$k")
+        error("Not implemented k=$k and method=$method")
     end
 end
 

@@ -2,9 +2,9 @@
 @testset "Sastre" begin
 
     ## Test approximation of exponential and number of multiplications
-    for (k,Ak) = [(3,1.1), (4,2.9), (6,5.3), (8,17.3)] # Where do I find these limits?
+    for (k,Ak,m) = [(3,1.1,:y1s), (4,2.9,:y1s), (6,5.1,:h2m), (8,17.3,:z1ps)] # Where do I find these limits?
         A = randn(100,100)/20 * Ak
-        (graph,cref) = gen_sastre_basic_exp(k)
+        (graph,cref) = gen_sastre_basic_exp(k,m)
         @test eval_graph(graph,A) ≈ exp(A)
         @test sum(values(graph.operations) .== :mult) == k
     end
@@ -12,7 +12,7 @@
 
     ## Test the degree-9 solver gen_sastre_basic(b) by comparison to tabulated values
     # 1: Table 4 against equations (16)-(32) for exponential
-    (graph1,cref1) = gen_sastre_basic_exp(3)
+    (graph1,cref1) = gen_sastre_basic_exp(3,:y1s)
     (graph2,cref2) =  gen_sastre_basic(1 ./factorial.(0:8))
     @test sum(values(graph2.operations) .== :mult) == 3
     @test all(cref1 .== cref2)
@@ -21,7 +21,7 @@
     end
 
     # 2: Table 11 against Table 10 and equations (16)-(32)
-    (graph_exp,_) = gen_sastre_basic_exp(6)
+    (graph_exp,_) = gen_sastre_basic_exp(6,:h2m)
     A = randn(100,100)/20 * 5.3
     # Naive implementation from coefficients in Table 10
     b8  = 2.186201576339059e-7
