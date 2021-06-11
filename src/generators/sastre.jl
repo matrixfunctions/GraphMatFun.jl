@@ -1,5 +1,5 @@
 
-export gen_sastre_basic_exp, gen_sastre_basic
+export gen_sastre_basic_exp, gen_sastre_basic, sastre_yks_to_degopt
 
 """
     (graph,cref)=gen_sastre_basic_exp(k,method)
@@ -182,6 +182,101 @@ function gen_sastre_basic(b)
     s=2
     p=s
     return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+end
+
+
+"""
+    (graph,cref)=sastre_yks_to_degopt(s,k,c)
+
+Transforms the polynomial evaluation format given by equations (62)-(65) in the
+reference to `degop`-format. The `graph` is a representation of y_{`k` `s`}.
+Input `c` is a grouping of the coefficients as given by the representation (62)-(69).
+`c` is a `Vector{Vector{Vector}}` of length `k`+1, representing
+
+    [
+    [c_i^{(0,1)}, c_i^{(0,2)}]
+    [c_i^{(1,1)}, c_i^{(1,2)}, c_i^{(1,3)}, c_i^{(1,4)}, c_i^{(1,5)}, c_i^{(1,6)}]
+    ...
+    [c_i^{(k,1)}, c_i^{(k,2)}, c_i^{(k,3)}, c_i^{(k,4)}, c_i^{(k,5)}, c_i^{(k,6)}]
+    ]
+
+Hence, `c[1]` contains two vectors, the first of length `s`-1 and the second
+of length `s`. (Note: In the first vector the constant for I is set to zero)
+and `c[2]` up to `c[k+1]` conatins six vectors:
+Even-numbered vectors have length `s`+1
+Odd-numbered vectors have length
+j-1, where j is the intex in `c`, e.g., `c[2][1]` has one element and `c[3][5]` have two.
+
+
+Reference:
+
+*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
+    """
+function sastre_yks_to_degopt(s,k,c)
+    println("Warning: Not done yet!")
+    T=eltype(eltype(eltype(c)))
+    x = Vector{Tuple{Vector{T},Vector{T}}}()
+
+    for j=1:s-1
+        push!(x,(vcat(zero(T),one(T),zeros(T,j-1))
+                ,vcat(zeros(T,j),one(T)))
+             )
+    end
+
+    # y0s first term
+    push!(x,(vcat(zeros(T,s),one(T))
+            ,vcat(zero(T),c[1][1][1:s])) #C_i^{(0,1)}
+         )
+    if (k==0)
+        z = vcat(c[1][2][1:s+1],one(T)) #C_i^{(0,2)}
+        return gen_degopt_poly(x,z)
+    end
+
+    # y1s first term - incorporating second term of y0s
+    #C_i^{(1,2)} + (C_0^{(1,1)} * C_i^{(0,2)})
+    a = c[2][2][1:s+1] + c[2][1][1]*c[1][2][1:s+1]
+    #C_i^{(1,4)} +  (C_0^{(1,3)} *C_i^{(0,2)}
+    b = c[2][4][1:s+1] + c[2][3][1]*c[1][2][1:s+1]
+    push!(x,(vcat(a,c[2][1][1])
+            ,vcat(b,c[2][3][1]))
+         )
+    for j = 2:k
+        # yjs first term - incorporating second and third terms of lower yls for l<j
+        a1 = c[j+1][2][1:s+1] + c[j+1][1][1]*c[1][2][1:s+1]
+        b1 = c[j+1][4][1:s+1] + c[j+1][3][1]*c[1][2][1:s+1]
+        for l = 2:j
+            println("!!1111!!")
+            # TODO: Incorporate the effects of that we are not computing yjs but only the first term. Similar to for-loop above!
+            a1 += c[j+1][1][l]*c[l][6][1:s+1]
+            b1 += c[j+1][3][l]*c[l][6][1:s+1]
+        end
+        # #C_i^{(j,2)} + (C_{j-1}^{(j,1)} * C_i^{(j-1,6)})
+        # a1 = c[j+1][2][1:s+1] + c[j+1][1][j]*c[j][6][1:s+1]
+        # #C_i^{(j,4)} + (C_{j-1}^{(j,3)} * C_i^{(j-1,6)})
+        # b1 = c[j+1][4][1:s+1] + c[j+1][3][j]*c[j][6][1:s+1]
+        a2 = c[j+1][1][1:j-1] + c[j][5][1:j-1] #C_i^{(j,1)} + C_i^{(j-1,5)}
+        b2 = c[j+1][3][1:j-1] + c[j][5][1:j-1] #C_i^{(j,3)} + C_i^{(j-1,5)}
+        push!(x,(vcat(a1,a2,c[j+1][1][j])
+                ,vcat(b1,b2,c[j+1][3][j]))
+             )
+    end
+
+    # The trailing yjs - incorporating second term of lower yls for l<j
+    a = c[k+1][6][1:s+1] + c[k+1][5][1]*c[1][2][1:s+1]
+    for l = 2:k
+        println("!!2222!!")
+        a += c[k+1][5][l]*c[l][6][1:s+1]
+    end
+    z = vcat(a,c[k+1][5][1:k],one(T))
+for xx = x
+println(length(xx[1]), "   ", length(xx[2]))
+println(xx[1])
+println(xx[2])
+end
+println(length(z))
+println(z)
+
+    return gen_degopt_poly(x,z)
 end
 
 
