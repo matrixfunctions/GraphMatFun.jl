@@ -13,8 +13,8 @@ Code generation in julia language, with optional overwriting of input,
 inlining the function and optional usage of dot fusion.
 
 """
-function LangJulia(overwrite_output=true,inline=true,dot_fusing=true)
-    return LangJulia(overwrite_output,inline,dot_fusing)
+function LangJulia(overwrite_input=true,inline=true,dot_fusing=true)
+    return LangJulia(overwrite_input,inline,dot_fusing)
 end
 
 
