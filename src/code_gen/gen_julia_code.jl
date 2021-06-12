@@ -260,7 +260,11 @@ function execute_operation!(lang::LangJulia,
         push_code!(code,lhs*" .= "*rhs);
         # Adjust the result with inplace additions of identity
         for c in id_coeffs
-            push_code!(code,"mul!($nodemem,true,I*$c,true,true)");
+            if VERSION >= v"1.7.0"
+                push_code!(code,"mul!($nodemem,true,I*$c,true,true)");
+            else
+                push_code!(code,"$nodemem+=I*$c");
+            end
         end
 
 
