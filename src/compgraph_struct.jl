@@ -415,6 +415,7 @@ function find_mergeable_sums(graph,node,processed,curr_coeff=1)
         pcoeffs2,pnodes2,pmerged2,sums2=find_mergeable_sums(graph,parent2,processed,coeff2)
         if curr_lincomb
             # Grow the sum by adjoining terms coming from parents, if any.
+            has_multiple_parents(graph,node) && (curr_coeff=1)
             new_coeffs=vcat(curr_coeff*pcoeffs1,curr_coeff*pcoeffs2);
             new_nodes=vcat(pnodes1,pnodes2)
             new_merged=vcat(pmerged1,pmerged2)
@@ -423,15 +424,15 @@ function find_mergeable_sums(graph,node,processed,curr_coeff=1)
             # coefficients are added to the vector of coefficients.
             if haskey(graph.operations,parent1) &&
                 graph.operations[parent1] == :lincomb &&
-                !has_multiple_parentss(graph,parent1)
+                !has_multiple_parents(graph,parent1)
                 new_merged=vcat(new_merged,parent1)
             else
                 new_coeffs=vcat(new_coeffs,curr_coeff*coeff1);
                 new_nodes=vcat(new_nodes,parent1)
             end
             if haskey(graph.operations,parent2) &&
-                graph.operations[parent2] == :lincomb
-                has_multiple_parentss(graph,parent2)
+                graph.operations[parent2] == :lincomb &&
+                !has_multiple_parents(graph,parent2)
                 new_merged=vcat(new_merged,parent2)
             else
                 new_coeffs=vcat(new_coeffs,curr_coeff*coeff2);
@@ -451,7 +452,7 @@ function find_mergeable_sums(graph,node,processed,curr_coeff=1)
                 vcat(sums,(pcoeffs1,pnodes1,vcat(pmerged1,parent1))) : sums
             sums=!isempty(pcoeffs2) ?
                 vcat(sums,(pcoeffs2,pnodes2,vcat(pmerged2,parent2))) : sums
-            return Float64[],Symbol[],Symbol[],v
+            return Float64[],Symbol[],Symbol[],sums
         end
     end
 end
