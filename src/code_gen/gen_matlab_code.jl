@@ -27,7 +27,8 @@ end
 # Code generation.
 function function_definition(lang::LangMatlab,graph,T,funname,precomputed_nodes)
     code=init_code(lang)
-    push_code!(code,"function output=$funname(A)",ind_lvl=0)
+    input_variables=join(precomputed_nodes, ", ");
+    push_code!(code,"function output=$funname($input_variables)",ind_lvl=0)
     return code
 end
 
@@ -42,6 +43,7 @@ function init_mem(lang::LangMatlab,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
     return mem
 end
+
 function function_end(lang::LangMatlab,graph,mem)
     code=init_code(lang)
     push_code!(code,"output=$(graph.outputs[end]);")
