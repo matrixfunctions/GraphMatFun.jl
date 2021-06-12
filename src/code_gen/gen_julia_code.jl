@@ -192,11 +192,9 @@ function execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_p
         push_comment!(code,"No copy necessary. Inline identity multiple add")
     end
 
-    # push_code!(code,"$(nodemem) .*= $non_I_parent_coeff")
-    # push_code!(code,"D=view($(nodemem), diagind($(nodemem), 0))")
-    # push_code!(code,"D .+= $I_parent_coeff")
     push_code!(code,"matfun_axpby!($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)")
 end
+
 function execute_operation!(lang::LangJulia,
                             T,graph::MultiLincombCompgraph,node,
                             dealloc_list,
@@ -377,10 +375,8 @@ function execute_operation_basic!(lang::LangJulia,
                 execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
             else
                 if (recycle_parent == parent1)
-                    # push_code!(code,"BLAS.axpby!($coeff2,$parent2mem,$coeff1,$nodemem);")
                     push_code!(code,"matfun_axpby!($nodemem,$coeff1,$coeff2,$parent2mem)")
                 else
-                    # push_code!(code,"BLAS.axpby!($coeff1,$parent1mem,$coeff2,$nodemem);")
                     push_code!(code,"matfun_axpby!($nodemem,$coeff2,$coeff1,$parent1mem)")
                 end
             end
@@ -408,7 +404,6 @@ function execute_operation_basic!(lang::LangJulia,
                 I_parent_coeff=coeff2
                 execute_julia_I_op(code,nodemem,non_I_parent_mem,non_I_parent_coeff,I_parent_coeff)
             else
-                # push_code!(code,"$(nodemem)[:]=$coeff1*$parent1mem + $coeff2*$parent2mem")
                 push_code!(code,"copy!($(nodemem),$parent1mem)") # Arbitrary choice
                 push_code!(code,"matfun_axpby!($(nodemem),$coeff1,$coeff2,$parent2mem)")
             end
