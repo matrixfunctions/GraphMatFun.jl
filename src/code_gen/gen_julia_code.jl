@@ -117,23 +117,7 @@ function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
     push_code!(code,"memslots=Vector{Matrix{T}}(undef,max_memslots)")
     push_code!(code,"n=size(A,1)")
     start_j=1
-
     push_comment!(code,"The first slots are precomputed nodes $precomputed_nodes")
-    if (lang.overwrite_input)
-        start_j += size(precomputed_nodes,1)
-    end
-    push_code!(code,"for  j=$start_j:max_memslots")
-
-    push_code!(code,"memslots[j]=Matrix{T}(undef,n,n)",ind_lvl=2)
-    push_code!(code,"end")
-
-    # If needed, initialize variable of type ValueOne for axpby with a=1 or b=1.
-    if (any(map(x->any(x .== 1),values(graph.coeffs))))
-        push_code!(code,"value_one=ValueOne()")
-    end
-
-
-    # Initialize the inputs
     for (i,n) in enumerate(precomputed_nodes)
         Ak_slot_name=get_slot_name(mem,n)
         if (lang.overwrite_input)
@@ -145,16 +129,31 @@ function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
         end
     end
 
+    if (lang.overwrite_input)
+        start_j += size(precomputed_nodes,1)
+    end
 
+    # If needed, allocate identity matrix.
     if has_identity_lincomb(graph)
-        alloc_slot!(mem,2,:I)
-        I_slot_name=get_slot_name(mem,:I)
-        push_code!(code,"$I_slot_name=Matrix{Float64}(I,n,n)")
         push_comment!(code,"Graph has linear combination of identities.")
         push_comment!(code,"The matrix I is explicitly allocated.")
+        alloc_slot!(mem,start_j,:I)
+        I_slot_name=get_slot_name(mem,:I)
+        push_code!(code,"$I_slot_name=Matrix{Float64}(I,n,n)")
+        start_j+=1
     else
         push_comment!(code,"Uniform scaling is exploited.");
         push_comment!(code,"No matrix I explicitly allocated.")
+    end
+
+    # Allocate memory for memory slots.
+    push_code!(code,"for j=$start_j:max_memslots")
+    push_code!(code,"memslots[j]=Matrix{T}(undef,n,n)",ind_lvl=2)
+    push_code!(code,"end")
+
+    # If needed, initialize variable of type ValueOne for axpby with a=1 or b=1.
+    if (any(map(x->any(x .== 1),values(graph.coeffs))))
+        push_code!(code,"value_one=ValueOne()")
     end
 
     return code
