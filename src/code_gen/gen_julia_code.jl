@@ -255,8 +255,12 @@ function execute_operation!(lang::LangJulia,
         # Print the code
         rhs=join((coeff_names.*".*").*parent_mems," .+ ")
         lhs=nodemem;
+        if !isempty(rhs)
+            push_code!(code,lhs*" .= "*rhs);
+        else
+            push_code!(code,lhs*" .= 0");
+        end
 
-        push_code!(code,lhs*" .= "*rhs);
         # Adjust the result with inplace additions of identity
         for c in id_coeffs
             if VERSION >= v"1.7.0"
