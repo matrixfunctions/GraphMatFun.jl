@@ -9,6 +9,7 @@ Code generation in C using MKL implementation of BLAS.
 """
 struct LangC_MKL
     gen_main
+    overwrite_input
 end
 
 """
@@ -19,18 +20,19 @@ Code generation in C using OpenBLAS implementation of BLAS.
 """
 struct LangC_OpenBLAS
     gen_main
+    overwrite_input
 end
 LangC=Union{LangC_MKL,LangC_OpenBLAS}
 
 
 # Generated constructors
 # https://docs.julialang.org/en/v1/manual/metaprogramming/#Code-Generation
-# to default to gen_main=false
+# to default to gen_main=false, overwrite_input=true
 for L in [:LangC_MKL, :LangC_OpenBLAS]
     eval(quote
-            function $L(gen_main=false)
-               return $L(gen_main)
-            end
+             function $L(gen_main=false,overwrite_input=true)
+                 return $L(gen_main,overwrite_input)
+             end
          end
          )
 end
@@ -41,7 +43,7 @@ end
 # Language specific operations.
 comment(::LangC,s)="/* $s */"
 
-slotname(::LangC,i)="memslots[$i-1]"
+slotname(::LangC,i)="memslots[$(i-1)]"
 
 # Variable declaration, initialization, and reference.
 # In C, complex types are structures and are passed by reference.
@@ -108,11 +110,6 @@ function get_blas_type(::LangC_OpenBLAS,T::Type{Complex{Float64}})
     return ("openblas_complex_double","z")
 end
 
-# Memory management functions.
-function langc_get_slot_name(mem,key)
-    return key==:A ? "A" : get_slot_name(mem,key)
-end
-
 function function_definition(lang::LangC,graph,T,funname,precomputed_nodes)
     (blas_type,blas_prefix)=get_blas_type(lang,T)
     code=init_code(lang)
@@ -122,13 +119,20 @@ function function_definition(lang::LangC,graph,T,funname,precomputed_nodes)
     push_code!(code,"#include<string.h>",ind_lvl=0)
     push_code!(code,"")
     push_comment!(code, "Code for polynomial evaluation.",ind_lvl=0)
-    push_code!(code,"void $blas_prefix$funname($blas_type *A, "*
+    input_variables=join(map(x->"$blas_type *"*string(x),precomputed_nodes), ", ")
+    push_code!(code,"void $blas_prefix$funname($input_variables, "*
         "const size_t n, $blas_type *output) {",ind_lvl=0)
     return code
 end
 
 function init_mem(lang::LangC,max_nof_nodes,precomputed_nodes)
     mem=CodeMem(max_nof_nodes,i->slotname(lang,i))
+
+    # Make sure the precomputed nodes have memslots
+    for (i,n) in enumerate(precomputed_nodes)
+        alloc_slot!(mem,i,n)
+    end
+
     return mem
 end
 
@@ -139,9 +143,18 @@ function function_init(lang::LangC,T,mem,graph,precomputed_nodes)
 
     # Initialization.
     graph_ops=values(graph.operations)
-    push_code!(code,"size_t max_memslots = $(max_nodes-1);")
+    # memalloc: matrices to allocate
+    # memslots: numbers of pointers
+    num_precomputed_nodes=size(precomputed_nodes,1)
+    num_memalloc=lang.overwrite_input ?
+        max_nodes-num_precomputed_nodes :
+        max_nodes
+    num_preallocated_slots=max_nodes-num_memalloc
+    push_code!(code,"size_t max_memalloc = $num_memalloc;")
+    push_code!(code,"size_t max_memslots = $max_nodes;")
     push_code!(code,"")
-    push_comment!(code,"Initializations.")
+
+    push_comment!(code,"Declarations and initializations.")
     # Allocate coefficients for linear combinations, if needed.
     if :lincomb in graph_ops
         push_code!(code,"$blas_type coeff1, coeff2;")
@@ -157,27 +170,42 @@ function function_init(lang::LangC,T,mem,graph,precomputed_nodes)
     if :ldiv in graph_ops
         push_code!(code, "lapack_int *ipiv = malloc(n*sizeof(*ipiv));")
     end
-    push_code!(code,"$blas_type *master_mem = malloc(n*n*max_memslots"*
-               "*sizeof(*master_mem));")
-    push_code!(code,"int j;")
-    alloc_slot!(mem,1,:A)
-    push_code!(code,"$blas_type *memslots[$max_nodes]; // One more than max_memslots")
-    push_code!(code,"memslots[0] = A; // First slot is A (and can be recycled)");
-    push_code!(code,"/* The other slots are pointers to allocated memory */");
-    push_code!(code,"for (j=0; j<max_memslots; j++) memslots[j+1] = master_mem+j*n*n;")
+    push_code!(code,"size_t j;")
+    push_code!(code,"")
 
+    push_comment!(code,"Memory management.")
+    push_code!(code,"$blas_type *master_mem = malloc(n*n*max_memalloc"*
+        "*sizeof(*master_mem));")
+    push_code!(code,"$blas_type *memslots[max_memslots]; "*
+        comment(lang,"As many slots as nodes"))
 
+    # Initialize the inputs
+    for (i,n) in enumerate(precomputed_nodes)
+        Ak_slot_name=get_slot_name(mem,n)
+        if (lang.overwrite_input)
+            # Just assign a pointer to the slot to allow overwrite
+            push_code!(code,"$Ak_slot_name = $n; "*
+                comment(lang,"Overwrite $n"))
+        else
+            # Otherwise make a copy
+            push_code!(code,"memcpy($Ak_slot_name,$n,n*n*sizeof(*master_mem));")
+        end
+    end
 
+    # Initialize pointers.
+    push_comment!(code,"The other slots are pointers to allocated memory.")
+    push_code!(code,"for (j=$(num_preallocated_slots-1); j<max_memalloc; j++)")
+    push_code!(code,"memslots[j+1] = master_mem+j*n*n;",ind_lvl=2)
 
     # Store identity explicitly only if graph has a linear combination of I.
     if has_identity_lincomb(graph)
-        #(nodemem_i,nodemem)=get_free_slot(mem)
-        alloc_slot!(mem,2,:I)
-        nodemem=slotname(lang,2);
-        push_code!(code,"size_t j;")
+        push_comment!(code,"Graph has linear combination of identities.")
+        push_comment!(code,"The matrix I is explicitly allocated.")
+        alloc_slot!(mem,num_precomputed_nodes+1,:I)
+        nodemem=get_slot_name(mem,:I);
         push_code!(code,"memset($nodemem, 0, n*n*sizeof(*master_mem));")
         push_code!(code,"for(j=0; j<n*n; j+=n+1)")
-        push_code!(code,"memslots[j] = ONE;",ind_lvl=2)
+        push_code!(code,"*($nodemem+j) = ONE;",ind_lvl=2)
     end
 
     return code
@@ -186,7 +214,7 @@ end
 function function_end(lang::LangC,graph,mem)
     code=init_code(lang)
     retval_node=graph.outputs[end]
-    retval=langc_get_slot_name(mem,retval_node)
+    retval=get_slot_name(mem,retval_node)
     push_code!(code,"")
     push_comment!(code,"Prepare output.")
     push_code!(code,"memcpy(output, $retval, n*n*sizeof(*output));")
@@ -222,10 +250,10 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
 
     # Get memory slots of parents, if explicitly stored.
     if !p1_is_identity
-        parent1mem=langc_get_slot_name(mem,parent1)
+        parent1mem=get_slot_name(mem,parent1)
     end
     if !p2_is_identity
-        parent2mem=langc_get_slot_name(mem,parent2)
+        parent2mem=get_slot_name(mem,parent2)
     end
 
     rzero=reference_constant(lang,T,"ZERO")
@@ -286,7 +314,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             # Allocate slot for result.
             if (parent2 in dealloc_list)
                 push_comment!(code,"Reusing memory of $parent2 for solution.")
-                nodemem=langc_get_slot_name(mem,parent2)
+                nodemem=get_slot_name(mem,parent2)
                 setdiff!(dealloc_list,[parent2])
                 set_slot_number!(mem,get_slot_number(mem,parent2),node)
             else
@@ -328,7 +356,7 @@ function execute_operation!(lang::LangC,T,graph,node,dealloc_list,mem)
             push_comment!(code,"Smart lincomb recycle $recycle_parent")
 
             # Perform operation.
-            nodemem=langc_get_slot_name(mem,recycle_parent)
+            nodemem=get_slot_name(mem,recycle_parent)
             if (recycle_parent == parent1)
                 if p2_is_identity
                     push_code!(code,"cblas_$blas_prefix"*"scal(n*n, $coeff1, "*
@@ -472,6 +500,7 @@ function gen_main(lang::LangC,T,fname,funname;A=10::Union{Integer,Matrix})
         # Call polynomial evaluation function.
         push_code!(code,"blas_type *B = malloc(n*n*sizeof(*A));")
         push_code!(code,"$blas_prefix$funname(A,n,B);")
+        push_code!(code, "return 0;")
         push_code!(code,"}",ind_lvl=0)
     end
 
