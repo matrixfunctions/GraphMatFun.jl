@@ -266,6 +266,7 @@ function execute_operation!(lang::LangJulia,
             if VERSION >= v"1.7.0"
                 push_code!(code,"mul!($nodemem,true,I*$c,true,true)");
             else
+                push_comment!(code,"This julia version does not support inplace identity add. Please update to julia 1.7 or newer for better performance.")
                 push_code!(code,"$nodemem+=I*$c");
             end
         end
