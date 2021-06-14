@@ -120,17 +120,17 @@ using Polynomials
     A2 = A*A
     A3 = A2*A
     y03 = A3*(c1*A+c2*A2+c3*A3) + c4*II+c5*A+c6*A2+c7*A3
-    (graph,cref)=gen_sastre_yks_degopt(3,0,c[1:1])
+    (graph,cref)=gen_sastre_yks_degopt(0,3,c[1:1])
     @test eval_graph(graph,A) ≈ y03
 
     y13 = (c8*y03+c9*II+c10*A+c11*A2+c12*A3)*(c13*y03+c14*II+c15*A+c16*A2+c17*A3) +
           c18*y03+c19*II+c20*A+c21*A2+c22*A3
-    (graph,cref)=gen_sastre_yks_degopt(3,1,c[1:2])
+    (graph,cref)=gen_sastre_yks_degopt(1,3,c[1:2])
     @test eval_graph(graph,A) ≈ y13
 
     y23 = (c23*y03+c24*y13+c25*II+c26*A+c27*A2+c28*A3)*(c29*y03+c30*y13+c31*II+c32*A+c33*A2+c34*A3) +
           c35*y03+c36*y13+c37*II+c38*A+c39*A2+c40*A3
-    (graph,cref)=gen_sastre_yks_degopt(3,2,c[1:3])
+    (graph,cref)=gen_sastre_yks_degopt(2,3,c[1:3])
     @test eval_graph(graph,A) ≈ y23
 
     y33 = (c41*y03+c42*y13+c43*y23+c44*II+c45*A+c46*A2+c47*A3)*(c48*y03+c49*y13+c50*y23+c51*II+c52*A+c53*A2+c54*A3) +

@@ -76,7 +76,7 @@ function gen_sid_exp(k;T=Float64)
 
         c=convert.(Vector{Vector{T}},c)
 
-       (graph,cref)=gen_sastre_yks_degopt(3,2,c)
+       (graph,cref)=gen_sastre_yks_degopt(2,3,c)
 
     elseif (k==6)
         # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
@@ -118,7 +118,7 @@ function gen_sid_exp(k;T=Float64)
 
             CC=convert.(Vector{Vector{T}},CC)
 
-           (graph,cref)=gen_sastre_yks_degopt(4,2,CC)
+           (graph,cref)=gen_sastre_yks_degopt(2,4,CC)
 
     elseif (k==7)
         # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
@@ -166,7 +166,7 @@ function gen_sid_exp(k;T=Float64)
 
             CC=convert.(Vector{Vector{T}},CC)
 
-           (graph,cref)=gen_sastre_yks_degopt(5,2,CC)
+           (graph,cref)=gen_sastre_yks_degopt(2,5,CC)
 
     elseif (k>7)
         (graph,cref)=gen_sid_exp(7;T=T)
