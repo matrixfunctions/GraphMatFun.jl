@@ -1,5 +1,5 @@
 
-export gen_sastre_basic_exp, gen_sastre_basic, sastre_yks_to_degopt
+export gen_sastre_basic_exp, gen_sastre_basic, gen_sastre_yks_degopt
 
 """
     (graph,cref)=gen_sastre_basic_exp(k,method)
@@ -186,7 +186,7 @@ end
 
 
 """
-    (graph,cref)=sastre_yks_to_degopt(s,k,c)
+    (graph,cref)=gen_sastre_yks_degopt(s,k,c)
 
 Transforms the polynomial evaluation format given by equations (62)-(65) in the
 reference to `degop`-format. The `graph` is a representation of y_{`k` `s`}.
@@ -218,7 +218,7 @@ Reference:
 
 *  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function sastre_yks_to_degopt(s,k,c)
+function gen_sastre_yks_degopt(s,k,c)
     T=eltype(eltype(eltype(c)))
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 

@@ -80,7 +80,7 @@ using Polynomials
     [[0.0, 1], [0, c8, c9], [c7, 1], [0, c6, 0], [c4, c5], [c1, c2, c3]], # (59)
     ]
 
-    (graph,cref)=sastre_yks_to_degopt(2,2,c)
+    (graph,cref)=gen_sastre_yks_degopt(2,2,c)
     A = randn(100,100)/20 * 3.1
     @test eval_graph(graph,A) ≈ exp(A)
 
