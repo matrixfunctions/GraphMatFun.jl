@@ -68,6 +68,7 @@ function initsim(s,prev_graph,prev_cref)
             graph_mult=0;
             oldgraph=Nothing
             oldcref=Nothing;
+            # Automatically determine the order
             while graph_mult<m+1
 
                 deg0 += 1;
@@ -100,7 +101,8 @@ function initsim(s,prev_graph,prev_cref)
 
             end
 
-            graph=oldgraph; # Useful at termination
+            # We go one step too far in the automatic determination
+            graph=oldgraph;
             cref=oldcref;
 
 
@@ -281,7 +283,7 @@ function interactive_simulations(init_sim,sim0,predefsims="")
             elseif (x=="l")
                 # Linear squares on degopt coeffs
                 graph=deepcopy(graph)
-                y_cref=get_degopt_coeffs(simlist[j].m)[2];
+                y_cref=get_degopt_crefs(simlist[j].m)[2];
 
                 yy0=get_coeffs(graph,y_cref);
                 opt_linear_fit!(graph, exp, discr, y_cref;
@@ -327,7 +329,7 @@ end
 function scale_and_square_degopt(fname,sim,kickstart=1)
     graph_org=import_compgraph(fname);;
     (graph,cref)=gen_degopt_by_squaring(graph_org);
-    (x,y)=get_degopt_coeffs(graph);
+    (x,y)=get_degopt_crefs(graph);
     if (kickstart>0)
         x[end][1][1] = 0.001 # Kickstart
     end
@@ -338,7 +340,7 @@ function scale_and_square_degopt(fname,sim,kickstart=1)
 
     graph2=Compgraph(Complex{BigFloat},graph2)
 
-    y_cref=get_degopt_coeffs(count(values(graph.operations) .== :mult))[2];
+    y_cref=get_degopt_crefs(count(values(graph.operations) .== :mult))[2];
 
     discr=sim.rho*exp.(1im*range(0,2*pi,length=sim.n)[1:end-1]);
     discr=convert.(Complex{BigFloat},discr);
