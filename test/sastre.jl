@@ -1,5 +1,7 @@
+using Polynomials
 
 @testset "Sastre" begin
+
 
     ## Test approximation of exponential and number of multiplications
     for (k,Ak,m) = [(3,1.1,:y1s), (4,2.9,:y1s), (6,5.1,:h2m), (8,17.3,:z1ps)] # Where do I find these limits?
@@ -8,6 +10,7 @@
         @test eval_graph(graph,A) ≈ exp(A)
         @test sum(values(graph.operations) .== :mult) == k
     end
+
 
 
     ## Test the degree-9 solver gen_sastre_basic(b) by comparison to tabulated values
@@ -51,6 +54,9 @@
     @test v1*vp1 + β0*I ≈ eval_graph(graph_exp,A)
     @test v1*vp1 + β0*I ≈ exp(A)
 
+
+
+    ## Test conversion of (62)-(65) by using numbers from (57)-(59)
     c16 =  4.018761610201036e-4
     c8  =  2.116367017255747e0
     c15 =  2.945531440279683e-3
@@ -75,6 +81,12 @@
     ]
 
     (graph,cref)=sastre_yks_to_degopt(2,2,c)
-    A = randn(100,100)/20 * 1.3
+    A = randn(100,100)/20 * 3.1
     @test eval_graph(graph,A) ≈ exp(A)
+
+    x = Polynomial("x")
+    CC = coeffs(eval_graph(Compgraph(Any,graph),x))
+    t = (CC[17]-1/factorial(16))*factorial(16) -(-0.454) # (60)
+    @test (abs(t) < 1e-3) && (abs(t) > 1e-4) # (60)
+    @test all(abs.((CC .* factorial.(0:16))[1:16] .- 1) .<= 2e-15)
 end
