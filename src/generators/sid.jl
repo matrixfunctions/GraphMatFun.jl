@@ -104,54 +104,21 @@ function gen_sid_exp(k;T=Float64)
            -3.005000525808178e-02
            1.969779342112314e-01
            1
-           1];
-        c=convert.(T,c);
+           1]
 
+            # Evaluation from  http://personales.upv.es/~jorsasma/software/expmpol.m
+            # y0s=Ap{4}*(c(1)*Ap{4}+c(2)*Ap{3}+c(3)*Ap{2}+c(4)*A);
+            # y1s=(y0s+c(5)*Ap{4}+c(6)*Ap{3}+c(7)*Ap{2}+c(8)*A)*(y0s+c(9)*Ap{4}+c(10)*Ap{3}+c(11)*Ap{2})+c(12)*y0s+c(13)*Ap{4}+c(14)*Ap{3}+c(15)*Ap{2}+c(16)*A;
+            # sol=y1s*(y0s+c(17)*Ap{4}+c(18)*Ap{3}+c(19)*Ap{2}+c(20)*A)+c(21)*Ap{4}+c(22)*Ap{3}+c(23)*Ap{2}+A+eye(n);
+            CC = [
+            [[c[4], c[3], c[2], c[1]], [0.0, 0, 0, 0, 0]],
+            [[1.0], [0, c[8], c[7], c[6], c[5]], [1.0], [0, 0, c[11], c[10], c[9]], [c[12]], [0, c[16], c[15], c[14], c[13]]],
+            [[0.0, 1], [0.0, 0, 0, 0, 0], [1.0, 0], [0, c[20], c[19], c[18], c[17]], [0.0, 0], [1, 1, c[23], c[22], c[21]]], # (19)
+            ]
 
-        # B2= A^2
-        v1a=[0;1.0];
-        v1b=[0;1.0];
+            CC=convert.(Vector{Vector{T}},CC)
 
-        # B3= A^3
-        v2a=[0;1.0;0];
-        v2b=[0;0;1.0];
-
-        # B4= A^4
-        v3a=[0;0;1.0;0];
-        v3b=[0;0;1.0;0];
-
-
-        # B5=y04=A^4*(c4*A+c3*A^2+c2*A^3+c1*A^4)
-        v4a=[0;0;0;0;1.0];
-        v4b=[0;c[4];c[3];c[2];c[1]];
-
-        # B6=first term in y14
-        #   =(c8*A+c7*A^2+c6*A^3+c5*A^4+y04)*(c11*A^2+c10*A^3+c9*A^4+y04)
-        v5a=[0;c[8];c[7];c[6];c[5];1];
-        v5b=[0;0;c[11];c[10];c[9];1];
-
-        # The additional terms in y14
-        y14=[0;c[16];c[15];c[14];c[13];c[12];1];
-
-
-
-
-        # B7=first term in T24
-        #   = y14*(c20*A+c19*A^2+c18*A^3+c17*A^4+y04)
-        v6a=y14;
-        v6b=[0;c[20];c[19];c[18];c[17];1;0];
-
-        # Output
-        y=[1;1;c[23];c[22];c[21];0;0;1];
-
-        xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b)];
-
-        # Force convert to type
-        xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
-        y = convert.(T,y);
-
-        (graph,cref)=gen_degopt_poly(xv,y);
-
+           (graph,cref)=gen_sastre_yks_degopt(4,2,CC)
 
     elseif (k==7)
         # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
@@ -185,56 +152,22 @@ function gen_sid_exp(k;T=Float64)
            7.705596948494946e-02
            5.029302610017967e-01
            1
-           1];
+           1]
 
-        c=convert.(T,c);
+            # Evaluation from  http://personales.upv.es/~jorsasma/software/expmpol.m
+            # y0s=Ap{5}*(c(1)*Ap{5}+c(2)*Ap{4}+c(3)*Ap{3}+c(4)*Ap{2}+c(5)*A);
+            # y1s=(y0s+c(6)*Ap{5}+c(7)*Ap{4}+c(8)*Ap{3}+c(9)*Ap{2}+c(10)*A)*(y0s+c(11)*Ap{5}+c(12)*Ap{4}+c(13)*Ap{3}+c(14)*Ap{2})+c(15)*y0s+c(16)*Ap{5}+c(17)*Ap{4}+c(18)*Ap{3}+c(19)*Ap{2}+c(20)*A;
+            # sol=y1s*(y0s+c(21)*Ap{5}+c(22)*Ap{4}+c(23)*Ap{3}+c(24)*Ap{2}+c(25)*A)+c(26)*Ap{5}+c(27)*Ap{4}+c(28)*Ap{3}+c(29)*Ap{2}+A+eye(n);
+            CC = [
+            [[c[5], c[4], c[3], c[2], c[1]], [0.0, 0, 0, 0, 0, 0]],
+            [[1.0], [0, c[10], c[9], c[8], c[7], c[6]], [1.0], [0, 0, c[14], c[13], c[12], c[11]], [c[15]], [0, c[20], c[19], c[18], c[17], c[16]]],
+            [[0.0, 1], [0.0, 0, 0, 0, 0, 0], [1.0, 0], [0, c[25], c[24], c[23], c[22], c[21]], [0.0, 0], [1, 1, c[29], c[28], c[27], c[26]]],
+            ]
 
-        # B2= A^2
-        v1a=[0;1.0];
-        v1b=[0;1.0];
+            CC=convert.(Vector{Vector{T}},CC)
 
-        # B3= A^3
-        v2a=[0;1.0;0];
-        v2b=[0;0;1.0];
+           (graph,cref)=gen_sastre_yks_degopt(5,2,CC)
 
-        # B4= A^4
-        v3a=[0;0;1.0;0];
-        v3b=[0;0;1.0;0];
-
-        # B5= A^5
-        v4a=[0;1.0;0.0;0;0];
-        v4b=[0;0;  0.0;0;1.0];
-
-
-        # B6=y05=
-        #   A^5*(c5*A+c4*A^2+c3*A^3+c2*A^4+c1*A^5)
-        v5a=[0;0.0; 0.0; 0;  0;    1];
-        v5b=[0;c[5];c[4];c[3];c[2];c[1]];
-
-        # B7=first term in y15
-        #   =(c10*A+c9*A^2+c8*A^3+c7*A^4+c6*A^5+y05)*
-        #         (c14*A^2+c13*A^3+c12*A^4+c11*A^5+y05)
-        v6a=[0;c[10];c[9] ;c[8] ;c[7]; c[6];1]
-        v6b=[0;0    ;c[14];c[13];c[12];c[11];1]
-
-        y15=[0;c[20];c[19];c[18];c[17];c[16];c[15];1];
-
-        # B8=first term in T30
-        #   =y15*(c[25]*A+c[24]*A^2+c[23]*A^3+c[22]*A^4+c[21]*A^5+y05)
-        v7a=y15;
-        v7b=[0;c[25];c[24];c[23];c[22];c[21];1;0];
-
-        # Output
-        y=[1;1;c[29];c[28];c[27];c[26];0;0;1];
-
-
-        xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b); (v7a,v7b)];
-
-        # Force convert to type
-        xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
-        y = convert.(T,y);
-
-        (graph,cref)=gen_degopt_poly(xv,y);
     elseif (k>7)
         (graph,cref)=gen_sid_exp(7;T=T)
         # Square it 7-k times
@@ -248,7 +181,6 @@ function gen_sid_exp(k;T=Float64)
     else
         error("Not implemented for k=$k");
     end
-
 
     return (graph,cref);
 end
