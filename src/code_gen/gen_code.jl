@@ -31,16 +31,47 @@ function preprocess_codegen(graph,lang)
 end
 
 
+# Returns a vector of active nodes that should be computed
+# including precomputed_nodes, but not parents of precomputed_nodes
+# (unless needed elsewhere).
+function get_active_nodes(graph,precomputed_nodes)
+    active_nodes=[];
+    search=graph.outputs;
+    next_search=search;
+    count=0;
+    while (size(search,1)>0)
+        next_search=[]; # collect the nodes to use in the next search
+        for n in search
+            push!(active_nodes,n);
+            if (!(n in precomputed_nodes))
+                # Do not search parents of precomp_nodes
+                for j=1:size(graph.parents[n],1)
+                    p=graph.parents[n][j];
+                    push!(next_search,p)
+                end
+            end
+        end
+        search=next_search;
+        count += 1;
+        if (count > size(keys(graph.parents),1))
+            error("Unable to determine the active nodes. Likely invalid graph");
+        end
+    end
+    return active_nodes
+end
+
 """
     gen_code(fname,graph; priohelp=Dict{Symbol,Float64}(),
-             lang=LangJulia(),funname="dummy")
+             lang=LangJulia(),funname="dummy",precomputed_nodes=[:A])
 
 Generates the code for the `graph` in the language
  specified in `lang` and writes it into the file
 `fname`. The string `funname` is the function name.
 Topological order of the nodes is comptued using
 `get_topo_order` and `priohelp` can be used to
-influence the order.
+influence the order. The nodes listed in `precomputed_nodes`
+are viewed as inputs, and code to compute these nodes are not
+computed.
 
 Currently supported languages: `LangC_MKL`, `LangC_OpenBLAS`,
  `LangJulia`, `LangMatlab`, `LangDegoptJulia`.
@@ -80,6 +111,8 @@ function _gen_code(fname,graph,
     end
 
     graph=preprocess_codegen(graph,lang)
+
+    #active_nodes = get_active_nodes(graph,precomputed_nodes);
 
     (order, can_be_deallocated, max_nof_slots) =
         get_topo_order(graph; priohelp=priohelp)
