@@ -214,7 +214,8 @@ function execute_operation!(lang::LangJulia,
 
         code=init_code(lang)
 
-        push_comment!(code,"Dot fusing for sum of $(join(graph.parents[node],' '))");
+        fused_sum=(join("x*".*string.(graph.parents[node]),'+'))
+        push_comment!(code,"Computing $node = $fused_sum");
 
 
         # Write the coeffs into appropriate vectors
@@ -263,7 +264,7 @@ function execute_operation!(lang::LangJulia,
 
         # Adjust the result with inplace additions of identity
         for c in id_coeffs
-            if VERSION >= v"1.7.0"
+            if VERSION > v"1.7.0-DEV.1240"
                 push_code!(code,"mul!($nodemem,true,I*$c,true,true)");
             else
                 push_comment!(code,"This julia version does not support inplace identity add. Please update to julia 1.7 or newer for better performance.")
