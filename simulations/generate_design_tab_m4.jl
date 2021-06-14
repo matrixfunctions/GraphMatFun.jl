@@ -46,7 +46,8 @@ ps1_init.init=:taylor;
 ps1_init.graph=:ps;
 (graph_ps1,simlist,graphlist,commandlist)=
 interactive_simulations(ps1_init,sim0,
-                        "IssssssssssddssddsrssssssssssssdsrsddssssssssssssssddsddssNssdsrsdsssq");
+                        "IsssssssssssddsssddssssdssGgggssdsssssssssssssDdgGGssssddssssssssssssssssddsssssssssssddssssssssssssddsssssssddsssssssssssssddgggssssssssssGssGGGssssssgggsdsssssssssssssssssssss");
+#                        "IssssssssssddssddsrssssssssssssdsrsddssssssssssssssddsddssNssdsrsdsssq");
 # Err: 3.5E-11
 
 ps2_init=deepcopy(base_sim);
@@ -54,7 +55,8 @@ ps2_init.init=:lsqr;
 ps2_init.graph=:ps;
 (graph_ps2,simlist,graphlist,commandlist)=
 interactive_simulations(ps2_init,sim0,
-                        "IssssssssssddssddsrssssssssssssdsrsddssssssssssssssddsddssNssdsrsdsssq");
+                        "IsssssssssssddsssddssssdssGgggssdsssssssssssssDdgGGssssddssssssssssssssssddsssssssssssddssssssssssssddsssssssddsssssssssssssddgggssssssssssGssGGGssssssgggsdsssssssssssssssssssss");
+#"IssssssssssddssddsrssssssssssssdsrsddssssssssssssssddsddssNssdsrsdsssq");
 # Err: 3.5E-11
 
 
