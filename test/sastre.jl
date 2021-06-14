@@ -56,7 +56,8 @@ using Polynomials
 
 
 
-    ## Test conversion of (62)-(65) by using numbers from (57)-(59)
+    ## Test conversion of (62)-(65) to Degopt
+    # 1: By using numbers from (57)-(59)
     c16 =  4.018761610201036e-4
     c8  =  2.116367017255747e0
     c15 =  2.945531440279683e-3
@@ -89,4 +90,52 @@ using Polynomials
     t = (CC[17]-1/factorial(16))*factorial(16) -(-0.454) # (60)
     @test (abs(t) < 1e-3) && (abs(t) > 1e-4) # (60)
     @test all(abs.((CC .* factorial.(0:16))[1:16] .- 1) .<= 2e-15)
+
+    # 2: By constructing an onw polynomial of the form y_33
+    c1  = 1.1e-2;    c2  = 1.2e-2;    c3  = 1.3e-2;    c4  = 1.4e-2
+    c5  = 1.5e-2;    c6  = 1.6e-2;    c7  = 1.7e-2;    c8  = 2.05e-2
+    c9  = 2.1e-2;    c10 = 2.15e-2;   c11 = 2.2e-2;    c12 = 2.25e-2
+    c13 = 2.3e-2;    c14 = 2.35e-2;   c15 = 2.4e-2;    c16 = 2.45e-2
+    c17 = 2.5e-2;    c18 = 2.55e-2;   c19 = 2.6e-2;    c20 = 2.65e-2
+    c21 = 2.7e-2;    c22 = 2.75e-2;   c23 = 3.05e-2;   c24 = 3.1e-2
+    c25 = 3.15e-2;   c26 = 3.2e-2;    c27 = 3.25e-2;   c28 = 3.3e-2
+    c29 = 3.35e-2;   c30 = 3.4e-2;    c31 = 3.45e-2;   c32 = 3.5e-2
+    c33 = 3.55e-2;   c34 = 3.6e-2;    c35 = 3.65e-2;   c36 = 3.7e-2
+    c37 = 3.75e-2;   c38 = 3.8e-2;    c39 = 3.85e-2;   c40 = 3.9e-2
+    c41 = 4.05e-2;   c42 = 4.1e-2;    c43 = 4.15e-2;   c44 = 4.2e-2
+    c45 = 4.25e-2;   c46 = 4.3e-2;    c47 = 4.35e-2;   c48 = 4.4e-2
+    c49 = 4.45e-2;   c50 = 4.5e-2;    c51 = 4.55e-2;   c52 = 4.6e-2
+    c53 = 4.65e-2;   c54 = 4.7e-2;    c55 = 4.8e-2;    c56 = 4.85e-2
+    c57 = 4.9e-2;    c58 = 4.95e-2;   c59 = 5e-2;     c60 = 5.05e-2
+    c61 = 5.10e-2
+
+    c = [
+    [[c1, c2, c3], [c4, c5, c6, c7]],
+    [[c8], [c9, c10, c11, c12], [c13], [c14, c15, c16, c17], [c18], [c19, c20, c21, c22]],
+    [[c23, c24], [c25, c26, c27, c28], [c29, c30], [c31, c32, c33, c34], [c35, c36], [c37, c38, c39, c40]],
+    [[c41, c42, c43], [c44, c45, c46, c47], [c48, c49, c50], [c51, c52, c53, c54], [c55, c56, c57], [c58, c59, c60, c61]],
+    ]
+
+    II = Matrix(1.0I,100,100)
+    A2 = A*A
+    A3 = A2*A
+    y03 = A3*(c1*A+c2*A2+c3*A3) + c4*II+c5*A+c6*A2+c7*A3
+    (graph,cref)=gen_sastre_yks_degopt(3,0,c[1:1])
+    @test eval_graph(graph,A) ≈ y03
+
+    y13 = (c8*y03+c9*II+c10*A+c11*A2+c12*A3)*(c13*y03+c14*II+c15*A+c16*A2+c17*A3) +
+          c18*y03+c19*II+c20*A+c21*A2+c22*A3
+    (graph,cref)=gen_sastre_yks_degopt(3,1,c[1:2])
+    @test eval_graph(graph,A) ≈ y13
+
+    y23 = (c23*y03+c24*y13+c25*II+c26*A+c27*A2+c28*A3)*(c29*y03+c30*y13+c31*II+c32*A+c33*A2+c34*A3) +
+          c35*y03+c36*y13+c37*II+c38*A+c39*A2+c40*A3
+    (graph,cref)=gen_sastre_yks_degopt(3,2,c[1:3])
+    @test eval_graph(graph,A) ≈ y23
+
+    y33 = (c41*y03+c42*y13+c43*y23+c44*II+c45*A+c46*A2+c47*A3)*(c48*y03+c49*y13+c50*y23+c51*II+c52*A+c53*A2+c54*A3) +
+          c55*y03+c56*y13+c57*y23+c58*II+c59*A+c60*A2+c61*A3
+    (graph,cref)=gen_sastre_yks_degopt(3,3,c)
+    @test eval_graph(graph,A) ≈ y33
+
 end
