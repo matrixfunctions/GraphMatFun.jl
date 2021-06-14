@@ -253,7 +253,6 @@ function gen_sastre_yks_degopt(k,s,c)
                 ,vcat(b,c[2][3][1]))
              )
 
-        c
         push!(adj_coeffs_mon, c[2][6][1:s+1]+c[2][5][1]*adj_coeffs_mon[1])
         push!(adj_coeffs_mult, [c[2][5][1]])
 
