@@ -12,37 +12,43 @@ end
 
 mv=[4; 5; 5; 6; 6; 7; 7; 8]
 rv=["0_69"; "1_68"; "1_9"; "2_22"; "2_7"; "3_59"; "6_0"; "13_5"];
-methods=["mono_taylor"; "PS_taylor"; "Sastre+"; "BBC+"; "SID+"; "Sastre"; "BBC"; "SID" ];
+methods=["mono+GN"; "ps+GN"; "sastre+GN"; "bbc+GN"; "sid+GN"; "sastre"; "bbc"; "sid" ];
 
 simulations=Matrix{ThetaEntry}(undef,size(methods,1),size(mv,1));
 for (i,m)=enumerate(methods)
     for (j,r)=enumerate(rv)
         mul=mv[j];
         theta_val=parse(Float64,replace(r,"_" => "."));
-        simulations[i,j]=ThetaEntry(mul,r,theta_val,m,Dict());
+        simulations[i,j]=ThetaEntry(mul,r,theta_val/1.5,m,Dict());
+
     end
 end
-
+@show simulations[1,1].theta_val
 simulations[1,8].theta_val=14;
 simulations[end,8].theta_val=5;
-
+#simulations[3,3].theta_val=0.5;
 for i=1:size(simulations,1);
+#for i=3
     method=simulations[i,1].method
     print(" $method ");
     for j=1:size(simulations,2);
 
         sim=simulations[i,j];
         mul=sim.mul
+
+
         theta_val=sim.theta_val;
         rstr=sim.rstr;
-        if (mul<8) # Hack to only print high
-            continue;
-        end;
+#        if (mul<8) # Hack to only print high
+#            continue;
+#        end;
 
-        basename="simulations/graphs/exp";
+        basename="simulations/newgraphs/exp";
         fname="$(basename)_m$(mul)_$(method)_$(rstr).cgr";
+
+
         if (!isfile(fname))
-            print("X");
+            print(" & X");
             continue
         end
         graph=import_compgraph(fname);
@@ -58,12 +64,20 @@ for i=1:size(simulations,1);
         try
             # If the fzero function does not find a root it
             # will throw an error
-            theta=compute_bwd_theta_exponential(graph,coefftype=BigFloat,tolerance=eps()/2,theta_init=big(theta_val))[2];
+            theta=compute_bwd_theta_exponential(graph,coefftype=BigFloat,
+                                                tolerance=eps()/2,theta_init=big(theta_val))[2];
+
         catch e
         end
 
         sim.theta_val=theta;
-        thetastr=@sprintf("%.3f",theta);
+        if (!isnan(theta))
+            thetastr=@sprintf("%.3f",theta);
+        else
+            therastr="x";
+        end
+
+
         print(" & $thetastr")
 
     end

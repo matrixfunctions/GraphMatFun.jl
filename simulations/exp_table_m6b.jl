@@ -19,7 +19,7 @@ base = init_state_mult(f,rho,n,m; eltype=Complex{BigFloat})
 base.params[:n]=n;
 base.params[:target_n]=target_n;
 base.params[:opt_kwargs]=opt_kwargs;
-base.params[:kickit_mode]=1;
+base.params[:kickit_mode]=0;
 
 
 oldrho="2_22";
