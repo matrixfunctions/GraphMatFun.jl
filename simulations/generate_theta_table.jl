@@ -7,6 +7,21 @@ mutable struct ThetaEntry
     theta_val # starting value for fzero and result
     method
     params
+    err
+    rho
+end
+
+function compute_err(graph,rho,n=400)
+
+    f=x->exp(x)
+    nn=n;
+    discr=rho*exp.(1im*range(0,2*pi,length=nn)[1:end-1]);
+    discr=convert.(Complex{BigFloat},discr);
+    err=norm((f.(discr)-eval_graph(graph,discr))./f.(discr),Inf)
+    return err;
+end
+function latexname(str)
+    replace(str,"+"=>"&");
 end
 
 
@@ -19,18 +34,20 @@ for (i,m)=enumerate(methods)
     for (j,r)=enumerate(rv)
         mul=mv[j];
         theta_val=parse(Float64,replace(r,"_" => "."));
-        simulations[i,j]=ThetaEntry(mul,r,theta_val/1.5,m,Dict());
+        simulations[i,j]=ThetaEntry(mul,r,theta_val/1.5,m,Dict(),0,theta_val);
 
     end
 end
-@show simulations[1,1].theta_val
+#
 simulations[1,8].theta_val=14;
 simulations[end,8].theta_val=5;
+simulations[3,6].theta_val=7.0;
 #simulations[3,3].theta_val=0.5;
+skip_theta=false;
+println("Theta table");
 for i=1:size(simulations,1);
-#for i=3
     method=simulations[i,1].method
-    print(" $method ");
+    print(" $(latexname(method)) ");
     for j=1:size(simulations,2);
 
         sim=simulations[i,j];
@@ -39,19 +56,19 @@ for i=1:size(simulations,1);
 
         theta_val=sim.theta_val;
         rstr=sim.rstr;
-#        if (mul<8) # Hack to only print high
+#        if (mul<7) # Hack to only print high
 #            continue;
 #        end;
 
         basename="simulations/newgraphs/exp";
         fname="$(basename)_m$(mul)_$(method)_$(rstr).cgr";
 
-
         if (!isfile(fname))
             print(" & X");
             continue
         end
         graph=import_compgraph(fname);
+        sim.err=compute_err(graph,sim.rho);
         x=get_coeffs(graph);
         if (norm(imag.(x))>eps())
             warning("Non-real")
@@ -64,8 +81,11 @@ for i=1:size(simulations,1);
         try
             # If the fzero function does not find a root it
             # will throw an error
+            if (!skip_theta)
             theta=compute_bwd_theta_exponential(graph,coefftype=BigFloat,
                                                 tolerance=eps()/2,theta_init=big(theta_val))[2];
+            end
+
 
         catch e
         end
@@ -74,7 +94,7 @@ for i=1:size(simulations,1);
         if (!isnan(theta))
             thetastr=@sprintf("%.3f",theta);
         else
-            therastr="x";
+            thetastr="x";
         end
 
 
@@ -83,7 +103,26 @@ for i=1:size(simulations,1);
     end
     println("  \\\\");
 end
+println("Error table");
+for i=1:size(simulations,1);
+    method=simulations[i,1].method
+    print(" $(latexname(method)) ");
+    for j=1:size(simulations,2);
+        sim=simulations[i,j];
+        e=sim.err
+        if (e>1 || e == 0)
+            estr = "\$\\times\$"
+        else
+            estr=@sprintf("%.1e",e);
+        end
 
+        print(" & $estr");
+
+
+    end
+    println("\\\\");
+
+end
 
 
 
