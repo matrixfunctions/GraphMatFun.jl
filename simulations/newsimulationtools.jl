@@ -13,10 +13,20 @@ function State(f,eltype)
     return State(f,[],eltype,Nothing,Nothing,Dict{Symbol,Any}(:opt_kwargs => Dict()));
 end
 
+function scale_and_square!(state)
+    degopt=Degopt(state.graph)
+    scale!(degopt,1/2)
+    square!(degopt)
+    (g,c)=gen_degopt_poly(degopt)
+    state.graph=g
+    state.cref=c
+end
+
 
 function get_disc_discr(state;n=state.params[:n])
     rho=state.params[:rho]
-    discr=rho*exp.(1im*range(0,2*pi,length=n)[1:end-1]);
+    nn=round(Int,n);
+    discr=rho*exp.(1im*range(0,2*pi,length=nn)[1:end-1]);
     discr=convert.(state.eltype,discr);
     return discr;
 end
@@ -41,6 +51,9 @@ struct LMSimulation
     kwargs
 end
 
+struct NoOp
+end
+
 function LMSimulation(s::State)
     kwargs=Dict();
     if (haskey(s.params,:curve_fit_kwargs))
@@ -54,6 +67,23 @@ end
 struct ModifyParam
     param
     factor
+end
+
+# Corresponds to a change of all variables
+struct KickIt
+    factor::Number
+    mode
+end
+function KickIt(state::State,factor)
+
+    if haskey(state.params,:kickit_mode)
+        mode=state.params[:kickit_mode]
+    else
+        mode=0;
+    end
+    @show mode
+    return KickIt(factor,mode);
+
 end
 
 
@@ -82,6 +112,7 @@ end
 function init_state_mult!(state,graphname,mult;showmeta=false)
 
     if (!isnothing(graphname))
+        print("Generating $graphname ");
         if (graphname == :sid)
             (graph,cref)=gen_sid_exp(mult)
         elseif (graphname == :bbc)
@@ -122,6 +153,7 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
             graph=oldgraph;
             cref=oldcref;
 
+            println(" degree $(deg0-1)");
         end
 
         state.params[:graphname]=string(graphname);
@@ -133,6 +165,26 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
         end
 
     end
+    return state;
+end
+function init_state_file!(state,graphname,filename;showmeta=true,scale_and_square=false);
+
+    state.graph=import_compgraph(filename);
+    state.params[:graphname]=string(graphname);
+
+    if (scale_and_square)
+        scale_and_square!(state)
+    else
+        (_,cref)=gen_degopt_poly(Degopt(state.graph))
+        state.cref=cref;
+    end
+
+
+    if (showmeta)
+        println("Generating $graphname based on $filename");
+        showerr(state,showmeta=true)
+    end
+
     return state;
 end
 
@@ -154,8 +206,12 @@ function initcommand(control,state)
         return ModifyParam(:droptol,2);
     elseif (control=="d")
         return ModifyParam(:droptol,1/2);
+    elseif (control=="k")
+        return KickIt(state,1e-9);
+    elseif (control=="K")
+        return KickIt(state,1e-6);
     else
-        error("Unknown command");
+        return NoOp();
     end
 end
 
@@ -192,6 +248,7 @@ function runcommand(s::ModifyParam,state)
     else
         o=state.params;
     end
+    T=typeof(o[param])
     o[param]=o[param]*factor;
     println("$param=$(o[param])");
     if (param == :n)
@@ -249,6 +306,40 @@ function runcommand(s::LMSimulation,state)
     return state;
 
 end
+function runcommand(s::NoOp,state)
+    println("No op");
+    return state;
+end
+
+function runcommand(s::KickIt,state)
+    factor=s.factor;
+    (x,y)=get_degopt_crefs(state.graph);
+    Random.seed!(0);
+    if (s.mode == 0)
+        cref=[x[end][1][1]];
+        vals=get_coeffs(state.graph,cref);
+        vals=vals.*(1 .+ randn(size(vals)));
+        set_coeffs!(state.graph,vals,cref);
+
+    elseif (s.mode == 1)
+        cref=[x[end][1][1]];
+        vals=get_coeffs(state.graph,cref);
+        vals=vals .+ randn(size(vals));
+        set_coeffs!(state.graph,vals,cref);
+    elseif (s.mode == 2)
+
+        cref=[x[1][2][1]];
+        vals=get_coeffs(state.graph,cref);
+        vals .+= 0.0001
+        set_coeffs!(state.graph,vals,cref);
+    else
+
+        println("Unknown Kickit Mode");
+    end
+
+    return state;
+end
+
 
 
 function run_sequence(state,predefsims="");
@@ -258,8 +349,8 @@ function run_sequence(state,predefsims="");
     statelist[1]=state;
     pre_commandlist=split(predefsims,"");
 
-    err=showerr(state);
-    println("Initialerr:$err");
+    err=showerr(state,output=false);
+    println("Initialerr $(state.params[:graphname]):$err");
     j=1;
     command="";
     while (command != "q")
@@ -303,8 +394,7 @@ function showmetainfo(state)
     println("rho: $(state.params[:graphname]): ρ=$(state.params[:rho]) ");
 end
 
-function showerr(state;output=true,showmeta=false)
-    n=state.params[:target_n] #
+function showerr(state;output=true,showmeta=false,n=state.params[:target_n])
     f=state.f;
     discr=get_disc_discr(state,n=n);
 
@@ -327,4 +417,13 @@ function showerr(state;output=true,showmeta=false)
     end
 
     return err
+end
+
+
+function read_one_key(; io = stdin)
+    setraw!(raw) = ccall(:jl_tty_set_mode, Int32, (Ptr{Cvoid},Int32), io.handle, raw)
+    setraw!(true)
+    s=read(io, 1)
+    setraw!(false)
+    return s
 end
