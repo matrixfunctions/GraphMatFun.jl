@@ -9,9 +9,9 @@ using LinearAlgebra
     P2 = coeff[1]*I + coeff[2]*A
     P3 = coeff[1]*I
 
-    poly_gens = Dict("Monomial" => :gen_monomial,
-                     "Horner"   => :gen_horner,
-                     "PS"       => :gen_ps)
+    poly_gens = Dict("Monomial" => :graph_monomial,
+                     "Horner"   => :graph_horner,
+                     "PS"       => :graph_ps)
 
     for key = keys(poly_gens)
         @testset "$key" begin

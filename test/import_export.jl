@@ -12,7 +12,7 @@ using LinearAlgebra
     den_coeffs = 10*randn(7)
     num_coeffs = 10*randn(7)
 
-    (graph,cref) = gen_rational(den_coeffs, num_coeffs, gen_ps)
+    (graph,cref) = graph_rational(den_coeffs, num_coeffs, graph_ps)
     fname = string(tempname(), ".cgr")
     export_compgraph(graph, fname)
     graph2 = import_compgraph(fname)

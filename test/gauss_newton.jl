@@ -8,7 +8,7 @@ using LinearAlgebra
     discr = collect(5*exp.(1im*range(0,2*pi,length=21))[1:end-1])
 
     coeff_pert = [3; -1; 2.0; 0.1; 1.2] + 0.9*[-3; 1; -2.0; 0.1; -1.2]
-    (graph,cref) = gen_monomial(coeff_pert); graph = complex(graph)
+    (graph,cref) = graph_monomial(coeff_pert); graph = complex(graph)
     opt_gauss_newton!(graph, p, discr, logger=0,
                       stoptol=1e-14, γ0=0.85 , cref=cref,
                       errtype=:relerr,
@@ -22,7 +22,7 @@ using LinearAlgebra
 
 
     coeff_pert = [3; -1; 2.0; 0.1; 1.2] + 0.9*[-3; 1; -2.0; 0.1; -1.2]
-    (graph,cref) = gen_monomial(coeff_pert); graph = complex(graph)
+    (graph,cref) = graph_monomial(coeff_pert); graph = complex(graph)
     opt_gauss_newton!(graph, p, discr,
                       stoptol=5e-13, cref=cref, errtype=:abserr)
 

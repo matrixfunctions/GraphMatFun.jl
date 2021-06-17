@@ -5,9 +5,9 @@ using LinearAlgebra, Polynomials
 
     coeff = collect(1:21.0)
 
-    poly_gens = Dict("Monomial" => (:gen_monomial,:gen_monomial_degopt),
-                     "Horner"   => (:gen_horner,:gen_horner_degopt),
-                     "PS"       => (:gen_ps,:gen_ps_degopt) )
+    poly_gens = Dict("Monomial" => (:graph_monomial,:graph_monomial_degopt),
+                     "Horner"   => (:graph_horner,:graph_horner_degopt),
+                     "PS"       => (:graph_ps,:graph_ps_degopt) )
 
     for key = keys(poly_gens)
         @testset "$key" begin
