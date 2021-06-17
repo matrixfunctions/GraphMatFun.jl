@@ -36,7 +36,13 @@ end
 function assign_coeff_basic(lang::LangJulia,v,i)
     T = typeof(v)
     if big(T) == T # High precision coeffs should be parsed as such
-        return ("coeff$i","coeff$i=parse($T, \"$v\")")
+        if real(T) == T
+        return ("coeff$i","coeff$i=big\"$v\"")
+        else
+            vr=real(v)
+            vi=imag(v)
+            return ("coeff$i","coeff$i=big\"$vr\" + big\"$vi\"*im")
+        end
     else
         return ("coeff$i","coeff$i=$v")
     end
