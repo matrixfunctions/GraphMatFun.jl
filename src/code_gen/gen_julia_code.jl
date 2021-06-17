@@ -35,8 +35,8 @@ end
 
 function assign_coeff_basic(lang::LangJulia,v,i)
     T = typeof(v)
-    if big(T) == T
-        return ("coeff$i","coeff$i=big\"$v\"")
+    if big(T) == T # High precision coeffs should be parsed as such
+        return ("coeff$i","coeff$i=parse($T, \"$v\")")
     else
         return ("coeff$i","coeff$i=$v")
     end
