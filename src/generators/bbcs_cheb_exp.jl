@@ -91,7 +91,7 @@ function graph_bbcs_cheb_exp(k;T=Complex{BigFloat})
         # Force convert to type
         xv = map( i -> (convert.(T,xv[i][1]),convert.(T,xv[i][2])), 1:size(xv,1) )
         y = convert.(T,y)
-        return graph_degopt_poly(xv,y)
+        return graph_degopt(xv,y)
     else  # Scalign-and-squaring phase
         s = k-5
         degopt = Degopt(graph_bbcs_cheb_exp(5; T=T)[1])
@@ -99,6 +99,6 @@ function graph_bbcs_cheb_exp(k;T=Complex{BigFloat})
         for i = 1:s
             square!(degopt)
         end
-        return graph_degopt_poly(degopt)
+        return graph_degopt(degopt)
     end
 end

@@ -176,7 +176,7 @@ function graph_sid_exp(k;T=Float64)
             degopt=Degopt(graph);
             square!(degopt);
             scale!(degopt,convert(T,1/2));
-            (graph,cref)=graph_degopt_poly(degopt);
+            (graph,cref)=graph_degopt(degopt);
         end
     else
         error("Not implemented for k=$k");

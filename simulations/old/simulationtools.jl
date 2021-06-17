@@ -60,7 +60,7 @@ function initsim(s,prev_graph,prev_cref)
             elseif (s.graph == :bbc)
                 (graph,cref)=gen_bbc_basic_exp(m)
             elseif (s.graph == :sastre)
-                (graph,cref)=GraphMatFun.gen_sastre_basic_exp(m)
+                (graph,cref)=GraphMatFun.gen_sastre_basic_exp(m,:y1s)
             end
         else
             deg0=m-1;
@@ -155,7 +155,12 @@ function showerr(s,graph,output=true)
     err=norm((s.f.(discr)-eval_graph(graph,discr))./s.f.(discr),Inf)
     imagnorm=Float64(norm(imag.(get_coeffs(graph))));
     if (output)
-        println("Target error: $(Float64(err)) norm(imag(coeffs))= $imagnorm");
+        if (imagnorm>0)
+            imagstr="norm(imag(coeffs))= $imagnorm"
+        else
+            imagstr="";
+        end
+        println("Target error: $(Float64(err)) $imagstr");
     end
 
     return err
@@ -326,7 +331,7 @@ end
 
 
 
-function scale_and_square_degopt(fname,sim,kickstart=1)
+function scale_and_square_degopt(fname,state,kickstart=1)
     graph_org=import_compgraph(fname);;
     (graph,cref)=gen_degopt_by_squaring(graph_org);
     (x,y)=get_degopt_crefs(graph);
@@ -342,7 +347,8 @@ function scale_and_square_degopt(fname,sim,kickstart=1)
 
     y_cref=get_degopt_crefs(count(values(graph.operations) .== :mult))[2];
 
-    discr=sim.rho*exp.(1im*range(0,2*pi,length=sim.n)[1:end-1]);
+    discr=get_disc_discr(state);
+    #discr=state.rho*exp.(1im*range(0,2*pi,length=sim.n)[1:end-1]);
     discr=convert.(Complex{BigFloat},discr);
     opt_linear_fit!(graph2, exp, discr, y_cref;
                     errtype = :relerr,

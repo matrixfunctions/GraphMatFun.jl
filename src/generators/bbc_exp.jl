@@ -40,7 +40,7 @@ function graph_bbc_basic_exp(k;T=Float64)
         # Force convert to type
         xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
         y = convert.(T,y);
-        (graph,cref)=graph_degopt_poly(xv,y);
+        (graph,cref)=graph_degopt(xv,y);
 
 
     elseif (k==3)
@@ -73,7 +73,7 @@ function graph_bbc_basic_exp(k;T=Float64)
 
 
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b)];
-        (graph,cref)=graph_degopt_poly(xv,y);
+        (graph,cref)=graph_degopt(xv,y);
 
 
     elseif (k==4)
@@ -111,7 +111,7 @@ function graph_bbc_basic_exp(k;T=Float64)
 
         #xv=[v1,v2,v3,v4];
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b)];
-        (graph,cref)=graph_degopt_poly(xv,y);
+        (graph,cref)=graph_degopt(xv,y);
 
 
     elseif (k==5)
@@ -168,7 +168,7 @@ function graph_bbc_basic_exp(k;T=Float64)
         y=[b01;b11;b21;b31;b61;0;1];
 
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b)];
-        (graph,cref)=graph_degopt_poly(xv,y);
+        (graph,cref)=graph_degopt(xv,y);
 
     elseif (k==6)
 
@@ -196,7 +196,7 @@ function graph_bbc_basic_exp(k;T=Float64)
         v6b=copy(v6a);
         y=t0*ones(8);
         xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b)];
-        (graph,cref)=graph_degopt_poly(xv,y);
+        (graph,cref)=graph_degopt(xv,y);
     else
         error("Incorrect k");
     end

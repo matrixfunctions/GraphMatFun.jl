@@ -11,7 +11,7 @@ using LinearAlgebra
 
     z=[1.0; -0.1; 0.1; 0.01];
 
-    (graph,crefs)=graph_degopt_poly(x,z)
+    (graph,crefs)=graph_degopt(x,z)
 
     x0=3.1415;
     ev1=eval_graph(graph,x0,comporder=get_topo_order_degopt(2));
@@ -40,7 +40,7 @@ using LinearAlgebra
 
     z=ones(T,4);
     x=[(x1a,x1b), (x2a,x2b)]
-    (graph2,crefs2)=graph_degopt_poly(x,z)
+    (graph2,crefs2)=graph_degopt(x,z)
 
 
 
@@ -55,7 +55,7 @@ using LinearAlgebra
             x[i]=(collect(1.0:i+1),collect(-1.0:-1:-(i+1)))
         end
         z=collect(range(4,5,length=k+2))
-        (graph,cref) = graph_degopt_poly(x,z)
+        (graph,cref) = graph_degopt(x,z)
 
         (xx,zz) = get_degopt_crefs(k)
         for i=1:k

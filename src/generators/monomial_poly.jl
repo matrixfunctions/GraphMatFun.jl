@@ -56,7 +56,7 @@ end
      (graph,crefs)=graph_monomial_degopt(a; input=:A)
 
 Generates the same polynomial as `graph_monomial`, in the monomial basis.
-However, it does so by wrapping a call to `graph_degopt_poly`, resulting in more
+However, it does so by wrapping a call to `graph_degopt`, resulting in more
 degrees of freedom in `crefs`.
 
     """
@@ -75,6 +75,6 @@ function graph_monomial_degopt(a; input=:A)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end
 
-    return graph_degopt_poly(x, a, input=input)
+    return graph_degopt(x, a, input=input)
 
 end

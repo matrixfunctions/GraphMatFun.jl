@@ -68,7 +68,7 @@ is evaluated as
      p(s) = a[1] + (αs)*(a[2] + (αs)*(... + (αs)*(a[n-1] + a[n]*(αs))...)),
 
 where α=`scaling`.
-However, the function uses a call to `graph_degopt_poly`, resulting in more
+However, the function uses a call to `graph_degopt`, resulting in more
 degrees of freedom in `crefs`. See also `graph_horner`.
     """
 function graph_horner_degopt(a; scaling=1.0, input=:A)
@@ -80,7 +80,7 @@ function graph_horner_degopt(a; scaling=1.0, input=:A)
         error("Does not implement degree-zero polynomial.")
     end
     if n == 2
-        return graph_degopt_poly([], [a[1],a[2]*scaling])
+        return graph_degopt([], [a[1],a[2]*scaling])
     end
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,n-2)
@@ -89,6 +89,6 @@ function graph_horner_degopt(a; scaling=1.0, input=:A)
         x[i] = ( vcat(a[n-i],zeros(T,i-1),one(T)), vcat(zero(T),scaling,zeros(T,i-1)) )
     end
 
-    return graph_degopt_poly(x, vcat(a[1],zeros(T,n-2),one(T)), input=input)
+    return graph_degopt(x, vcat(a[1],zeros(T,n-2),one(T)), input=input)
 
 end

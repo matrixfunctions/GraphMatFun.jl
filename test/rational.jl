@@ -30,7 +30,7 @@ using LinearAlgebra
     β1=(x1a[1]*I+x1a[2]*A)*(x1b[1]*I+x1b[2]*A)
     β2=(x2a[1]*I+x2a[2]*A+x2a[3]*β1)*(x2b[1]*I+x2b[2]*A+x2b[3]*β1)
     den=z[1]*I+z[2]*A+z[3]*β1+z[4]*β2;
-    (den_graph,den_cref)=graph_degopt_poly(x,z)
+    (den_graph,den_cref)=graph_degopt(x,z)
 
     x1a=[2.1; 1.2]
     x1b=[1.3; 0.3]
@@ -42,7 +42,7 @@ using LinearAlgebra
     β1=(x1a[1]*I+x1a[2]*A)*(x1b[1]*I+x1b[2]*A)
     β2=(x2a[1]*I+x2a[2]*A+x2a[3]*β1)*(x2b[1]*I+x2b[2]*A+x2b[3]*β1)
     num=z[1]*I+z[2]*A+z[3]*β1+z[4]*β2;
-    (num_graph,num_cref)=graph_degopt_poly(x,z)
+    (num_graph,num_cref)=graph_degopt(x,z)
 
     P = num\den
     (graph, cref) = graph_rational(den_graph, num_graph, den_cref=den_cref, num_cref=num_cref)

@@ -17,7 +17,7 @@ function scale_and_square!(state)
     degopt=Degopt(state.graph)
     scale!(degopt,1/2)
     square!(degopt)
-    (g,c)=graph_degopt_poly(degopt)
+    (g,c)=graph_degopt(degopt)
     state.graph=g
     state.cref=c
 end
@@ -175,7 +175,7 @@ function init_state_file!(state,graphname,filename;showmeta=true,scale_and_squar
     if (scale_and_square)
         scale_and_square!(state)
     else
-        (_,cref)=graph_degopt_poly(Degopt(state.graph))
+        (_,cref)=graph_degopt(Degopt(state.graph))
         state.cref=cref;
     end
 

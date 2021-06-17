@@ -185,7 +185,7 @@ end
 """
      (graph,crefs)=graph_exp_native_jl_degopt(A; input=:A)
 
-Same as `graph_exp_native_jl` but with calls to `graph_degopt_poly` for contruction of
+Same as `graph_exp_native_jl` but with calls to `graph_degopt` for contruction of
 numerator and denominator polynomials.
     """
 function graph_exp_native_jl_degopt(A; input=:A)
@@ -222,7 +222,7 @@ function graph_exp_native_jl_low_degopt(C, input)
     a = view(C,4:2:n)
     xU[s+1] = ( vcat(zeros(T,1),one(T),zeros(T,s+1)), vcat(C[2],zero(T),a) )
     zU = vcat(zeros(T,s+2), one(T))
-    (graphU,crefU) = graph_degopt_poly(xU, zU, input=input)
+    (graphU,crefU) = graph_degopt(xU, zU, input=input)
     rename_node!(graphU, Symbol("T2k$(4+s)") , :U, crefU)
 
     # V
@@ -230,7 +230,7 @@ function graph_exp_native_jl_low_degopt(C, input)
     xV[1:s]=xU[1:s]
     a = view(C,3:2:n-1)
     zV = vcat(C[1],zero(T),a)
-    (graphV,crefV) = graph_degopt_poly(xV, zV, input=input)
+    (graphV,crefV) = graph_degopt(xV, zV, input=input)
     rename_node!(graphV, Symbol("T2k$(3+s)") , :V, crefV)
 
 
@@ -279,7 +279,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
     xU[5] = ( vcat(zero(T),one(T),zeros(T,4)), vcat(CC[2],zero(T),a,one(T)) )
 
     zU = vcat(zeros(T,6), one(T))
-    (graphU,crefU) = graph_degopt_poly(xU, zU, input=C)
+    (graphU,crefU) = graph_degopt(xU, zU, input=C)
     rename_node!(graphU, :T2k8 , :U, crefU)
 
     # V  = A6 * (CC[13].*A6 .+ CC[11].*A4 .+ CC[9].*A2) .+
@@ -296,7 +296,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
     # V = Vp + CC[7].*A6 .+ CC[5].*A4 .+ CC[3].*A2 .+ CC[1].*Inn
     a = view(CC,3:2:7)
     zV = vcat(CC[1],zero(T),a,one(T))
-    (graphV,crefV) = graph_degopt_poly(xV, zV, input=C)
+    (graphV,crefV) = graph_degopt(xV, zV, input=C)
     rename_node!(graphV, :T2k7 , :V, crefV)
 
     graph = merge_graphs(graphU, graphV, prefix1="U", prefix2="V", skip_basic1=true, skip_basic2=true, cref1=crefU, cref2=crefV, input1=C, input2=C)
@@ -318,7 +318,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
             xS[i] = ( vcat(zeros(T,i),one(T)), vcat(zeros(T,i),one(T)) )
         end
         zS = vcat(zeros(T,si+1), one(T))
-        (graphS,crefS) = graph_degopt_poly(xS, zS, input=:P)
+        (graphS,crefS) = graph_degopt(xS, zS, input=:P)
 
         graph = merge_graphs(graph, graphS, prefix1="", prefix2="S", skip_basic1=true, skip_basic2=true, cref1=cref, cref2=crefS, input1=C, input2=:P)
         cref =vcat(cref, crefS)

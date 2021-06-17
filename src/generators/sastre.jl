@@ -234,7 +234,7 @@ function graph_sastre_yks_degopt(k,s,c)
          )
     if (k==0)
         z = vcat(c[1][2][1:s+1],one(T)) #C_i^{(0,2)}
-        return graph_degopt_poly(x,z)
+        return graph_degopt(x,z)
     else
 
         # y_js = g_js + sum_i=0^(j-1) c_i^(j,5) y_is + sum_i=0^s c_i^(j,6) x^i
@@ -287,7 +287,7 @@ function graph_sastre_yks_degopt(k,s,c)
         z = vcat(adj_coeffs_mon[k+1],adj_coeffs_mult[k+1],one(T))
     end
 
-    return graph_degopt_poly(x,z)
+    return graph_degopt(x,z)
 end
 
 
@@ -326,7 +326,7 @@ function graph_sastre_z1ps_degopt(s,p,c,d,e,f,a)
     if (p==0) || (p==s) # Only (32)-(34) Evaluating y1s
 
         z=y1s
-        return graph_degopt_poly(x,z)
+        return graph_degopt(x,z)
     else #Apply PS-scheme as in (52)
         v = convert(Int,p/s) # Assumed to be an integer, according to paper, p = v*s
 
@@ -347,7 +347,7 @@ function graph_sastre_z1ps_degopt(s,p,c,d,e,f,a)
          end
 
         z = vcat(a[1:s],zeros(T,2+v),one(T))
-        return graph_degopt_poly(x,z)
+        return graph_degopt(x,z)
     end
 end
 
@@ -393,5 +393,5 @@ function graph_sastre_h2m_degopt(s,c,d,e,f)
          )
 
     z = vcat(one(T),zeros(s+4),one(T))
-    return graph_degopt_poly(x,z)
+    return graph_degopt(x,z)
 end

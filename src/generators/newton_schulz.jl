@@ -60,7 +60,7 @@ using the recursion
     Z_i=A*V_i
     V_{i+1}=V_i*(2*I-Z_i).
 
-The function makes a call to `graph_degopt_poly`, resulting in more
+The function makes a call to `graph_degopt`, resulting in more
 degrees of freedom in `crefs`. See also `graph_newton_schulz`.
 
     """
@@ -76,5 +76,5 @@ function graph_newton_schulz_degopt(k, T=ComplexF64; input=:A)
         x[i] = ( vcat(zeros(T,i-1),one(T),zero(T)), vcat(2,zeros(T,i-1),-one(T)) )
     end
 
-    return graph_degopt_poly(x, vcat(zeros(T,2*k+1),one(T)), input=input)
+    return graph_degopt(x, vcat(zeros(T,2*k+1),one(T)), input=input)
 end
