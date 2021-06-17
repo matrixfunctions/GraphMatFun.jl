@@ -1,7 +1,7 @@
 using LinearAlgebra
 @testset "code gen" begin
 
-    (graph,crefs)=gen_ps([3 4 0.9 0.11])
+    (graph,crefs)=graph_ps([3 4 0.9 0.11])
     A=[3 4.0; 5.5 0.1];
 
     # Test julia code generation
