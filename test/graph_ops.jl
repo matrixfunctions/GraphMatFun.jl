@@ -3,6 +3,8 @@ using LinearAlgebra, Polynomials
 @testset "graphops" begin
     graph = Compgraph();
 
+    # Graph evaluation.
+
     # Instructions for  (I + 2*(I + A/5))^{-1} (I + 1/2 *(I + A/5)^2)
     add_lincomb!(graph,:C, 1.0, :I, 1/5, :A);
     add_mult!(graph,:Csqr, :C, :C);
@@ -30,6 +32,7 @@ using LinearAlgebra, Polynomials
     Z = (I+2*(I+A/5))\(I + 1/2 *(I + A/5)^2);
     @test Z≈E
 
+    # Node removal.
     del_node!(graph,:D) #Remove rational part
     del_output!(graph,:out)
     @test isempty(graph.outputs)
@@ -44,8 +47,6 @@ using LinearAlgebra, Polynomials
     del_output!(graph,:N_new)
     @test isempty(graph.outputs)
 
-
-
     # Valid names and manipulation of the output list
     names = [:Acoeff_type, :coeff1A, :Bcoeff2,
              :My_output, :output1_My, :output1MY2]
@@ -55,10 +56,10 @@ using LinearAlgebra, Polynomials
         add_ldiv!(graph,name,:D,:N);
         add_output!(graph,name)
     end
+
+    # Clearance of output nodes.
     clear_outputs!(graph)
     @test isempty(graph.outputs)
-
-
 
     # Node renaming
     graph=Compgraph()
@@ -80,10 +81,15 @@ using LinearAlgebra, Polynomials
     A = [0.4 0.2; 1.1 0.3]
     @test eval_graph(graph1,A)==eval_graph(graph,A^2)
 
+    # Input kwarg to eval_graph.
+    graph1=deepcopy(graph)
+    new_input=:B
+    rename_node!(graph,:A,new_input)
+    @test eval_graph(graph1,A)==eval_graph(graph,A,input=new_input)
+
+    # Removal of output node
     del_output!(graph,:Pout)
     @test isempty(graph.outputs)
-
-
 
     # Test extract_sum on graph for the function:
     # T := (I + 2*A + 3*A^2)

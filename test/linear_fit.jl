@@ -18,9 +18,40 @@ end
     (graph,cref) = graph_monomial(zeros(length(coeff)))
     opt_linear_fit!(graph, p, discr, cref,
                     errtype=:relerr, linlsqr=:svd, droptol=1e-15)
-    @test all(abs.(eval_graph(graph,discr) .- p.(discr)) .< 1e-14* abs.(p.(discr)))
+    @test all(abs.(eval_graph(graph,discr) .- p.(discr))
+              .< 1e-14* abs.(p.(discr)))
     A = [3 4 ; 5 6.6]; PA = p(A)
     @test norm(eval_graph(graph,A) - PA) < 1e-14 * norm(PA)
+
+    new_input = :B
+    (graph,cref) = graph_monomial(zeros(length(coeff)), input=new_input)
+    opt_linear_fit!(graph, p, discr, cref,
+                    input=new_input, errtype=:relerr,
+                    linlsqr=:svd, droptol=1e-15)
+    @test all(abs.(eval_graph(graph,discr, input=new_input) .- p.(discr))
+              .< 1e-14* abs.(p.(discr)))
+    A = [3 4 ; 5 6.6]; PA = p(A)
+    @test norm(eval_graph(graph,A,input=new_input) - PA) < 1e-14 * norm(PA)
+
+
+
+    (graph,cref) = graph_monomial(zeros(length(coeff)))
+    opt_linear_fit!(graph, p, discr, cref,
+                    errtype=:relerr, linlsqr=:svd, droptol=1e-15)
+    @test all(abs.(eval_graph(graph,discr) .- p.(discr))
+              .< 1e-14* abs.(p.(discr)))
+    A = [3 4 ; 5 6.6]; PA = p(A)
+    @test norm(eval_graph(graph,A) - PA) < 1e-14 * norm(PA)
+
+    new_input = :Anew
+    rename_node!(graph, :A, new_input, cref)
+    opt_linear_fit!(graph, p, discr, cref,
+                    input=new_input, errtype=:relerr,
+                    linlsqr=:svd, droptol=1e-15)
+    @test all(abs.(eval_graph(graph,discr, input=new_input) .- p.(discr))
+              .< 1e-14* abs.(p.(discr)))
+    A = [3 4 ; 5 6.6]; PA = p(A)
+    @test norm(eval_graph(graph,A,input=new_input) - PA) < 1e-14 * norm(PA)
 
 
     (graph,cref) = graph_monomial(zeros(length(coeff)))
@@ -30,7 +61,17 @@ end
     A = [3 4 ; 5 6.6]; PA = p(A)
     @test norm(eval_graph(graph,A) - PA) < 1e-14 * norm(PA)
     @test isequal(eltype(graph),real(eltype(graph)))
-    
+
+    rename_node!(graph,:A,new_input)
+    opt_linear_fit!(graph, p, complex(discr), cref,
+                    errtype=:relerr, input=new_input,
+                    linlsqr=:real_svd, droptol=1e-15)
+    @test all(abs.(eval_graph(graph,discr,input=new_input) .- p.(discr))
+              .< 1e-14* abs.(p.(discr)))
+    A = [3 4 ; 5 6.6]; PA = p(A)
+    @test norm(eval_graph(graph,A,input=new_input) - PA) < 1e-14 * norm(PA)
+    @test isequal(eltype(graph),real(eltype(graph)))
+
 
     # Other functions
     coeff = [3; -1; 2.0]
