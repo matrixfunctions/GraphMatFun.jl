@@ -24,13 +24,23 @@ comment(::LangJulia,s)="# $s"
 
 slotname(::LangJulia,i)="memslots[$i]"
 
-assign_coeff(lang::LangJulia,v,i)=
-    v==1 ?
-    ("value_one",
-     comment(lang,"Saving scalar multiplications using ValueOne().")) :
-         ("coeff$i","coeff$i=$v")
+function assign_coeff(lang::LangJulia,v,i)
+    if v == 1
+        return ("value_one",
+        comment(lang,"Saving scalar multiplications using ValueOne()."))
+    else
+        assign_coeff_basic(lang,v,i)
+    end
+end
 
-assign_coeff_basic(lang::LangJulia,v,i)=("coeff$i","coeff$i=$v")
+function assign_coeff_basic(lang::LangJulia,v,i)
+    T = typeof(v)
+    if big(T) == T
+        return ("coeff$i","coeff$i=big\"$v\"")
+    else
+        return ("coeff$i","coeff$i=$v")
+    end
+end
 
 function preprocess_codegen(graph,lang::LangJulia)
 
