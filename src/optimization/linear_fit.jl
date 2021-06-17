@@ -2,6 +2,7 @@ export opt_linear_fit!
 
 """
     opt_linear_fit!(graph, objfun, discr, linear_cref;
+                    input = :A,
                     errtype = :abserr,
                     linlsqr = :backslash,
                     droptol = 0)
@@ -16,19 +17,20 @@ to the values of `objfun`, in the points `discr`. Reference to the coefficients
 The variable `graph` is modified during the iterations and the function has no
 return value.
 
-See `opt_gauss_newton!` for a description the kwarg `errtype`,
-and `solve_linlsqr!` for the kwargs `linlsqr`, and `droptol`.
+See `opt_gauss_newton!` for a description the kwarg `errtype` and `input`,
+and `solve_linlsqr!` for the kwargs `linlsqr and `droptol`.
 
     """
 function opt_linear_fit!(graph, objfun, discr, linear_cref;
+                         input = :A,
                          errtype = :abserr,
                          linlsqr = :backslash,
                          droptol = 0)
 
     objfun_vals = objfun.(discr)
 
-    vals = init_vals_eval_graph!(graph, discr, nothing)
-    eval_graph(graph, discr, vals=vals)
+    vals = init_vals_eval_graph!(graph, discr, nothing, input)
+    eval_graph(graph, discr, vals=vals, input=input)
 
     n = length(linear_cref)
     T = eltype(valtype(vals))
