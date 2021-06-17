@@ -4,7 +4,7 @@ SHELL := /bin/bash
 	cleanall clean_c clean_julia clean_matlab clean_output
 
 N=1000 # Default matrix size
-TEMPDIR=$(realpath ../generated_code/)
+TEMPDIR=$(realpath ..)/generated_code
 
 # Clean the /tmp/ directory, then generate the code, and run the experiments.
 all: cleanall generate runall
