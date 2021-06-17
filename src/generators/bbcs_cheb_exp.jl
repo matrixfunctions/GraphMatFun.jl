@@ -1,7 +1,7 @@
-export gen_bbcs_cheb_exp
+export graph_bbcs_cheb_exp
 
 """
-    (graph,cref)=gen_bbcs_cheb_exp(k;T=Complex{BigFloat})
+    (graph,cref)=graph_bbcs_cheb_exp(k;T=Complex{BigFloat})
 
 Computes a polynomial evaluation approximating the exponential for
 skew-Hermitian matrices using `k` matrix multiplications following the procedure
@@ -15,7 +15,7 @@ Reference:
 *  An efficient algorithm to compute the exponential of skew-Hermitian matrices for the time integration of the Schrödinger equation, P. Bader, S. Blanes, F. Casas, M. Seydaoglu, arXiv:2103.10132
 
     """
-function gen_bbcs_cheb_exp(k;T=Complex{BigFloat})
+function graph_bbcs_cheb_exp(k;T=Complex{BigFloat})
     CBF = Complex{BigFloat}
     if (k<=5) # Basic implementation from paper
         if (k==1)
@@ -91,14 +91,14 @@ function gen_bbcs_cheb_exp(k;T=Complex{BigFloat})
         # Force convert to type
         xv = map( i -> (convert.(T,xv[i][1]),convert.(T,xv[i][2])), 1:size(xv,1) )
         y = convert.(T,y)
-        return gen_degopt_poly(xv,y)
+        return graph_degopt_poly(xv,y)
     else  # Scalign-and-squaring phase
         s = k-5
-        degopt = Degopt(gen_bbcs_cheb_exp(5; T=T)[1])
+        degopt = Degopt(graph_bbcs_cheb_exp(5; T=T)[1])
         scale!(degopt,BigFloat("2.0")^(-big(s)))
         for i = 1:s
             square!(degopt)
         end
-        return gen_degopt_poly(degopt)
+        return graph_degopt_poly(degopt)
     end
 end

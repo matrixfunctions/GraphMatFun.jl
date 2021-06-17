@@ -1,10 +1,10 @@
-export gen_degopt_poly, get_topo_order_degopt
+export graph_degopt_poly, get_topo_order_degopt
 
 
 """
-    (graph,crefs)=gen_degopt_poly(k;T=ComplexF64,input=:A)
-    (graph,crefs)=gen_degopt_poly(x,z;input=:A)
-    (graph,crefs)=gen_degopt_poly(d::Degopt;input=:A)
+    (graph,crefs)=graph_degopt_poly(k;T=ComplexF64,input=:A)
+    (graph,crefs)=graph_degopt_poly(x,z;input=:A)
+    (graph,crefs)=graph_degopt_poly(d::Degopt;input=:A)
 
 Corresponds to the (for a fixed numer of multiplications) degree-optimal polynomial
 
@@ -28,9 +28,9 @@ Reference: The general recursion is mentioned in equation (9) in this paper:
 
 * Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
 """
-function gen_degopt_poly(x,z;input=:A)
+function graph_degopt_poly(x,z;input=:A)
     T = promote_type(eltype(eltype(eltype(x))), eltype(z))
-    (graph,crefs)=gen_degopt_poly_B(x,T,input=input);
+    (graph,crefs)=graph_degopt_poly_B(x,T,input=input);
 
     k=size(x,1);
 
@@ -54,7 +54,7 @@ function gen_degopt_poly(x,z;input=:A)
     return (graph,crefs);
 
 end
-function gen_degopt_poly(k;T=ComplexF64,input=:A)
+function graph_degopt_poly(k;T=ComplexF64,input=:A)
 
     x=Vector{Tuple{Vector{T},Vector{T}}}(undef,k);
     for i=1:k
@@ -63,16 +63,16 @@ function gen_degopt_poly(k;T=ComplexF64,input=:A)
 
     z=ones(T,k+2)
 
-    gen_degopt_poly(x,z;input=:A)
+    graph_degopt_poly(x,z;input=:A)
 end
-function gen_degopt_poly(degopt::Degopt;input=:A)
-    return gen_degopt_poly(degopt.x,degopt.y,input=input);
+function graph_degopt_poly(degopt::Degopt;input=:A)
+    return graph_degopt_poly(degopt.x,degopt.y,input=input);
 end
 
 
 # Normally x::Vector{Tuple{Vector{Number},Vector{Number}}}
 # Containing the coefficients in the recursion
-function gen_degopt_poly_B(x,T;input=:A)
+function graph_degopt_poly_B(x,T;input=:A)
 
 
     k=size(x,1);
@@ -118,7 +118,7 @@ end
     order=get_topo_order_degopt(k)
 
 A special implementation of `get_topo_order` for degree optimal polynomials
-generated with `gen_degopt_poly`. The natural order of computation is to compute
+generated with `graph_degopt_poly`. The natural order of computation is to compute
 row by row. See also `get_degopt_crefs`.
 
 """

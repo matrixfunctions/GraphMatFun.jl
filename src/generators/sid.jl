@@ -1,9 +1,9 @@
 # Boostingthecomputationofthematrixexponential
 
-export gen_sid_exp;
+export graph_sid_exp;
 
 """
-    (graph,cref)=gen_sid_exp(k;T=Float64)
+    (graph,cref)=graph_sid_exp(k;T=Float64)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
@@ -14,7 +14,7 @@ Reference:
 * Boosting the computation of the matrix exponential, J. Sastre, J. Ibáñez, E. Defez, Appl. Math. Computation, 340, 2019, 206-220.
 
     """
-function gen_sid_exp(k;T=Float64)
+function graph_sid_exp(k;T=Float64)
 
     if (k==4) # Table 3
 
@@ -43,7 +43,7 @@ function gen_sid_exp(k;T=Float64)
 
         c=convert.(Vector{Vector{T}},c)
 
-        (graph,cref)=gen_sastre_yks_degopt(2,2,c)
+        (graph,cref)=graph_sastre_yks_degopt(2,2,c)
 
     elseif (k==5) # Tabel 4
 
@@ -76,7 +76,7 @@ function gen_sid_exp(k;T=Float64)
 
         c=convert.(Vector{Vector{T}},c)
 
-       (graph,cref)=gen_sastre_yks_degopt(2,3,c)
+       (graph,cref)=graph_sastre_yks_degopt(2,3,c)
 
     elseif (k==6)
         # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
@@ -118,7 +118,7 @@ function gen_sid_exp(k;T=Float64)
 
             CC=convert.(Vector{Vector{T}},CC)
 
-           (graph,cref)=gen_sastre_yks_degopt(2,4,CC)
+           (graph,cref)=graph_sastre_yks_degopt(2,4,CC)
 
     elseif (k==7)
         # Coefficients from http://personales.upv.es/~jorsasma/software/expmpol.m
@@ -166,17 +166,17 @@ function gen_sid_exp(k;T=Float64)
 
             CC=convert.(Vector{Vector{T}},CC)
 
-           (graph,cref)=gen_sastre_yks_degopt(2,5,CC)
+           (graph,cref)=graph_sastre_yks_degopt(2,5,CC)
 
     elseif (k>7)
-        (graph,cref)=gen_sid_exp(7;T=T)
+        (graph,cref)=graph_sid_exp(7;T=T)
         # Square it 7-k times
         for j=8:k
 
             degopt=Degopt(graph);
             square!(degopt);
             scale!(degopt,convert(T,1/2));
-            (graph,cref)=gen_degopt_poly(degopt);
+            (graph,cref)=graph_degopt_poly(degopt);
         end
     else
         error("Not implemented for k=$k");

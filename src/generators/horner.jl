@@ -1,7 +1,7 @@
-export gen_horner, gen_horner_degopt
+export graph_horner, graph_horner_degopt
 
 """
-     (graph,crefs)=gen_horner(a; input=:A, B=:B, C=:C, scaling=1.0)
+     (graph,crefs)=graph_horner(a; input=:A, B=:B, C=:C, scaling=1.0)
 
 Generates the graph for the polynomial using Horner's method. More precisely,
 it corresponds to the evaluation of the polynomial
@@ -17,7 +17,7 @@ where α=`scaling`.
 
 The kwargs `B` and `C` specifies the base-names of these intermediate variables.
     """
-function gen_horner(a; input=:A, B=:B, C=:C, scaling=1.0)
+function graph_horner(a; input=:A, B=:B, C=:C, scaling=1.0)
 
     # Initial setup
     n = length(a);
@@ -57,7 +57,7 @@ end
 
 
 """
-     (graph,crefs)=gen_horner_degopt(a; scaling=1.0, input=:A)
+     (graph,crefs)=graph_horner_degopt(a; scaling=1.0, input=:A)
 
 Generates a polynomial using Horner's evaluation scheme. The polynomial
 
@@ -68,10 +68,10 @@ is evaluated as
      p(s) = a[1] + (αs)*(a[2] + (αs)*(... + (αs)*(a[n-1] + a[n]*(αs))...)),
 
 where α=`scaling`.
-However, the function uses a call to `gen_degopt_poly`, resulting in more
-degrees of freedom in `crefs`. See also `gen_horner`.
+However, the function uses a call to `graph_degopt_poly`, resulting in more
+degrees of freedom in `crefs`. See also `graph_horner`.
     """
-function gen_horner_degopt(a; scaling=1.0, input=:A)
+function graph_horner_degopt(a; scaling=1.0, input=:A)
 
     n = length(a)
     T = eltype(a)
@@ -80,7 +80,7 @@ function gen_horner_degopt(a; scaling=1.0, input=:A)
         error("Does not implement degree-zero polynomial.")
     end
     if n == 2
-        return gen_degopt_poly([], [a[1],a[2]*scaling])
+        return graph_degopt_poly([], [a[1],a[2]*scaling])
     end
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,n-2)
@@ -89,6 +89,6 @@ function gen_horner_degopt(a; scaling=1.0, input=:A)
         x[i] = ( vcat(a[n-i],zeros(T,i-1),one(T)), vcat(zero(T),scaling,zeros(T,i-1)) )
     end
 
-    return gen_degopt_poly(x, vcat(a[1],zeros(T,n-2),one(T)), input=input)
+    return graph_degopt_poly(x, vcat(a[1],zeros(T,n-2),one(T)), input=input)
 
 end

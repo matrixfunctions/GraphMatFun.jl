@@ -1,7 +1,7 @@
-export gen_newton_schulz, gen_newton_schulz_degopt
+export graph_newton_schulz, graph_newton_schulz_degopt
 
 """
-     (graph,crefs)=gen_newton_schulz(k, T=ComplexF64; input=:A, B=:B, C=:C, V=:V)
+     (graph,crefs)=graph_newton_schulz(k, T=ComplexF64; input=:A, B=:B, C=:C, V=:V)
 
 Does `k` iterations of the Newton–Schulz iteration for approximating the inverse
 of a matrix A (name given by `input`), i.e., the recursion
@@ -24,7 +24,7 @@ References:
 
 * N. J. Higham. Functions of Matrices. SIAM publications, Philadelphia, PA, 2008.
     """
-function gen_newton_schulz(k, T=ComplexF64; input=:A, Z=:Z, Q=:Q, V=:V)
+function graph_newton_schulz(k, T=ComplexF64; input=:A, Z=:Z, Q=:Q, V=:V)
 
     graph = Compgraph(T);
     cref=Vector{Tuple{Symbol,Int}}(undef,0)
@@ -52,7 +52,7 @@ end
 
 
 """
-     (graph,crefs)=gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
+     (graph,crefs)=graph_newton_schulz_degopt(k, T=ComplexF64; input=:A)
 
 Does `k` iterations of the Newton–Schulz iteration for approximating the inverse,
 using the recursion
@@ -60,11 +60,11 @@ using the recursion
     Z_i=A*V_i
     V_{i+1}=V_i*(2*I-Z_i).
 
-The function makes a call to `gen_degopt_poly`, resulting in more
-degrees of freedom in `crefs`. See also `gen_newton_schulz`.
+The function makes a call to `graph_degopt_poly`, resulting in more
+degrees of freedom in `crefs`. See also `graph_newton_schulz`.
 
     """
-function gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
+function graph_newton_schulz_degopt(k, T=ComplexF64; input=:A)
 
     x = Vector{Tuple{Vector{T},Vector{T}}}(undef,2*k)
     # Z_i=A*V_i --- Odd numbers
@@ -76,5 +76,5 @@ function gen_newton_schulz_degopt(k, T=ComplexF64; input=:A)
         x[i] = ( vcat(zeros(T,i-1),one(T),zero(T)), vcat(2,zeros(T,i-1),-one(T)) )
     end
 
-    return gen_degopt_poly(x, vcat(zeros(T,2*k+1),one(T)), input=input)
+    return graph_degopt_poly(x, vcat(zeros(T,2*k+1),one(T)), input=input)
 end

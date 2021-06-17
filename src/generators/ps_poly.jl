@@ -1,7 +1,7 @@
-export gen_ps, gen_ps_degopt
+export graph_ps, graph_ps_degopt
 
 """
-     (graph,crefs)=gen_ps(a; input=:A,
+     (graph,crefs)=graph_ps(a; input=:A,
                           B_base=:B, C_base=:C, P_base=:P)
 
 Generates the graph for the Paterson–Stockmeyer procedure with monomial basis coefficieents. More precily, it corresponds to evaluation of the polynomial
@@ -17,7 +17,7 @@ The code follows the description in:
 * Optimality of the Paterson–Stockmeyer method for evaluating matrix polynomials and rational matrix functions, M. Fasi, Linear Algebra Appl., 574, 2019.
 
     """
-function gen_ps(a; input=:A,
+function graph_ps(a; input=:A,
                 B_base=:B, C_base=:C, P_base=:P);
 
     # Initial setup
@@ -138,15 +138,15 @@ end
 
 
 """
-     (graph,crefs)=gen_ps_degopt(a; input=:A)
+     (graph,crefs)=graph_ps_degopt(a; input=:A)
 
-Generates the same polynomial as `gen_ps`, i.e.,
+Generates the same polynomial as `graph_ps`, i.e.,
 the graph for the Paterson–Stockmeyer procedure with monomial basis coefficieents.
-However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
+However, it does so by wrapping a call to `graph_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_ps_degopt(a; input=:A)
+function graph_ps_degopt(a; input=:A)
 
     # Initial setup
     n = length(a)
@@ -162,7 +162,7 @@ function gen_ps_degopt(a; input=:A)
             for i = 1:(k-1)
                 x[i] = (vcat(zero(T),one(T),zeros(i-1)), vcat(zeros(i),one(T)))
             end
-            return gen_degopt_poly(x, a)
+            return graph_degopt_poly(x, a)
         end
     end
 
@@ -205,6 +205,6 @@ function gen_ps_degopt(a; input=:A)
     end
 
     z = vcat(a[1:s],zero(T),zeros(T,v-1-i_adj),one(T))
-    return gen_degopt_poly(x, z, input=input)
+    return graph_degopt_poly(x, z, input=input)
 
 end

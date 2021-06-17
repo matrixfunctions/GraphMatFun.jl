@@ -1,7 +1,7 @@
-export gen_monomial, gen_monomial_degopt
+export graph_monomial, graph_monomial_degopt
 
 """
-     (graph,crefs)=gen_monomial(a; input=:A, polyname=:P)
+     (graph,crefs)=graph_monomial(a; input=:A, polyname=:P)
 
 Generates the graph for the polynomial using the monomial basis coefficients. More precisely,
 it corresponds to the evaluation of the polynomial
@@ -11,7 +11,7 @@ it corresponds to the evaluation of the polynomial
 where s^k is naively evaluated as s^k=s*s^(k-1) for k=2,3,...,n-1.
 The kwarg `polyname` specifies the name of intermediate variables.
     """
-function gen_monomial(a; input=:A, polyname=:P)
+function graph_monomial(a; input=:A, polyname=:P)
 
     # Initial setup
     n = length(a);
@@ -53,14 +53,14 @@ end
 
 
 """
-     (graph,crefs)=gen_monomial_degopt(a; input=:A)
+     (graph,crefs)=graph_monomial_degopt(a; input=:A)
 
-Generates the same polynomial as `gen_monomial`, in the monomial basis.
-However, it does so by wrapping a call to `gen_degopt_poly`, resulting in more
+Generates the same polynomial as `graph_monomial`, in the monomial basis.
+However, it does so by wrapping a call to `graph_degopt_poly`, resulting in more
 degrees of freedom in `crefs`.
 
     """
-function gen_monomial_degopt(a; input=:A)
+function graph_monomial_degopt(a; input=:A)
 
     n = length(a)
     d = n-1
@@ -75,6 +75,6 @@ function gen_monomial_degopt(a; input=:A)
         x[i] = ( vcat(zeros(T,i),one(T)), vcat(zero(T),one(T),zeros(T,i-1)) )
     end
 
-    return gen_degopt_poly(x, a, input=input)
+    return graph_degopt_poly(x, a, input=input)
 
 end

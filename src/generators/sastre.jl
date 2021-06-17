@@ -1,8 +1,8 @@
 
-export gen_sastre_basic_exp, gen_sastre_basic, gen_sastre_yks_degopt
+export graph_sastre_basic_exp, graph_sastre_basic, graph_sastre_yks_degopt
 
 """
-    (graph,cref)=gen_sastre_basic_exp(k,method)
+    (graph,cref)=graph_sastre_basic_exp(k,method)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following a `method` given
@@ -23,7 +23,7 @@ Reference:
 
 * Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function gen_sastre_basic_exp(k,method)
+function graph_sastre_basic_exp(k,method)
     if (k==3) && (method==:y1s) # Table 4
         e0 = 2.974307204847627
         e2 = 1.225521150112075e-1
@@ -43,7 +43,7 @@ function gen_sastre_basic_exp(k,method)
 
         s=2
         p=0
-        return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+        return graph_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
 
     elseif (k==4) && (method==:y1s) # Not tabulated?
         e0 = 5.018851944498568
@@ -54,7 +54,7 @@ function gen_sastre_basic_exp(k,method)
 
         s=3
         p=0
-        return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+        return graph_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
 
     elseif (k==6) && (method==:h2m) # Table 11 and equation (69)
         e0 = 7.922322450524197
@@ -86,7 +86,7 @@ function gen_sastre_basic_exp(k,method)
         fp=[f0p;f1p;f2p]
 
         s=2
-        gen_sastre_h2m_degopt(s,(c,cp),(d,dp),(e,ep),(f,fp))
+        graph_sastre_h2m_degopt(s,(c,cp),(d,dp),(e,ep),(f,fp))
 
     elseif (k==8)  && (method==:z1ps) # Table 7
         c10=-6.140022498994532e-17
@@ -121,7 +121,7 @@ function gen_sastre_basic_exp(k,method)
 
         s=5
         p=10
-        return gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
+        return graph_sastre_z1ps_degopt(s,p,c,d,e,f,a)
 
     else
         error("Not implemented k=$k and method=$method")
@@ -130,7 +130,7 @@ end
 
 
 """
-    (graph,cref)=gen_sastre_basic(b)
+    (graph,cref)=graph_sastre_basic(b)
 
 Computes the degree-8 polynomial
 
@@ -142,7 +142,7 @@ Reference:
 
 *  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function gen_sastre_basic(b)
+function graph_sastre_basic(b)
 # Equations (16) - (32)
     if (size(b,1) !=9)
         error("Not implemented for length(b)=$k")
@@ -181,12 +181,12 @@ function gen_sastre_basic(b)
 
     s=2
     p=s
-    return gen_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
+    return graph_sastre_z1ps_degopt(s,p,c,d,e,f,NaN)
 end
 
 
 """
-    (graph,cref)=gen_sastre_yks_degopt(k,s,c)
+    (graph,cref)=graph_sastre_yks_degopt(k,s,c)
 
 Transforms the polynomial evaluation format given by equations (62)-(65) in the
 reference to `degop`-format. The `graph` is a representation of y_{`k` `s`}.
@@ -218,7 +218,7 @@ Reference:
 
 *  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function gen_sastre_yks_degopt(k,s,c)
+function graph_sastre_yks_degopt(k,s,c)
     T=eltype(eltype(eltype(c)))
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 
@@ -234,7 +234,7 @@ function gen_sastre_yks_degopt(k,s,c)
          )
     if (k==0)
         z = vcat(c[1][2][1:s+1],one(T)) #C_i^{(0,2)}
-        return gen_degopt_poly(x,z)
+        return graph_degopt_poly(x,z)
     else
 
         # y_js = g_js + sum_i=0^(j-1) c_i^(j,5) y_is + sum_i=0^s c_i^(j,6) x^i
@@ -287,7 +287,7 @@ function gen_sastre_yks_degopt(k,s,c)
         z = vcat(adj_coeffs_mon[k+1],adj_coeffs_mult[k+1],one(T))
     end
 
-    return gen_degopt_poly(x,z)
+    return graph_degopt_poly(x,z)
 end
 
 
@@ -301,7 +301,7 @@ end
 # f=[f0;...f_s] # size = s+1
 # a=[a0;...a_(p-1)] # size = p   Can be NaN if p=s
 # Nof mult: s+1+p/s = s+1+v
-function gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
+function graph_sastre_z1ps_degopt(s,p,c,d,e,f,a)
     T=eltype(c)
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 
@@ -326,7 +326,7 @@ function gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
     if (p==0) || (p==s) # Only (32)-(34) Evaluating y1s
 
         z=y1s
-        return gen_degopt_poly(x,z)
+        return graph_degopt_poly(x,z)
     else #Apply PS-scheme as in (52)
         v = convert(Int,p/s) # Assumed to be an integer, according to paper, p = v*s
 
@@ -347,16 +347,16 @@ function gen_sastre_z1ps_degopt(s,p,c,d,e,f,a)
          end
 
         z = vcat(a[1:s],zeros(T,2+v),one(T))
-        return gen_degopt_poly(x,z)
+        return graph_degopt_poly(x,z)
     end
 end
 
 
 # Internal use only
 # Transforms formula (34)-(35) + (69) to degopt form
-# Input is analogous to gen_sastre_z1ps_degopt() but with tuples of vectors
+# Input is analogous to graph_sastre_z1ps_degopt() but with tuples of vectors
 # # Nof mult: s+4
-function gen_sastre_h2m_degopt(s,c,d,e,f)
+function graph_sastre_h2m_degopt(s,c,d,e,f)
     T=eltype(eltype(c))
     x = Vector{Tuple{Vector{T},Vector{T}}}()
 
@@ -393,5 +393,5 @@ function gen_sastre_h2m_degopt(s,c,d,e,f)
          )
 
     z = vcat(one(T),zeros(s+4),one(T))
-    return gen_degopt_poly(x,z)
+    return graph_degopt_poly(x,z)
 end

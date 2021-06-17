@@ -1,7 +1,7 @@
-export gen_denman_beavers
+export graph_denman_beavers
 
 """
-        (graph,cref)=gen_denman_beavers(k;T=ComplexF64,cref_mode=0)
+        (graph,cref)=graph_denman_beavers(k;T=ComplexF64,cref_mode=0)
 
 Creates the graph corresponding to the Denman-Beavers
 iteration for the matrix square root, using k iterations.
@@ -13,7 +13,7 @@ Reference:
 
 * The matrix sign function and computations in systems, E. Denman,  A. Beavers, Applied Mathematics and Computation, 2(1), 1976, https://doi.org/10.1016/0096-3003(76)90020-5
     """
-function gen_denman_beavers(k;T=ComplexF64,cref_mode=0)
+function graph_denman_beavers(k;T=ComplexF64,cref_mode=0)
 
     graph = Compgraph(T);
 
