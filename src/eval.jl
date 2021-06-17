@@ -10,8 +10,8 @@ export eval_graph,eval_jac,eval_runerr
 # Modifies the Dict vals if passed as a kwarg
 # Returns the output specificed in graph.outputs[output]
 """
-    result=eval_graph(graph,x; vals=nothing,
-                      output=size(graph.outputs,1),
+    result=eval_graph(graph, x; vals=nothing,
+                      input=:A, output=size(graph.outputs,1),
                       comporder=nothing)
 
 Evaluates a graph in the value `x` which is typically a scalar value or a matrix. If `x` is a Vector, the values will be
@@ -31,10 +31,12 @@ julia> vals[:X3]
 ```
 
     """
-function eval_graph(graph, x; vals=nothing, output=size(graph.outputs,1), comporder=nothing)
-    vals = init_vals_eval_graph!(graph, x, vals)
+function eval_graph(graph,x; vals=nothing,
+                    input=:A, output=size(graph.outputs,1),
+                    comporder=nothing)
+    vals=init_vals_eval_graph!(graph,x,vals,input)
     if comporder == nothing
-        comporder = get_topo_order(graph)[1]
+        comporder=get_topo_order(graph,input=input)[1]
     end
     for node = comporder
         parentval1=vals[graph.parents[node][1]]
@@ -97,16 +99,16 @@ function carry_out!(graph, vals, parentval1::AbstractMatrix, parentval2::Abstrac
 end
 
 # Initiate the Dict vals with different types via dispatch. Create if needed
-function init_vals_eval_graph!(graph, x, vals)
+function init_vals_eval_graph!(graph,x,vals,input)
     if vals == nothing
         T_comp=promote_type(eltype(graph),typeof(x))
         vals = Dict{Symbol,T_comp}()
     end
     vals[:I]=one(x)
-    vals[:A]=x
+    vals[input]=x
     return vals
 end
-function init_vals_eval_graph!(graph, x::AbstractVector, vals)
+function init_vals_eval_graph!(graph,x::AbstractVector,vals,input)
     if vals == nothing
         T_elem=promote_type(eltype(graph),eltype(x))
         if x isa Vector
@@ -117,10 +119,10 @@ function init_vals_eval_graph!(graph, x::AbstractVector, vals)
         vals = Dict{Symbol,T_comp}()
     end
     vals[:I]=one.(x)
-    vals[:A]=x
+    vals[input]=x
     return vals
 end
-function init_vals_eval_graph!(graph, x::AbstractMatrix, vals)
+function init_vals_eval_graph!(graph,x::AbstractMatrix,vals,input)
     if vals == nothing
         T_elem=promote_type(eltype(graph),eltype(x))
         if x isa Matrix
@@ -133,7 +135,7 @@ function init_vals_eval_graph!(graph, x::AbstractMatrix, vals)
         vals = Dict{Symbol,T_comp}()
     end
     vals[:I]=one(x)
-    vals[:A]=x
+    vals[input]=x
     return vals
 end
 
@@ -146,22 +148,25 @@ end
 # is sum_i (Z(x_i)-f(x_i)) dZ(x_i)/dc, i.e., J^T times vector of residual
 # values r_i=Z(x_i)-f(x_i).
 """
-    J=eval_jac(graph, x, cref; vals=nothing, output=size(graph.outputs,1))
+    J=eval_jac(graph,x, cref; vals=nothing,
+               input=:A, output=size(graph.outputs,1))
 
 Computes Jacobian ```J = dZ(x_i)/dc```, with respect to the coefficients given in the vector `cref`, and
 points `x[1],...,x[end]`. See `eval_graph` for
  description of `vals` and `output`.
      """
-function eval_jac(graph, x, cref; vals=nothing, output=size(graph.outputs,1))
+function eval_jac(graph, x, cref; vals=nothing,
+                  input=:A, output=size(graph.outputs,1))
     if (cref isa Tuple) #Workaround for single coefficient
         cref=[cref]
     end
 
     # T = promote_type(eltype(x),eltype(graph))
-    comporder = get_topo_order(graph)[1]
+    comporder = get_topo_order(graph,input=input)[1]
     if vals==nothing
-        vals = init_vals_eval_graph!(graph, x, vals)
-        eval_graph(graph, x, vals=vals, output=output, comporder=comporder)
+        vals = init_vals_eval_graph!(graph, x, vals, input)
+        eval_graph(graph, x, vals=vals,
+                   input=input, output=output, comporder=comporder)
     end
     T = eltype(valtype(vals))
 
@@ -227,7 +232,7 @@ end
 # Returns the output specificed in graph.outputs[output]
 """
     err=eval_runerr(graph, x; vals=nothing, relerrs=nothing,
-                           output=size(graph.outputs,1),
+                           input=:A,output=size(graph.outputs,1),
                            mode=:bounds,
                            add_relerr=eps())
 
@@ -241,16 +246,17 @@ random error within the bound.
 
    """
 function eval_runerr(graph, x; vals=nothing, relerrs=nothing,
-                    output=size(graph.outputs,1),
-                    mode=:bounds, # Can be :bounds, :rand, :estimate
-                    add_relerr=eps())
+                     input=:A,output=size(graph.outputs,1),
+                     mode=:bounds, # Can be :bounds, :rand, :estimate
+                     add_relerr=eps())
     T = promote_type(eltype(x),eltype(graph))
-    comporder = get_topo_order(graph)[1]
+    comporder = get_topo_order(graph,input)[1]
     if vals==nothing
-        vals = init_vals_eval_graph!(graph, x, vals)
-        eval_graph(graph, x, vals=vals, output=output, comporder=comporder)
+        vals = init_vals_eval_graph!(graph, x, vals, input)
+        eval_graph(graph, x, vals=vals,
+                   input=input, output=output, comporder=comporder)
     end
-    relerrs = init_relerrs_eval_runerr!(relerrs, T, x, add_relerr)
+    relerrs = init_relerrs_eval_runerr!(relerrs, T, x, add_relerr, input)
 
     for node = comporder
         parentval1=vals[graph.parents[node][1]]
@@ -352,24 +358,24 @@ function error_prop!(graph, relerrs, nodeval::AbstractMatrix, parentval1::Abstra
 end
 
 # Initiate the Dict relerr with different types via dispatch. Create if needed
-function init_relerrs_eval_runerr!(relerrs, T, x, add_relerr)
+function init_relerrs_eval_runerr!(relerrs, T, x, add_relerr, input)
     if relerrs==nothing
         T_big=big(T)
         relerrs=Dict{Symbol,T_big}()
     end
     relerrs[:I]=add_relerr
-    relerrs[:A]=add_relerr
+    relerrs[input]=add_relerr
     return relerrs
 end
-function init_relerrs_eval_runerr!(relerrs, T, x::AbstractVector, add_relerr)
+function init_relerrs_eval_runerr!(relerrs, T, x::AbstractVector, add_relerr, input)
     if relerrs==nothing
         T_big=big(T)
         relerrs=Dict{Symbol,Vector{T_big}}()
     end
     relerrs[:I]=zeros(T_big,length(x))
     relerrs[:I][:] .= add_relerr
-    relerrs[:A]=zeros(T_big,length(x))
-    relerrs[:A][:] .= add_relerr
+    relerrs[input]=zeros(T_big,length(x))
+    relerrs[input][:] .= add_relerr
     return relerrs
 end
 

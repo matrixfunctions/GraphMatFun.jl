@@ -535,12 +535,13 @@ function nof_uncomputed_children(graph,node,vals)
 end
 
 """
-    (order,can_be_deallocated,max_nodes)=get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),free_mem_bonus=1000,will_not_deallocate=[:I])
+    (order,can_be_deallocated,max_nodes)=get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),free_mem_bonus=1000,will_not_deallocate=[:I],input=:A)
 
-Computes a vector of all nodes sorted in a topological
-way, i.e., an order it can be computed. The `priohelp`
-kwarg can be used to obtain a different topological
-ordering, by changing the node priority.
+Computes a topological sort of `graph`, that is, an ordering of the
+nodes following which the function the graph represents can be
+evaluated. The `priohelp` kwarg can be used to obtain a different
+topological ordering by changing the node priority. The code assumes
+that the nodes `:I` and `input` do not need to be computed.
 
 The code uses a heuristic to minimize pathwidth. It is based on a
 point system. You can influence the computation order by providing
@@ -559,17 +560,17 @@ the pathwidth.
 
     """
 function get_topo_order(graph; priohelp=Dict{Symbol,Float64}(),
-                        free_mem_bonus=1000,will_not_dealloc=[:I])
+                        free_mem_bonus=1000,will_not_dealloc=[:I], input=:A)
     # Assumed to be true for the computed nodes, and not exist for other nodes
     is_computed=Dict{Symbol,Bool}();
     is_computed[:I]=true;
-    is_computed[:A]=true;
+    is_computed[input]=true;
 
     # TODO: Can this be optimized? If I is not needed? Saves memory...
     # To keep track of the maximum number of nodes alive at the same time
     is_still_needed=Dict{Symbol,Bool}();
     is_still_needed[:I]=true;
-    is_still_needed[:A]=true;
+    is_still_needed[input]=true;
     max_nof_nodes = 2;
 
     outputs = graph.outputs;
