@@ -17,7 +17,7 @@ function scale_and_square!(state)
     degopt=Degopt(state.graph)
     scale!(degopt,1/2)
     square!(degopt)
-    (g,c)=gen_degopt_poly(degopt)
+    (g,c)=graph_degopt_poly(degopt)
     state.graph=g
     state.cref=c
 end
@@ -114,9 +114,9 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
     if (!isnothing(graphname))
         print("Generating $graphname ");
         if (graphname == :sid)
-            (graph,cref)=gen_sid_exp(mult)
+            (graph,cref)=graph_sid_exp(mult)
         elseif (graphname == :bbc)
-            (graph,cref)=gen_bbc_basic_exp(m)
+            (graph,cref)=graph_bbc_basic_exp(m)
         elseif (graphname == :sastre)
             method=:y1s;
             if (m==6)
@@ -124,7 +124,7 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
             elseif (m==8)
                 method=:z1ps
             end
-            (graph,cref)=gen_sastre_basic_exp(m,method)
+            (graph,cref)=graph_sastre_basic_exp(m,method)
         end
 
         if (graphname in [:ps,:mono])
@@ -142,9 +142,9 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
                 oldgraph=graph;
                 oldcref=cref;
                 if (graphname == :ps)
-                    (graph,cref)=gen_ps_degopt(c)
+                    (graph,cref)=graph_ps_degopt(c)
                 elseif (graphname == :mono)
-                    (graph,cref)=gen_monomial_degopt(c)
+                    (graph,cref)=graph_monomial_degopt(c)
                 end
                 graph_mult=count(values(graph.operations) .==:mult);
             end
@@ -175,7 +175,7 @@ function init_state_file!(state,graphname,filename;showmeta=true,scale_and_squar
     if (scale_and_square)
         scale_and_square!(state)
     else
-        (_,cref)=gen_degopt_poly(Degopt(state.graph))
+        (_,cref)=graph_degopt_poly(Degopt(state.graph))
         state.cref=cref;
     end
 
