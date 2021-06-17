@@ -135,7 +135,7 @@ function function_init(lang::LangJulia,T,mem,graph,precomputed_nodes)
             push_code!(code,"$Ak_slot_name=$n "*comment(lang,"overwrite $n"))
         else
             # Otherwise make a copy
-            push_code!(code,"copy!($Ak_slot_name,$n)")
+            push_code!(code,"$Ak_slot_name=copy($n)")
         end
     end
 
