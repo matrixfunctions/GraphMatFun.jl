@@ -13,7 +13,7 @@ Reference:
 
 * The matrix sign function and computations in systems, E. Denman,  A. Beavers, Applied Mathematics and Computation, 2(1), 1976, https://doi.org/10.1016/0096-3003(76)90020-5
     """
-function graph_denman_beavers(k;T=ComplexF64,cref_mode=0)
+function graph_denman_beavers(k;T=Float64,cref_mode=0)
 
     graph = Compgraph(T);
 
