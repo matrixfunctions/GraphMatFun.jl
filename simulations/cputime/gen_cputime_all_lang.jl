@@ -55,8 +55,9 @@ function gen_main(fname,N,col,graphs,names,mkl,commentsign="#",skip=[:expm_matla
             this_sim_code=deepcopy(repeated_code);
             for (j,line)=enumerate(this_sim_code)
                 if (g isa Compgraph)
+                    tempdir_str=tempdir();
                     line=replace(line,"INCLUDE" =>
-                      string("include(joinpath(tempdir(),\"NAME.jl\"));"));
+                      string("include(joinpath(\"$(tempdir_str)\",\"NAME.jl\"));"));
                 else
                     line=replace(line,"INCLUDE" => "exp_julia=exp");
                 end
