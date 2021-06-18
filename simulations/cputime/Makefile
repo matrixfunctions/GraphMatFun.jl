@@ -58,7 +58,7 @@ run_julia:
 		$(TEMPDIR)/run_cputime_julia_OpenBLAS.jl.output
 
 run_matlab:
-	cd $(TEMPDIR)/; matlab -batch "run_cputime_matlab_OpenBLAS" &> \
+	cd $(TEMPDIR)/; matlab -nodesktop -r  "run_cputime_matlab_OpenBLAS" &> \
 		$(TEMPDIR)/run_cputime_matlab_OpenBLAS.m.output
 
 
