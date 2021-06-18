@@ -23,7 +23,20 @@ Reference:
 
 * Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function graph_sastre_basic_exp(k,method)
+function graph_sastre_basic_exp(k,method=:auto)
+    if (method == :auto)
+        if (k<=4)
+            method=:y1s;
+        elseif (k==6)
+            method=:h2m;
+        elseif (k==8)
+            method=:z1ps;
+        else
+            error("This number of multiplication is not available.");
+        end
+
+    end
+
     if (k==3) && (method==:y1s) # Table 4
         e0 = 2.974307204847627
         e2 = 1.225521150112075e-1
