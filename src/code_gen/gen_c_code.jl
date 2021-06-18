@@ -118,7 +118,7 @@ function function_definition(lang::LangC,graph,T,funname,precomputed_nodes)
     push_code!(code,"#include<stdlib.h>",ind_lvl=0)
     push_code!(code,"#include<string.h>",ind_lvl=0)
     push_code!(code,"")
-    push_comment!(code, "Code for polynomial evaluation.",ind_lvl=0)
+    push_comment!(code, "Code for matrix function evaluation.",ind_lvl=0)
     input_variables=join(map(x->"$blas_type *"*string(x),precomputed_nodes), ", ")
     push_code!(code,"void $blas_prefix$funname($input_variables, "*
         "const size_t n, $blas_type *output) {",ind_lvl=0)
