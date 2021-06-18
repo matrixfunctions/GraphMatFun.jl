@@ -71,7 +71,7 @@ function matfun_axpby!(X,a,b,Y::UniformScaling)
     @inbounds for i=1:n
         X[i,i]+=(b isa ValueOne) ? 1 : b
     end
-end")
+end\n")
 end
 
 function push_code_matfun_axpby!(code)
@@ -92,7 +92,7 @@ function matfun_axpby!(X,a,b,Y)
             end
         end
     end
-end")
+end\n")
 end
 
 function function_definition(lang::LangJulia,graph,T,funname,precomputed_nodes)
@@ -120,6 +120,7 @@ function function_definition(lang::LangJulia,graph,T,funname,precomputed_nodes)
         copy_input="copy("*join(precomputed_nodes, "), copy(")*")"
         push_code!(code,"return $(funname)!($copy_input)")
         push_code!(code,"end", ind_lvl=0)
+        push_code!(code,"", ind_lvl=0)
         push_code!(code,inline_string*"function $(funname)!($input_variables)",
                    ind_lvl=0)
     end
