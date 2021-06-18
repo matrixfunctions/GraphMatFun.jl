@@ -49,7 +49,6 @@ function assign_coeff_basic(lang::LangJulia,v,i)
 end
 
 function preprocess_codegen(graph,lang::LangJulia)
-
     if (lang.dot_fusing)
         return MultiLincombCompgraph(graph); # Merge many lincombs for dot fusion
     else
@@ -112,13 +111,18 @@ function function_definition(lang::LangJulia,graph,T,funname,precomputed_nodes)
         push_code_matfun_axpby!(code)
     end
 
-    input_variables = join(precomputed_nodes, ", ");
-    if (lang.inline)
-        push_code!(code,"@inline function $funname($input_variables)",ind_lvl=0)
-    else
-        push_code!(code,"function $funname($input_variables)",ind_lvl=0)
+    input_variables=join(precomputed_nodes, ", ")
+    inline_string=lang.inline ? "@inline " : ""
+    push_code!(code,inline_string*"function $funname($input_variables)",
+               ind_lvl=0)
+    # Generate version a bang version of the function.
+    if (lang.overwrite_input)
+        copy_input="copy("*join(precomputed_nodes, "), copy(")*")"
+        push_code!(code,"return $(funname)!($copy_input)")
+        push_code!(code,"end", ind_lvl=0)
+        push_code!(code,inline_string*"function $(funname)!($input_variables)",
+                   ind_lvl=0)
     end
-
     push_code!(code,"T=promote_type(eltype($(input_variables[1])),$T) "*
         comment(lang,"Make it work for many 'bigger' types (matrices and scalars)"))
     return code
