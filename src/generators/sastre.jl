@@ -9,11 +9,13 @@ using `k` matrix multiplications following a `method` given
 in the reference. The schemes are embedded into `degop`-format.
 
 Methods are:
+* `:ps_degopt`, Paterson–Stockmeyer method embedded into `degopt`-format.
 * `:y1s`, given by equations (34)-(35)
 * `:z1ps`, given by equations (34)-(35) and (52)
 * `:h2m`, given by equations (34)-(35) and (69)
 
 Not all combinations of `k` and `method` are implemented. Available ones are:
+* `k`<3, `method`=`:ps_degopt`
 * `k`=3, `method`=`:y1s`, as per Table 4 in the reference
 * `k`=4, `method`=`:y1s`
 * `k`=6, `method`=`:h2m`, as per Table 11 in the reference
@@ -28,7 +30,9 @@ Reference:
     """
 function graph_sastre_exp(k,method=:auto)
     if (method == :auto)
-        if (k<=4)
+        if (k<3)
+            method=:ps_degopt
+        elseif (k==3) || (k==4)
             method=:y1s;
         elseif (k==6)
             method=:h2m;
@@ -40,7 +44,10 @@ function graph_sastre_exp(k,method=:auto)
 
     end
 
-    if (k==3) && (method==:y1s) # Table 4
+    if (k<3) && (method==:ps_degopt)
+        return graph_ps_degopt(1 ./ factorial.(0:(k+1)) )
+
+    elseif (k==3) && (method==:y1s) # Table 4
         e0 = 2.974307204847627
         e2 = 1.225521150112075e-1
         d1 = 8.765009801785554e-1
