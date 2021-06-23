@@ -45,7 +45,14 @@ function graph_sastre_exp(k,method=:auto)
     end
 
     if (k<3) && (method==:ps_degopt)
-        return graph_ps_degopt(1 ./ factorial.(0:(k+1)) )
+        if k == 2
+            deg = 4
+        elseif k == 1
+            deg = 2
+        else
+            deg = 1
+        end
+        return graph_ps_degopt(1 ./ factorial.(0:deg) )
 
     elseif (k==3) && (method==:y1s) # Table 4
         e0 = 2.974307204847627
