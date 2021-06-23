@@ -9,6 +9,10 @@ Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
 in the reference. The coefficients are directly copied from the paper.
 
+The evaluation is embedded in the `degopt`-format, using the function
+`graph_sastre_yks_degopt`. Moreover, for `k`<=3 it uses the Paterson–Stockmeyer
+method.
+
 Reference:
 
 * Boosting the computation of the matrix exponential, J. Sastre, J. Ibáñez, E. Defez, Appl. Math. Computation, 340, 2019, 206-220.
