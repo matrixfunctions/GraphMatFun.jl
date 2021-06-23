@@ -11,6 +11,9 @@ Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
 in the reference. The coefficients are directly copied from the paper.
 
+The evaluation is embedded in the `degopt`-format, and for `k`<3, the evaluation
+is using the Paterson–Stockmeyer method.
+
 Reference:
 
 * Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
@@ -18,30 +21,15 @@ Reference:
     """
 function graph_bbc_exp(k;T=Float64)
 
-    if (k==2)
-
-        c=[1;1;1/2;1/6;1/25]; # Taylor coeffs
-        c=convert.(T,c);
-
-        # PS rule for degree 4.
-
-        ## Notation in Fasi paper: kk=4,s=2,nu=2
-
-        # A2=A^2
-        v1a=[0;1.0];
-        v1b=[0;1.0];
-
-        # A4=A^2*(c[3]+c[4]*A+c[5]*A^2)
-        v2a=[0;0;1.0]; # A^2
-        v2b=[c[3];c[4];c[5]]; # tildeP1
-
-        y=[c[1];c[2];0;1.0];
-        xv=[(v1a,v1b); (v2a,v2b)];
-        # Force convert to type
-        xv=map(i-> (convert.(T,xv[i][1]),convert.(T,xv[i][2])),1:size(xv,1))
-        y = convert.(T,y);
-        (graph,cref)=graph_degopt(xv,y);
-
+    if (k<3)
+        if k == 2
+            deg = 4
+        elseif k == 1
+            deg = 2
+        else
+            deg = 1
+        end
+        return graph_ps_degopt( convert.(T,1 ./ factorial.(0:deg)) )
 
     elseif (k==3)
         # Equation 13
