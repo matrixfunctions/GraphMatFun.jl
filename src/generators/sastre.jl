@@ -1,5 +1,5 @@
 
-export graph_sastre_exp, graph_sastre_basic, graph_sastre_yks_degopt
+export graph_sastre_exp, graph_sastre_poly, graph_sastre_yks_degopt
 
 """
     (graph,cref)=graph_sastre_exp(k,method=:auto)
@@ -160,7 +160,7 @@ end
 
 
 """
-    (graph,cref)=graph_sastre_basic(b)
+    (graph,cref)=graph_sastre_poly(b)
 
 Computes the degree-8 polynomial
 
@@ -172,7 +172,7 @@ Reference:
 
 *  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function graph_sastre_basic(b)
+function graph_sastre_poly(b)
 # Equations (16) - (32)
     if (size(b,1) !=9)
         error("Not implemented for length(b)=$k")

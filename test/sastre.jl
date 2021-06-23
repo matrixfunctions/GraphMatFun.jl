@@ -19,10 +19,10 @@ using Polynomials
 
 
 
-    ## Test the degree-9 solver graph_sastre_basic(b) by comparison to tabulated values
+    ## Test the degree-9 solver graph_sastre_poly(b) by comparison to tabulated values
     # 1: Table 4 against equations (16)-(32) for exponential
     (graph1,cref1) = graph_sastre_exp(3,:y1s)
-    (graph2,cref2) =  graph_sastre_basic(1 ./factorial.(0:8))
+    (graph2,cref2) =  graph_sastre_poly(1 ./factorial.(0:8))
     @test sum(values(graph2.operations) .== :mult) == 3
     @test all(cref1 .== cref2)
     for c = cref1
@@ -52,8 +52,8 @@ using Polynomials
     b0  = 3.096467971936040
     bp0 = 0.0
     β0 = 1
-    (graph,_) =  graph_sastre_basic([b0,b1,b2,b3,b4,b5,b6,b7,b8])
-    (graphp,_) =  graph_sastre_basic([bp0,bp1,bp2,bp3,bp4,bp5,bp6,bp7,bp8])
+    (graph,_) =  graph_sastre_poly([b0,b1,b2,b3,b4,b5,b6,b7,b8])
+    (graphp,_) =  graph_sastre_poly([bp0,bp1,bp2,bp3,bp4,bp5,bp6,bp7,bp8])
     v1 = eval_graph(graph,A)
     vp1 = eval_graph(graphp,A)
 
