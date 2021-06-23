@@ -16,7 +16,19 @@ Reference:
     """
 function graph_sid_exp(k;T=Float64)
 
-    if (k==4) # Table 3
+    if (k<=3)
+        if k == 3
+            deg = 6
+        elseif k == 2
+            deg = 4
+        elseif k == 1
+            deg = 2
+        else
+            deg = 1
+        end
+        return graph_ps_degopt( convert.(T, 1 ./ factorial.(0:deg)) )
+
+    elseif (k==4) # Table 3
 
         c1  = 4.018761610201036*1e-4
         c2  = 2.945531440279683*1e-3

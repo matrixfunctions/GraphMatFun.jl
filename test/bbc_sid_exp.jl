@@ -50,6 +50,34 @@
 
     @testset "SID exp" begin
         x=2.0
+        p0sid=1 # Order of approx for 0 matrix multiplies
+        (graph,cref)=graph_sid_exp(0)
+        err1=eval_graph(big(graph),big(x))-exp(big(x))
+        err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
+        @test -log(abs(err2/err1))/log(α) > p0sid+1
+
+        x=2.0
+        p1sid=2 # Order of approx for 1 matrix multiplies
+        (graph,cref)=graph_sid_exp(1)
+        err1=eval_graph(big(graph),big(x))-exp(big(x))
+        err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
+        @test -log(abs(err2/err1))/log(α) > p1sid+1
+
+        x=2.0
+        p2sid=4 # Order of approx for 2 matrix multiplies
+        (graph,cref)=graph_sid_exp(2)
+        err1=eval_graph(big(graph),big(x))-exp(big(x))
+        err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
+        @test -log(abs(err2/err1))/log(α) > p2sid+1
+
+        x=2.0
+        p3sid=6 # Order of approx for 3 matrix multiplies
+        (graph,cref)=graph_sid_exp(3)
+        err1=eval_graph(big(graph),big(x))-exp(big(x))
+        err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
+        @test -log(abs(err2/err1))/log(α) > p3sid+1
+
+        x=2.0
         p4sid=15 # Order of approx for 4 matrix multiplies
         (graph,cref)=graph_sid_exp(4)
         err1=eval_graph(big(graph),big(x))-exp(big(x))
