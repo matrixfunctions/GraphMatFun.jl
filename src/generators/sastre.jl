@@ -2,7 +2,7 @@
 export graph_sastre_exp, graph_sastre_basic, graph_sastre_yks_degopt
 
 """
-    (graph,cref)=graph_sastre_exp(k,method)
+    (graph,cref)=graph_sastre_exp(k,method=:auto)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following a `method` given
@@ -18,6 +18,9 @@ Not all combinations of `k` and `method` are implemented. Available ones are:
 * `k`=4, `method`=`:y1s`
 * `k`=6, `method`=`:h2m`, as per Table 11 in the reference
 * `k`=8, `method`=`:z1ps`, as per Table 7 in the reference
+
+The default option `method=:auto` will choose method according to the value of
+`k`, as prescribed above.
 
 Reference:
 
