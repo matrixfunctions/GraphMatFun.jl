@@ -58,9 +58,9 @@ function initsim(s,prev_graph,prev_cref)
             if (s.graph == :sid)
                 (graph,cref)=gen_sid_exp(m)
             elseif (s.graph == :bbc)
-                (graph,cref)=gen_bbc_basic_exp(m)
+                (graph,cref)=gen_bbc_exp(m)
             elseif (s.graph == :sastre)
-                (graph,cref)=GraphMatFun.gen_sastre_basic_exp(m,:y1s)
+                (graph,cref)=GraphMatFun.gen_sastre_exp(m,:y1s)
             end
         else
             deg0=m-1;

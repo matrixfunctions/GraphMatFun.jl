@@ -2,10 +2,10 @@
 #
 # Philipp Bader, Sergio Blanes, and Fernando Casas. Computing the matrix exponential with an optimized Taylor polynomial approximation. Mathematics, 7(12), 2019.
 #
-export graph_bbc_basic_exp
+export graph_bbc_exp
 
 """
-    (graph,cref)=graph_bbc_basic_exp(k;T=Float64)
+    (graph,cref)=graph_bbc_exp(k;T=Float64)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following the procedure
@@ -16,7 +16,7 @@ Reference:
 * Computing the matrix exponential with an optimized Taylor polynomial approximation, P. Bader, S. Blanes, and F. Casas, Mathematics, 7(12), 2019.
 
     """
-function graph_bbc_basic_exp(k;T=Float64)
+function graph_bbc_exp(k;T=Float64)
 
     if (k==2)
 

@@ -113,7 +113,7 @@ println("Run include(save_all.jl) if you want to save");
 #
 #errX1=showerr(target,sastre_org,false)
 #errX2=showerr(target,sid_org,false)
-#bbc_graph=gen_bbc_basic_exp(4)[1]
+#bbc_graph=gen_bbc_exp(4)[1]
 #errX3=showerr(target,bbc_graph,false)
 #println("PS taylor $err1")
 #println("PS lsqr $err2")

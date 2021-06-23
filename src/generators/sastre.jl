@@ -1,8 +1,8 @@
 
-export graph_sastre_basic_exp, graph_sastre_basic, graph_sastre_yks_degopt
+export graph_sastre_exp, graph_sastre_basic, graph_sastre_yks_degopt
 
 """
-    (graph,cref)=graph_sastre_basic_exp(k,method)
+    (graph,cref)=graph_sastre_exp(k,method)
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following a `method` given
@@ -23,7 +23,7 @@ Reference:
 
 * Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
     """
-function graph_sastre_basic_exp(k,method=:auto)
+function graph_sastre_exp(k,method=:auto)
     if (method == :auto)
         if (k<=4)
             method=:y1s;

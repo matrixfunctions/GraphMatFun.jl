@@ -116,7 +116,7 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
         if (graphname == :sid)
             (graph,cref)=graph_sid_exp(mult)
         elseif (graphname == :bbc)
-            (graph,cref)=graph_bbc_basic_exp(m)
+            (graph,cref)=graph_bbc_exp(m)
         elseif (graphname == :sastre)
             method=:y1s;
             if (m==6)
@@ -124,7 +124,7 @@ function init_state_mult!(state,graphname,mult;showmeta=false)
             elseif (m==8)
                 method=:z1ps
             end
-            (graph,cref)=graph_sastre_basic_exp(m,method)
+            (graph,cref)=graph_sastre_exp(m,method)
         end
 
         if (graphname in [:ps,:mono])
