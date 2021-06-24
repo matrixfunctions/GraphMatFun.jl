@@ -119,7 +119,7 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
     end
 
     # Series expansion of polynomial approximant p.
-    a=Polynomial(coeff)
+    papproximant=Polynomial(coeff)
 
     # (Truncated) series expansions of exp(-z) and log(1+z).
     expminusz=(-1).^(0:1:nterms)./factorial.(collect(big(0.):big(1.):nterms))
@@ -128,11 +128,14 @@ function compute_bwd_theta_exponential(graph::Compgraph{T};
     plogzplusone=Polynomial(logzplusone)
 
     # From exp(z+δ) ≈ p(z), approximate δ ≈ log((exp(-z) p(z)-1)+1).
-    b=Polynomial((pexpminusz * a).coeffs[1:nterms])
-    c=Polynomial((plogzplusone(b-1)).coeffs[1:nterms])
+    # The variables are as follows:
+    #    * pexpzpz: the coefficients of exp(-z) p(z)
+    #    * presult: the coefficients of log((exp(-z) p(z)-1)+1)
+    pexpzpz=Polynomial((pexpminusz * papproximant).coeffs[1:nterms])
+    presult=Polynomial((plogzplusone(pexpzpz-1)).coeffs[1:nterms])
 
     # Compute bound on |δ|.
-    bnd_bwd_err=Polynomial(abs.(c.coeffs))
+    bnd_bwd_err=Polynomial(abs.(presult.coeffs))
 
     # Find point where bound on relative backward error equals tolerance.
     e_bwd(z)=abs.(bnd_bwd_err(z))./abs.(z)
