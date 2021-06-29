@@ -20,4 +20,5 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/matrixfunctions/GraphMatFun.jl",
+    devbranch="main",
 )
