@@ -1,3 +1,4 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 GraphMatFun = "456a00ab-810a-4bbb-9f06-6bc08c0a1e82"
+NetworkOptions = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
