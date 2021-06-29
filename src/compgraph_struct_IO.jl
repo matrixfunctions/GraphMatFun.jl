@@ -28,7 +28,9 @@ These kwarg influence how the graph is stored:
 CGR format:
 
 Every line corresponds to a node / operation. The syntax is matlab compatible,
-although `gen_code` produces faster matlab code.
+although [`gen_code`](@ref) produces faster matlab code.
+
+See also [`export_compgraph`](@ref).
 
     """
 function export_compgraph(graph, fname; main_output=nothing,
@@ -113,6 +115,7 @@ end
 
 Reads a graph stored in the computation graph format (cgr) in the file `fname`.
 
+See also [`import_compgraph`](@ref).
     """
 function import_compgraph(fname)
     fname = abspath(fname)

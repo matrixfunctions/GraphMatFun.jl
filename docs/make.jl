@@ -1,3 +1,4 @@
+push!(LOAD_PATH, string(@__DIR__, "/.."))
 using GraphMatFun
 using Documenter
 
@@ -15,6 +16,11 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Manual" => [
+        "graph.md",
+        "generators.md",
+        "optim.md",
+        "code_gen.md",],
     ],
 )
 
