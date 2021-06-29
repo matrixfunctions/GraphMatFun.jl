@@ -333,11 +333,13 @@ function compress_graph_redundant!(graph,cref=[];compress_lincomb=true,verbose=f
     ismodified=true
     while ismodified
         ismodified=false
-        for (key,parents) in graph.parents # No need to check input nodes.
-            redundant_nodes=find_redundant_nodes(graph,key,compress_lincomb)
-            if !isempty(redundant_nodes)
-                merge_redundant_nodes!(graph,key,redundant_nodes,cref,verbose)
-                ismodified=true
+        for key in get_sorted_keys(graph) # No need to check input nodes.
+            if key in get_sorted_keys(graph) # Check that node is not removed
+                redundant_nodes=find_redundant_nodes(graph,key,compress_lincomb)
+                if !isempty(redundant_nodes)
+                    merge_redundant_nodes!(graph,key,redundant_nodes,cref,verbose)
+                    ismodified=true
+                end
             end
         end
     end
