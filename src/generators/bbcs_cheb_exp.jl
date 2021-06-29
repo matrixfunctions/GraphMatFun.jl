@@ -8,7 +8,7 @@ skew-Hermitian matrices using `k` matrix multiplications following the procedure
 in the reference.
 
 For `k` > 5 it resorts to scaling-and-squaring of the `k` = 5 graph.
-The graph is in the degopt format.
+The graph is in the degopt format, see [`graph_degopt`](@ref).
 
 Reference:
 

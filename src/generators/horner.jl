@@ -68,8 +68,8 @@ is evaluated as
      p(s) = a[1] + (αs)*(a[2] + (αs)*(... + (αs)*(a[n-1] + a[n]*(αs))...)),
 
 where α=`scaling`.
-However, the function uses a call to `graph_degopt`, resulting in more
-degrees of freedom in `crefs`. See also `graph_horner`.
+However, the function uses a call to [`graph_degopt`](@ref), resulting in more
+degrees of freedom in `crefs`. See also [`graph_horner`](@ref).
     """
 function graph_horner_degopt(a; scaling=1.0, input=:A)
 

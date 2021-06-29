@@ -50,7 +50,9 @@ end
 """
     graph=Compgraph(T,orggraph::Compgraph)
 
-Converts a graph such that the coefficients become type `T`. Note that `T` can be a `Number` but can be other objects with defined operations, or just `Any`.
+Converts a graph such that the coefficients become type `T`.
+Note that `T` can be a `Number` but can be other objects with defined
+operations, or just `Any`.
 
     """
 function Compgraph(T,orggraph::Compgraph)
@@ -67,9 +69,21 @@ function Compgraph(T,orggraph::Compgraph)
                      );
 end
 # Convenience helpers
+"""
+    bgraph=big(graph::Compgraph{T})
+
+Converts the coefficients of `graph` to type `big(T)` and returns `bgraph`,
+which is of type `Compgraph{big(T)}`.
+    """
 function big(orggraph::Compgraph{T}) where {T}
     return Compgraph(big(T),orggraph)
 end
+"""
+    cgraph=big(graph::Compgraph{T})
+
+Converts the coefficients of `graph` to type `complex(T)` and returns `cgraph`,
+which is of type `Compgraph{complex(T)}`.
+    """
 function complex(orggraph::Compgraph{T}) where {T}
     return Compgraph(complex(T),orggraph)
 end
@@ -211,14 +225,14 @@ function rename_node!(graph,src,dest,cref=Vector())
 end
 
 """
-    crefs=add_sum!(graph,node,c,nodelist,base_name=node)
+    cref=add_sum!(graph,node,c,nodelist,base_name=node)
 
 Adds a linear combination of more than two nodes, given
 in `nodelist::Vector`, with coefficients given in `c`.
 The `base_name` is temporary variables for the summing.
 The sum is stored in `node`.
 
-Returns cref list with references.
+Returns `cref` list with references.
 
 """
 function add_sum!(graph,node,c,nodelist,base_name=node)
@@ -504,6 +518,11 @@ end
 
 
 ## Misc helpers
+"""
+    T=eltpye(graph::Compgraph{T})
+
+Returns the type `T` of a `graph`.
+    """
 function eltype(graph::Compgraph{T}) where {T}
     return T
 end

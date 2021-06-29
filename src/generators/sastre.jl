@@ -6,7 +6,8 @@ export graph_sastre_exp, graph_sastre_poly, graph_sastre_yks_degopt
 
 Computes a polynomial evaluation approximating the exponential
 using `k` matrix multiplications following a `method` given
-in the reference. The schemes are embedded into `degop`-format.
+in the reference. The schemes are embedded into `degop`-format,
+see [`graph_degopt`](@ref).
 
 Methods are:
 * `:ps_degopt`, Paterson–Stockmeyer method embedded into `degopt`-format.

@@ -17,11 +17,15 @@ export eval_graph,eval_jac,eval_runerr
 Evaluates a graph in the value `x` which is typically a scalar value or a matrix. If `x` is a Vector, the values will be
 evaluated  elementwise.
 
-The `comporder` is a `Vector` of nodes specifying in which order the graph should be computed. By default `get_topo_order` is used.
+The `comporder` is a `Vector` of nodes specifying in which order the graph should
+be computed. By default [`get_topo_order`](@ref) is used.
 
-The `output` is an `Int` specifying which node should be considered as output. The output node is `graph.outputs[output]`.
+The `output` is an `Int` specifying which node should be considered as output.
+The output node is `graph.outputs[output]`.
 
-The `vals` is used to inspect contents other than the output inside the graph. Typically `vals` is a `Dict`. It will be modified to contain the computed nodes of the graph. If we wish to inspect node `X3`, we can initiate an empty dict as input:
+The `vals` is used to inspect contents other than the output inside the graph.
+Typically `vals` is a `Dict`. It will be modified to contain the computed nodes
+of the graph. If we wish to inspect node `X3`, we can initiate an empty dict as input:
 
 ```julia-repl
 julia> vals=Dict{Symbol,Any}();
@@ -148,11 +152,12 @@ end
 # is sum_i (Z(x_i)-f(x_i)) dZ(x_i)/dc, i.e., J^T times vector of residual
 # values r_i=Z(x_i)-f(x_i).
 """
-    J=eval_jac(graph,x, cref; vals=nothing,
+    J=eval_jac(graph, x, cref; vals=nothing,
                input=:A, output=size(graph.outputs,1))
 
-Computes Jacobian ```J = dZ(x_i)/dc```, with respect to the coefficients given in the vector `cref`, and
-points `x[1],...,x[end]`. See `eval_graph` for
+Computes Jacobian ```J = dZ(x_i)/dc```, with respect to the coefficients given
+in the vector `cref`, and
+points in `x`. See [`eval_graph`](@ref) for
  description of `vals` and `output`.
      """
 function eval_jac(graph, x, cref; vals=nothing,
@@ -237,7 +242,7 @@ end
                            add_relerr=eps())
 
 Provides the running error of the graph evaluated in `x`.
-See `eval_graph` for meaning of `vals` and `output`. The
+See [`eval_graph`](@ref) for meaning of `vals` and `output`. The
 kwarg `relerrs` is an anologous variable for the running
 error estimates in each node. The kwarg `mode`
 can be `:bounds`, `:rand`, `:estimate`, specifying

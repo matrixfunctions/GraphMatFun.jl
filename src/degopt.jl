@@ -82,7 +82,7 @@ end
 """
     grow!(degopt::Degopt)
 
-Increases the degopt by one multiplication without modifying the function values.
+Increases the [`Degopt`](@ref) by one multiplication without modifying the function values.
 
 """
 function grow!(degopt::Degopt{T}) where T
@@ -98,14 +98,14 @@ end
     (x,z)=get_degopt_crefs(k)
     (x,z)=get_degopt_crefs(graph)
 
-Retruns crefs related to `graph_degopt`. Specifically
+Retruns crefs related to [`graph_degopt`](@ref). Specifically
 `x` is a `Vector{Tuple{Vector{Tuple{Symbol,Int}},Vector{Tuple{Symbol,Int}}}}`
 such that `x[2][1]` corresponds to the coefficients of the left hand side of the
 multiplication
 
     B2=(α_2_1 *I + α_2_2 *A)(β_2_1 *I + β_2_2 *A)
 
-i.e., the crefs corresponding to `[α_2_1, α_2_2]`. See `graph_degopt`. Hence,
+i.e., the crefs corresponding to `[α_2_1, α_2_2]`. See [`graph_degopt`](@ref). Hence,
 `get_coeffs(graph,x[2][1])` returns the corresponding numerical values of the coefficients.
 
 """
@@ -152,7 +152,7 @@ end
 """
     scale!(degopt::Degopt,α)
 
-Effectively change a `Degopt` such that the input is scaled by `α`. If `p` is the original function, `p(α x)` will be the new function.
+Effectively change a [`Degopt`](@ref) such that the input is scaled by `α`. If `p` is the original function, `p(α x)` will be the new function.
 
 """
 function scale!(degopt::Degopt,α)
@@ -168,7 +168,7 @@ end
 """
     square!(degopt::Degopt)
 
-Effectively square a `Degopt` in the sense that the output is square. If `p` is the original function, `p(x)^2` will be the new function.
+Effectively square a [`Degopt`](@ref) in the sense that the output is square. If `p` is the original function, `p(x)^2` will be the new function.
 
 """
 function square!(degopt::Degopt)
@@ -189,11 +189,11 @@ function row1_normalize!(xx,a,b,c,d)
 end
 import LinearAlgebra.normalize!; # for overloading
 """
-    normalize!(degopt,tp=:row1)
+    normalize!(degopt::Degopt,tp=:row1)
 
-Normalizes the degopt coefficients, in the way specified by `tp`.
-If the `rp==:row1` the degopt will be transformed
-to an equivalent degopt with first row equal to `(0 1) (0 1)`.
+Normalizes the [`Degopt`](@ref) coefficients, in the way specified by `tp`.
+If the `rp==:row1` the `degopt` will be transformed
+to an equivalent [`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.
 
 """
 function normalize!(degopt::Degopt,tp=:row1)

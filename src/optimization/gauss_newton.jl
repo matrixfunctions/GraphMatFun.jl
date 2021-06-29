@@ -23,7 +23,7 @@ that are considered free variables and optimized.
 `input` is the label corresponding to the input node of the graph.
 The stepsize can be scaled with `γ0`.
 `linlsqr` and `droptol` determines how the inner linear least squares problem is
-solved; see `solve_linlsqr!`.
+solved; see [`solve_linlsqr!`](@ref).
 
     """
 function opt_gauss_newton!(graph, objfun, discr;

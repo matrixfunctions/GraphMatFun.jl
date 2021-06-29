@@ -17,8 +17,8 @@ to the values of `objfun`, in the points `discr`. Reference to the coefficients
 The variable `graph` is modified during the iterations and the function has no
 return value.
 
-See `opt_gauss_newton!` for a description the kwarg `errtype` and `input`,
-and `solve_linlsqr!` for the kwargs `linlsqr and `droptol`.
+See [`opt_gauss_newton!`](@ref) for a description the kwarg `errtype` and `input`,
+and [`solve_linlsqr!`](@ref) for the kwargs `linlsqr and `droptol`.
 
     """
 function opt_linear_fit!(graph, objfun, discr, linear_cref;
