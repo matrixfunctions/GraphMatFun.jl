@@ -29,12 +29,8 @@ LangC=Union{LangC_MKL,LangC_OpenBLAS}
 # https://docs.julialang.org/en/v1/manual/metaprogramming/#Code-Generation
 # to default to gen_main=false, overwrite_input=true
 for L in [:LangC_MKL, :LangC_OpenBLAS]
-    eval(quote
-             function $L(gen_main=false,overwrite_input=true)
-                 return $L(gen_main,overwrite_input)
-             end
-         end
-         )
+    @eval $L()=$L(false,true)
+    @eval $L(gen_main)=$L(gen_main,true)
 end
 
 

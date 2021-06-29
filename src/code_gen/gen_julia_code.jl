@@ -4,7 +4,7 @@ export LangJulia
 struct LangJulia
     overwrite_input # Overwrite input
     inline
-    dot_fusing  # Allow dot fusion
+    dot_fusing # Allow dot fusion
 end
 """
     LangJulia(overwrite_input=true,inline=true,dot_fusing=true)
@@ -13,9 +13,9 @@ Code generation in julia language, with optional overwriting of input,
 inlining the function and optional usage of dot fusion.
 
 """
-function LangJulia(overwrite_input=true,inline=true,dot_fusing=true)
-    return LangJulia(overwrite_input,inline,dot_fusing)
-end
+LangJulia()=LangJulia(true,true,true)
+LangJulia(overwrite_input)=LangJulia(overwrite_input,true,true)
+LangJulia(overwrite_input,inline)=LangJulia(overwrite_input,inline,true)
 
 
 
