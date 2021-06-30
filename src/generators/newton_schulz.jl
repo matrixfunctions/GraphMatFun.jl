@@ -20,7 +20,7 @@ intermediate steps.
 
 References:
 
-* Günther Schulz. Iterative Berechnung der reziproken Matrix. Z. Angew. Math. Mech., 13:57–59, 1933.
+* Günther Schulz. Iterative Berechnung der reziproken Matrix. Z. Angew. Math. Mech., 13:57–59, 1933. DOI: [10.1002/zamm.19330130111](https://doi.org/10.1002/zamm.19330130111)
 
 * N. J. Higham. Functions of Matrices. SIAM publications, Philadelphia, PA, 2008.
     """

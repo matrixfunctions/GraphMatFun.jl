@@ -41,7 +41,7 @@ References:
 
 * N. J. Higham. The Scaling and Squaring Method for the Matrix Exponential Revisited. SIAM J. Matrix Anal. Appl., 2005 26:4, 1179-1193
 
-* Julia's matrix exponential, at the time of conversion: https://github.com/JuliaLang/julia/blob/697e782ab86bfcdd7fd15550241fe162c51d9f98/stdlib/LinearAlgebra/src/dense.jl#L554
+* Julia's matrix exponential, [at the time of conversion](https://github.com/JuliaLang/julia/blob/697e782ab86bfcdd7fd15550241fe162c51d9f98/stdlib/LinearAlgebra/src/dense.jl#L554).
     """
 function graph_exp_native_jl(A; input=:A)
     T = eltype(A)

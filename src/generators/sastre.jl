@@ -27,7 +27,7 @@ The default option `method=:auto` will choose method according to the value of
 
 Reference:
 
-* Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
+* Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, DOI: [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
     """
 function graph_sastre_exp(k,method=:auto)
     if (method == :auto)
@@ -171,7 +171,7 @@ according to Example 3.1 in the reference.
 
 Reference:
 
-*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
+*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, DOI: [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
     """
 function graph_sastre_poly(b)
 # Equations (16) - (32)
@@ -247,7 +247,7 @@ For example, equations (57)-(59) are implemented as:
 
 Reference:
 
-*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, https://doi.org/10.1016/j.laa.2017.11.010
+*  Efficient evaluation of matrix polynomials, J. Sastre. Linear Algebra and its Applications ,Volume 539, 2018, Pages 229-250, DOI: [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
     """
 function graph_sastre_yks_degopt(k,s,c)
     T=eltype(eltype(eltype(c)))
