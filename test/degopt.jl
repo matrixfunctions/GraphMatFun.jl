@@ -59,4 +59,9 @@ using LinearAlgebra
     @test eval_graph(g8,pi) ≈ eval_graph(g1,pi)
 
 
+    # get_degopt_coeff
+    (HA,HB,y)=get_degopt_coeffs(g8);
+    (g9,_)=graph_degopt(Degopt(HA,HB,y))
+    @test eval_graph(g8,pi) == eval_graph(g9,pi)
+
 end

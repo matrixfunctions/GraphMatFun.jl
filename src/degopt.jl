@@ -1,5 +1,5 @@
 # Degree optimal polynomials
-export Degopt, grow!, get_degopt_crefs, scale!, square!, get_hess;
+export Degopt, grow!, get_degopt_crefs, scale!, square!, get_degopt_coeffs;
 
 struct Degopt{T}
     x::Vector{Tuple{Vector{T},Vector{T}}}
@@ -225,17 +225,24 @@ function normalize!(degopt::Degopt,tp=:row1)
     end
 end
 
-function get_hess(degopt::Degopt)
+"""
+    get_degopt_coeffs(degopt) -> (HA,HB,y)
+    get_degopt_coeffs(graph) -> (HA,HB,y)
 
+Returns the coefficients of the degree-optimal
+polynomial using two matrices and one vectors as described
+in [`Degopt`](@ref).
+"""
+function get_degopt_coeffs(degopt::Degopt)
     p=size(degopt.x,1);
     T=eltype(degopt.y)
-    HA=zeros(T,p,p);
-    HB=zeros(T,p,p);
-
+    HA=zeros(T,p,p+1);
+    HB=zeros(T,p,p+1);
     for i=1:p
         HA[i,1:(i+1)]=degopt.x[i][1]
         HB[i,1:(i+1)]=degopt.x[i][2]
     end
-    return (HA,HB);
-
+    y=degopt.y
+    return (HA,HB,y);
 end
+get_degopt_coeffs(graph::Compgraph) = deg_degopt_coeffs(Degopt(graph));
