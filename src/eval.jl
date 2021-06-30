@@ -333,34 +333,6 @@ function error_prop!(graph, relerrs, nodeval::AbstractVector, parentval1::Abstra
     relerrs[node] = relerrs[node] .+ add_relerr
     return nothing
 end
-function error_prop!(graph, relerrs, nodeval::AbstractMatrix, parentval1::AbstractMatrix, parentval2::AbstractMatrix, node, mode, add_relerr)
-    # Matrices
-    op=graph.operations[node]
-    parent1 = graph.parents[node][1]
-    parent2 = graph.parents[node][2]
-    if (op==:mult) || (op==:ldiv)
-        relerrs[node]=NaN # TODO: The formula is more complicated
-    elseif (op==:lincomb)
-        if (mode == :rand || mode == :estimate)
-            relerrs[node]=NaN # TODO: A signed scalar value representing the error
-        else
-            valnorm=norm(nodeval)
-            if (valnorm==0)
-                valnorm=eps(BigFloat)*100 # Hack to avoid division by zero
-            end
-            relerrs[node]=(norm(parentval1)*relerrs[parent1]
-                        + norm(parentval2)*relerrs[parent2])/valnorm
-        end
-    else
-        error("Unknown operation")
-    end
-    if (mode == :rand)
-        relerrs[node]=(1-2*rand())*relerrs[node] #NOTE: Okey like this if scalars
-    end
-    # Introduce round-off errors.
-    relerrs[node] = relerrs[node] + add_relerr
-    return nothing
-end
 
 # Initiate the Dict relerr with different types via dispatch. Create if needed
 function init_relerrs_eval_runerr!(relerrs, T, x, add_relerr, input)
