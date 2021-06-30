@@ -21,6 +21,7 @@ makedocs(;
         "generators.md",
         "optim.md",
         "code_gen.md",],
+        "Index" => "docidx.md",
     ],
 )
 
