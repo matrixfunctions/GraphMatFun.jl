@@ -245,4 +245,4 @@ function get_degopt_coeffs(degopt::Degopt)
     y=degopt.y
     return (HA,HB,y);
 end
-get_degopt_coeffs(graph::Compgraph) = deg_degopt_coeffs(Degopt(graph));
+get_degopt_coeffs(graph::Compgraph) = get_degopt_coeffs(Degopt(graph));
