@@ -506,12 +506,9 @@ function eltype(graph::Compgraph{T}) where {T}
     return T
 end
 
-"""
-    children=get_children(graph,node)
 
-Returns the (direct) children of `node`.
-
-    """
+#     children=get_children(graph,node)
+# Returns the (direct) children of `node`.
 function get_children(graph,node)
     c=Vector{Symbol}()
     for (child,parents) in graph.parents
