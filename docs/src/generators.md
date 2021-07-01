@@ -2,7 +2,7 @@
 # Built-in graphs
 
 ## Polynomails
-Standard evaluation shcemes such as monomial evaluation (([`graph_monomial`](@ref))), Horner evaluation (([`graph_horner`](@ref))) and Paterson--Stockmeyer (([`graph_ps`](@ref))) are available. There are also the degree-optimal polynomials (([`Degopt`](@ref))) described in the next section.
+Standard evaluation shcemes such as monomial evaluation ([`graph_monomial`](@ref)), Horner evaluation ([`graph_horner`](@ref)) and Paterson--Stockmeyer ([`graph_ps`](@ref)) are available. There are also the degree-optimal polynomials ([`Degopt`](@ref)) described in the next section.
 ```@docs
 graph_monomial
 graph_monomial_degopt
