@@ -1,4 +1,4 @@
-# Degree optimal polynomials
+# Degree-optimal polynomials
 export Degopt, grow!, get_degopt_crefs, scale!, square!, get_degopt_coeffs;
 
 struct Degopt{T}
@@ -18,7 +18,7 @@ end
     end
 
 
-Creates an object representing a degree optimal polynomial, i.e., the coefficients in an evaluation scheme which maximizes the degree for a fixed number of multiplications. The object represents the coefficients in
+Creates an object representing a degree-optimal polynomial, i.e., the coefficients in an evaluation scheme which maximizes the degree for a fixed number of multiplications. The object represents the coefficients in
 
 
     A0=I

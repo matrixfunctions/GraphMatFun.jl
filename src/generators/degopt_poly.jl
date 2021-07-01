@@ -117,7 +117,7 @@ end
 """
     order=get_topo_order_degopt(k)
 
-A special implementation of [`get_topo_order`](@ref) for degree optimal polynomials
+A special implementation of [`get_topo_order`](@ref) for degree-optimal polynomials
 generated with [`graph_degopt`](@ref). The natural order of computation is to compute
 row by row. See also [`get_degopt_crefs`](@ref).
 
