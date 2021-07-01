@@ -283,33 +283,6 @@ function del_node!(graph,node)
     return nothing
 end
 
-# Add an artificial node defined as:
-#   :ArtificialX = 1.0 * output[end] + 0.0 * node
-# sets the output to :ArtificialX. This modification
-# does not change the input-output relation of the graph.
-# Returns the symbol of the new node.
-function add_artificial!(graph,node)
-    key=:None
-    for k=1:100
-        tkey=Symbol("Artificial$k");
-        if (!haskey(graph.parents,tkey))
-            key=tkey;
-            break
-        end
-    end
-    if (key==:None)
-        error("No new Artificial key slot found");
-    end
-    if (node==key)
-        error("Cannot add an artificial node it itself")
-    end
-
-    # Set to eps() to make it not disappear in plotting
-    add_lincomb!(graph,key,1.0,graph.outputs[end],eps(),node)
-    graph.outputs[end]=key
-    return key
-end
-
 function check_node_name_legality(graph,node)
     nodestr = String(node)
     re1 = r"^output[0-9]*$"
