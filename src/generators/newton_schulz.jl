@@ -61,7 +61,7 @@ using the recursion
     V_{i+1}=V_i*(2*I-Z_i).
 
 The function makes a call to [`graph_degopt`](@ref), resulting in more
-degrees of freedom in `crefs`. See also `graph_newton_schulz`.
+degrees of freedom in `crefs`. See also [`graph_newton_schulz`](@ref).
 
     """
 function graph_newton_schulz_degopt(k, T=ComplexF64; input=:A)

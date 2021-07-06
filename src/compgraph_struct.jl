@@ -132,7 +132,9 @@ end
 """
     add_output!(graph,node)
 
-Adds an output `node` to the graph.
+Adds `node` to the bottom of the list of outputs of the graph.
+
+See also [`eval_graph`](@ref), [`eval_jac`](@ref), and [`eval_runerr`](@ref).
     """
 function add_output!(graph,node)
     # TODO: Add this?
@@ -166,9 +168,9 @@ end
 """
     rename_node!(graph,src,dest,cref=Vector())
 
-This changes the name of the node `src` to `dest` and updating
-all references to the node including coefficient
-references in `cref`.
+This changes the name of the node `src` to `dest` and updates
+all references to the node, including coefficient
+references in `cref` and `graph.outputs`.
     """
 function rename_node!(graph,src,dest,cref=Vector())
     if src == dest
@@ -272,8 +274,10 @@ end
 """
     del_node!(graph,node)
 
-Deletes a node from the graph, and all data associated with it, except
+Deletes `node` from the graph, and all data associated with it, except
 for `graph.outputs`.
+
+See [`del_output!`](@ref).
     """
 function del_node!(graph,node)
     delete!(graph.parents,node)
