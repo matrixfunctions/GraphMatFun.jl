@@ -30,7 +30,14 @@ get_topo_order_degopt
 graph_sastre_yks_degopt
 ```
 
+## Rational functions
+```@docs
+graph_rational
+```
+
 ## Matrix exponential
+One of the most important matrix functions is the matrix exponential.
+The package contains graph-representations for several of the state-of-the-art evaluation schemes.
 ```@docs
 graph_exp_native_jl
 graph_exp_native_jl_degopt
@@ -42,7 +49,6 @@ graph_bbcs_cheb_exp
 
 ## Other matrix functions and iterations
 ```@docs
-graph_rational
 graph_denman_beavers
 graph_newton_schulz
 graph_newton_schulz_degopt

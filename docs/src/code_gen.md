@@ -1,7 +1,11 @@
 
 # Code generation and efficiency
+While the graph can be evaluated with [`eval_graph`](@ref), the ideal way to utilize a good graph is
+to produce efficient code. Currently code generation to [Julia](https://julialang.org/), [Matlab](http://matlab.com), and [C](https://www.iso.org/standard/74528.html) is supported.
 
 ## Improving graph topology
+The [`Compgraph`](@ref) is a general framework, and sometimes the topology can be improved.
+This is especially important before code generation.
 ```@docs
 extract_sums
 has_trivial_nodes

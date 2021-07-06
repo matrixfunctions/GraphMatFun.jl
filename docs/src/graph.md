@@ -1,5 +1,12 @@
 
 # Graphs and their manipulation
+
+    
+## The computational graph -- Compgraph
+
+The computational graph is represented by a struct `Compgraph{T}`, where `T` is the type of the coefficients.
+Each node in the graph is represented by a `Symbol`, and these node-IDs need to be unique for every node.
+
 ```@docs
 Compgraph
 ```
