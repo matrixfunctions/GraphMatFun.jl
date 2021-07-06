@@ -335,15 +335,15 @@ function get_all_cref(graph)
 end
 
 """
-    v=extract_sums(graph)
+    sums=extract_sums(graph::Compgraph{T})
 
-::Vector{Tuple{Vector{Float64},Vector{Symbol},Vector{Symbol}}}`
+`sums::Vector{Tuple{Vector{T},Vector{Symbol},Vector{Symbol}}}`
 
 Returns a representation of sums in `graph` which may potentially be merged.
 The vector `sums` contains a tuple for each of these sums. The three entries of
 the tuple are:
 
-* a vector of `Float64` values that represent the coefficients of the summands;
+* a vector of `T` values that represent the coefficients of the summands;
 * a vector of `Symbol`s that correspond to the summands; and
 * a vector of intermediate `Symbol`s (i.e, nodes) that can be merged.
 
