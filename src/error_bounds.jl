@@ -5,9 +5,15 @@ export compute_fwd_theta
 export compute_bwd_theta_exponential
 
 """
-    get_polynomial(graph::Compgraph)
+    p = get_polynomial(graph::Compgraph)
 
-Return the polynomial underlying the computational graph.
+Return the polynomial underlying the computational `graph`.
+The `graph` is assumed to involve only linear combinations and multiplications.
+
+`p` is polynomial of type `Polynomial` from the package
+[`Polynomials.jl`](https://juliamath.github.io/Polynomials.jl/stable/).
+
+See also [`get_polynomial_coefficients`](@ref).
 """
 function get_polynomial(graph::Compgraph)
     graph=Compgraph(Any, graph); # Allow for symbolic values
@@ -16,11 +22,15 @@ function get_polynomial(graph::Compgraph)
 end
 
 """
-    get_polynomial_coefficients(graph::Compgraph)
+    c = get_polynomial_coefficients(graph::Compgraph)
 
-Return the coefficients of the polynomial underlying the computational graph.
-The coefficients are expressed in the monomial basis and sorted from the
-leading coefficient to the constant term.
+Return the coefficients of the polynomial underlying the computational `graph`.
+The `graph` is assumed to involve only linear combinations and multiplications.
+
+The coefficients `c` is a vector containing the coefficients as expressed in
+the monomial basis and sorted from the leading coefficient to the constant term.
+
+See also [`get_polynomial`](@ref).
 """
 function get_polynomial_coefficients(graph::Compgraph)
     return get_polynomial(graph).coeffs

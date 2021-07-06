@@ -74,6 +74,8 @@ end
 
 Converts the coefficients of `graph` to type `big(T)` and returns `bgraph`,
 which is of type `Compgraph{big(T)}`.
+
+See also [`Compgraph(T,orggraph::Compgraph)`](@ref).
     """
 function big(orggraph::Compgraph{T}) where {T}
     return Compgraph(big(T),orggraph)
@@ -83,6 +85,8 @@ end
 
 Converts the coefficients of `graph` to type `complex(T)` and returns `cgraph`,
 which is of type `Compgraph{complex(T)}`.
+
+See also [`Compgraph(T,orggraph::Compgraph)`](@ref).
     """
 function complex(orggraph::Compgraph{T}) where {T}
     return Compgraph(complex(T),orggraph)
@@ -107,6 +111,8 @@ end
 
 The operation `α1*p1+α2*p2` is added to the graph.
 The result is stored in node `node`.
+
+See also [`add_sum!`](@ref).
     """
 function add_lincomb!(graph,node,α1,p1,α2,p2)
     check_node_name_legality(graph,node)
