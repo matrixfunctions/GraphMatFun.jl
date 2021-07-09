@@ -72,3 +72,16 @@ julia> get_polynomial_coefficients(graph)
  4.0
  1.0
 ```
+
+
+## How do I cite it?
+
+We are finalizing a software paper for this work.
+If you find this software useful please cite it by using this citation data:
+```bibtex
+@Misc{,
+  author = {E. Jarlebring and M. Fasi and E. Ringh},
+  title  = {Computational graphs for matrix functions},
+  year   = {2021},
+}
+```
