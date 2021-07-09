@@ -104,6 +104,11 @@
         err1=eval_graph(big(graph),big(x))-exp(big(x))
         err2=eval_graph(big(graph),big(x)/α)-exp(big(x)/α)
         @test -log(abs(err2/err1))/log(α) > p7sid+1
+
+        # Test scaling and squaring
+        x=6.5
+        (graph,cref)=graph_sid_exp(8)
+        @test abs(eval_graph(big(graph),big(x))-exp(big(x))) < 5e2*eps()
     end
 
 
