@@ -13,6 +13,7 @@ using Test
     include("gauss_newton.jl")
     include("graph_ops.jl")
     include("import_export.jl")
+    include("jac.jl")
     include("linear_fit.jl")
     include("merge_graphs.jl")
     include("newton_schulz.jl")
