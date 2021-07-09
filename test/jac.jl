@@ -12,7 +12,6 @@
 
     x = randn(5)
     @test eval_graph(graph,x) ≈ (c[1] .+ c[2]*x) .* (c[3] .+ c[4]*x) ./ (c[5] .+ c[6]*x)
-    println(get_all_cref(graph))
 
     dg_dc3 = eval_jac(graph,x,(:B2, 1))
     @test dg_dc3 ≈ (c[1] .+ c[2]*x) ./ (c[5] .+ c[6]*x)
