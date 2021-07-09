@@ -93,9 +93,9 @@ using Polynomials
 
     x = Polynomial("x")
     CC = coeffs(eval_graph(Compgraph(Any,graph),x))
-    t = (CC[17]-1/factorial(16))*factorial(16) -(-0.454) # (60)
+    t = (CC[17]-1/factorial(big(16)))*factorial(big(16)) -(-0.454) # (60)
     @test (abs(t) < 1e-3) && (abs(t) > 1e-4) # (60)
-    @test all(abs.((CC .* factorial.(0:16))[1:16] .- 1) .<= 2e-15)
+    @test all(abs.((CC .* factorial.(big.(0:16)))[1:16] .- 1) .<= 2e-15)
 
     # 2: By constructing an onw polynomial of the form y_33
     c1  = 1.1e-2;    c2  = 1.2e-2;    c3  = 1.3e-2;    c4  = 1.4e-2
