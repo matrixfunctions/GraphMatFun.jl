@@ -2,8 +2,8 @@ using Polynomials,Roots
 export get_polynomial
 export get_polynomial_coefficients
 export compute_fwd_theta
-export compute_bnd_rel_bwd_err_exp
-export compute_bwd_theta_exp
+export compute_bnd_rel_bwd_err
+export compute_bwd_theta
 
 """
     p = get_polynomial(graph::Compgraph)
@@ -47,7 +47,7 @@ Return relative forward error and corresponding theta for approximation to `f`.
 
 The first output ``e_{fwd}`` is the function that computes the relative forward
 error``e_{fwd}(z)=|f(z) - p(z)| / |z|``, where ``p`` is the polynomial
-underlying the computational graph `graph`. This is meaningful only if ``p`` is
+underlying the computational graph `graph`. This is meaningful only if ``p``
 approximates ``f`` in some sense.
 
 The second output ``θ`` is the largest positive real number such that
@@ -81,28 +81,34 @@ function compute_fwd_theta(graph::Compgraph{T},f;
 end
 
 """
-    e_bwd=compute_bnd_relative_error(graph::Compgraph{T},
+    e_bwd=compute_bnd_relative_error(f, graph::Compgraph{T},
                                      numterms=100,
                                      numdigits=100,
                                      coefftype=T) where T
 
-Compute a bound on the relative backward error of the exponential.
+Compute a bound on the relative backward error of the function `f`.
 
 The returned function ``e_{bwd}`` is a bound on the relative backward error of
 the polynomial underlying the computational graph `graph`, seen as an
-approximant to the exponential. For the underlying polynomial ``p``, the
-function returns a bound on `|δ|` where `δ` is such that exp(z+δ) = p(z).
+approximant to `f`. For the underlying polynomial ``p``, the
+function returns a bound on `|δ|` where `δ` is such that ``f(z+δ) = p(z)``.
 
-The bound is computed by means of the identity δ = log((exp(-z) p(z)-1)+1). The
-code computes the series expansion of the right-hand side of the equation,
-truncates it to the first `numterms` coefficients, bounds each coefficient of the
-ensuing polynomial with its absolute value. The computation uses `numdigits`
-digits of precision.
+The first argument `f` is a symbol. Currently supported values include:
+
+- `:exp` The bound is computed by means of the identity δ = log((exp(-z)
+p(z)-1)+1). The code computes the series expansion of the right-hand side of the
+equation, truncates it to the first `numterms` coefficients, bounds each
+coefficient of the ensuing polynomial with its absolute value. The computation
+uses `numdigits` digits of precision.
+
 """
-function compute_bnd_rel_bwd_err_exp(graph::Compgraph{T};
-                                     coefftype=T,
-                                     numterms=100,
-                                     numdigits=100) where T
+function compute_bnd_rel_bwd_err(f, graph::Compgraph{T};
+                                 coefftype=T,
+                                 numterms=100,
+                                 numdigits=100) where T
+    if f != :exp
+        error("Currently :exp is the only supported function.")
+    end
     # Set precision to numdigits decimal digits.
     setprecision(Integer(ceil(log2(10. ^numdigits))));
 
@@ -139,26 +145,27 @@ function compute_bnd_rel_bwd_err_exp(graph::Compgraph{T};
 end
 
 """
-    (e_bwd,theta)=compute_bwd_theta_exp(graph::Compgraph{T},
-                                                numterms=100,
-                                                numdigits=100,
-                                                coefftype=T,
-                                                tolerance=eps(coefftype)/2,
-                                                theta_init=big"0.1",
-                                                use_log=false) where T
+    (e_bwd,theta)=compute_bwd_theta(graph::Compgraph{T},
+                                    numterms=100,
+                                    numdigits=100,
+                                    coefftype=T,
+                                    tolerance=eps(coefftype)/2,
+                                    theta_init=big"0.1",
+                                    use_log=false) where T
 
-    (e_bwd,theta)=compute_bwd_theta_exp(bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph),
-                                                tolerance=eps(coefftype)/2,
-                                                theta_init=big"0.2"
-                                                use_log=false) where T
+    (e_bwd,theta)=compute_bwd_theta(bnd_rel_err=compute_bnd_rel_bwd_err(:exp,
+                                                                        graph),
+                                    tolerance=eps(coefftype)/2,
+                                    theta_init=big"0.2"
+                                    use_log=false) where T
 
-Bound on relative backward error of the exponential with corresponding theta.
+Compute bound on relative backward error with corresponding theta.
 
 The first output ``e_{bwd}`` is a function that returns a bound on the relative
 backward error of the polynomial underlying the computational graph `graph`,
 seen as an approximant to the exponential. For the underlying polynomial ``p``,
 the function returns a bound on `|δ|` where `δ` is such that exp(z+δ) = p(z).
-This function is computed using `compute_bnd_rel_bwd_err_exp`.
+This function is computed using `compute_bnd_rel_bwd_err(:graph)`.
 
 The second output ``θ`` is the largest positive real number such that
 ``e_{bwd}(θ) ≤ tolerance``, where ``tolerance`` is by default the unit roundoff
@@ -171,17 +178,18 @@ value set to `theta_init`. By default this root-finding procedure uses
 high-precision arithmetic.
 
 If the kwarg `use_log` is set to `true`, then the value of ``theta`` is computed
-by approximating a solution to the equation ``log(e_{bwd}(z)) =
-log(tolerance)`` instead.
+by approximating a solution to the equation ``log(e_{bwd}(z)) = log(tolerance)``
+instead.
 
-The alternative form of the function accepts a function that returns a bound on
-the relative backward error. By default, the function is constructed with
-`compute_bnd_rel_bwd_err_exp` and the default values for the kwargs in the first form.
+The alternative form accepts a function that returns a bound on the relative
+backward error. By default, the function is constructed with
+`compute_bnd_rel_bwd_err(:exp, ...)` and the default values for the kwargs in
+the first form.
 """
-function compute_bwd_theta_exp(;bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph),
-                               tolerance=eps(coefftype)/2,
-                               theta_init=big"0.2",
-                               use_log=false) where T
+function compute_bwd_theta(;bnd_rel_err=compute_bnd_rel_bwd_err(:exp, graph),
+                           tolerance=eps(coefftype)/2,
+                           theta_init=big"0.2",
+                           use_log=false) where T
     # Find point where bound on relative backward error equals tolerance.
     e_bwd=bnd_rel_err
     h(z)=use_log ? log(e_bwd(z)/tolerance) : e_bwd(z) - tolerance
@@ -190,18 +198,18 @@ function compute_bwd_theta_exp(;bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph),
     return e_bwd,theta_bwd
 end
 
-function compute_bwd_theta_exp(graph::Compgraph{T};
-                               coefftype=T,
-                               numterms=100,
-                               numdigits=100,
-                               tolerance=eps(coefftype)/2,
-                               theta_init=big"0.2",
-                               use_log=false) where T
-    return compute_bwd_theta_exp(bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph;
-                                                                         coefftype=coefftype,
-                                                                         numterms=numterms,
-                                                                         numdigits=numdigits),
-                                 tolerance=tolerance,
-                                 theta_init=theta_init,
-                                 use_log=use_log)
+function compute_bwd_theta(graph::Compgraph{T};
+                           coefftype=T,
+                           numterms=100,
+                           numdigits=100,
+                           tolerance=eps(coefftype)/2,
+                           theta_init=big"0.2",
+                           use_log=false) where T
+    return compute_bwd_theta(bnd_rel_err=compute_bnd_rel_bwd_err(:exp, graph;
+                                                                 coefftype=coefftype,
+                                                                 numterms=numterms,
+                                                                 numdigits=numdigits),
+                             tolerance=tolerance,
+                             theta_init=theta_init,
+                             use_log=use_log)
 end
