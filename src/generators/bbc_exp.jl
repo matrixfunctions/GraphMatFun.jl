@@ -159,32 +159,8 @@ function graph_bbc_exp(k;T=Float64)
         (graph,cref)=graph_degopt(xv,y);
 
     elseif (k==6)
-
-        # Coefficients unknwn
-        t0=0.1;
-        println("k=6 for BBC the coefficients are not documented. Setting unknown to t0=$(t0).");
-        v1=[0;1;                 0;1.0];
-        v2=[0;1;0;               0;0;1.0];
-        v3=[0;0;1;0;             0;0;0;1.0];
-        v4=[0;0;0;0;1;           0;0;0;0;1.0];
-
-        v1a=[0;1.0];
-        v1b=[0;1.0];
-        v2a=[0; 1.0; 0.0];
-        v2b=[0; 0;   1.0];
-        v3a=[0; 0;     0; 1.0];
-        v3b=[0; 0;     0; 1.0];
-        v4a=[0; 0; 0;     0; 1.0];
-        v4b=[0; 0; 0;     0; 1.0];
-
-
-        v5a=t0*ones(6);
-        v5b=copy(v5a);
-        v6a=t0*ones(7);
-        v6b=copy(v6a);
-        y=t0*ones(8);
-        xv=[(v1a,v1b); (v2a,v2b); (v3a,v3b); (v4a,v4b); (v5a,v5b); (v6a,v6b)];
-        (graph,cref)=graph_degopt(xv,y);
+        # Coefficients unknown
+        error("k=6 for BBC the coefficients are not documented.");
     else
         error("Incorrect k");
     end
