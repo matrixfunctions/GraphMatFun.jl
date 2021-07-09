@@ -255,7 +255,7 @@ function eval_runerr(graph, x; vals=nothing, relerrs=nothing,
                      mode=:bounds, # Can be :bounds, :rand, :estimate
                      add_relerr=eps())
     T = promote_type(eltype(x),eltype(graph))
-    comporder = get_topo_order(graph,input)[1]
+    comporder = get_topo_order(graph;input=input)[1]
     if vals==nothing
         vals = init_vals_eval_graph!(graph, x, vals, input)
         eval_graph(graph, x, vals=vals,
