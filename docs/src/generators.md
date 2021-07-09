@@ -1,8 +1,8 @@
 
 # Built-in graphs
 
-## Polynomails
-Standard evaluation shcemes such as monomial evaluation ([`graph_monomial`](@ref)), Horner evaluation ([`graph_horner`](@ref)) and Paterson--Stockmeyer ([`graph_ps`](@ref)) are available. There are also the degree-optimal polynomials ([`Degopt`](@ref)) described in the next section.
+## Polynomials
+Standard evaluation schemes such as monomial evaluation ([`graph_monomial`](@ref)), Horner evaluation ([`graph_horner`](@ref)) and Paterson--Stockmeyer ([`graph_ps`](@ref)) are available. There are also the degree-optimal polynomials ([`Degopt`](@ref)) described in the next section.
 ```@docs
 graph_monomial
 graph_monomial_degopt
@@ -14,7 +14,7 @@ graph_sastre_poly
 ```
 
 
-## Degree-optimal polynomails
+## Degree-optimal polynomials
 The degree-optimal polynomial is a multiplication-economic scheme for evaluating polynomials.
 It has the possibility to reach the highest attainable degree possible for a fixed number of multiplications, i.e., degree equal to ``2^m`` with ``m`` multiplication. However, the set of degree-optimal polynomials does not span the whole set of polynomials of degree less than or equal to ``2^m``. Provided [optimization techniques](optim.md) are therefore useful to achieve good approximations.
 ```@docs
