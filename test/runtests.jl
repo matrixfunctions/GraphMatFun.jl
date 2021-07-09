@@ -20,5 +20,6 @@ using Test
     include("polynomials_degopt.jl");
     include("polynomials.jl");
     include("rational.jl");
+    include("sastre.jl");
     include("topo_order.jl");
 end
