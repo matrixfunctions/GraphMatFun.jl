@@ -11,7 +11,7 @@ for working with computational [graphs](https://en.wikipedia.org/wiki/Graph_(abs
 
 ## Installation
 
-The latest release of the package can be installed as 
+The latest release of the package can be installed as
 ```julia-repl
 julia> ]
 (v1.6) pkg> add GraphMatFun
@@ -22,7 +22,7 @@ julia> using GraphMatFun
 ```
 
 
-## Building a frist graph
+## Building a first graph
 
 Consider the following polynomial,
 ```math
