@@ -2,10 +2,10 @@ using Polynomials
 
 @testset "Sastre" begin
 
+    α = big(1.2)
 
     ## Test approximation of exponential and number of multiplications
-    for (k,Ak,m) = [(0,0.0001,:ps_degopt), (1,0.001,:ps_degopt), (2,0.1,:ps_degopt), (3,1.1,:y1s), (4,2.9,:y1s), (6,5.1,:h2m), (8,16.5,:z1ps)] # Where do I find these limits?
-        A = randn(100,100)/20 * Ak
+    for (k,dk,Ak,m) = [(0,1,0.0001,:ps_degopt), (1,2,0.001,:ps_degopt), (2,4,0.1,:ps_degopt), (3,8,1.1,:y1s), (4,12,2.9,:y1s), (6,16,5.1,:h2m), (8,30,16.5,:z1ps)] # Where do I find these limits?
         for i = 1:2
             @testset "k = $k, and i=$i" begin
                 if i == 1
@@ -13,7 +13,9 @@ using Polynomials
                 else
                     (graph,cref) = graph_sastre_exp(k,:auto)
                 end
-                @test eval_graph(graph,A) ≈ exp(A)
+                err1=eval_graph(graph,big(Ak))-exp(big(Ak))
+                err2=eval_graph(graph,big(Ak)/α)-exp(big(Ak)/α)
+                @test -log(abs(err2/err1))/log(α) > dk+1
                 @test sum(values(graph.operations) .== :mult) == k
             end
         end
@@ -58,9 +60,16 @@ using Polynomials
     (graphp,_) =  graph_sastre_poly([bp0,bp1,bp2,bp3,bp4,bp5,bp6,bp7,bp8])
     v1 = eval_graph(graph,A)
     vp1 = eval_graph(graphp,A)
-
     @test v1*vp1 + β0*I ≈ eval_graph(graph_exp,A)
-    @test v1*vp1 + β0*I ≈ exp(A)
+
+    v1 = eval_graph(graph,big(5.3))
+    vp1 = eval_graph(graphp,big(5.3))
+    err1= (v1*vp1 + β0*I) -exp(big(5.3))
+
+    v1 = eval_graph(graph,big(5.3)/α)
+    vp1 = eval_graph(graphp,big(5.3)/α)
+    err2= (v1*vp1 + β0*I) -exp(big(5.3)/α)
+    @test -log(abs(err2/err1))/log(α) > 16+1
 
 
 
@@ -90,8 +99,9 @@ using Polynomials
     ]
 
     (graph,cref)=graph_sastre_yks_degopt(2,2,c)
-    A = randn(100,100)/20 * 3.1
-    @test eval_graph(graph,A) ≈ exp(A)
+    err1=eval_graph(graph,big(3.1))-exp(big(3.1))
+    err2=eval_graph(graph,big(3.1)/α)-exp(big(3.1)/α)
+    @test -log(abs(err2/err1))/log(α) > 15+1
 
     x = Polynomial("x")
     CC = coeffs(eval_graph(Compgraph(Any,graph),x))
