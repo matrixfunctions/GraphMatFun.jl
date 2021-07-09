@@ -144,15 +144,13 @@ end
                                                 numdigits=100,
                                                 coefftype=T,
                                                 tolerance=eps(coefftype)/2,
-                                                theta_init=big"0.1") where T
+                                                theta_init=big"0.1",
+                                                use_log=false) where T
 
-    (e_bwd,theta)=compute_bwd_theta_exp(bnd_rel_err=
-                                                    compute_bnd_rel_bwd_err_exp(graph;
-                                                                            coefftype=coefftype,
-                                                                            numterms=numterms,
-                                                                            mitigates=100),
+    (e_bwd,theta)=compute_bwd_theta_exp(bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph),
                                                 tolerance=eps(coefftype)/2,
-                                                theta_init=big"0.2") where T
+                                                theta_init=big"0.2"
+                                                use_log=false) where T
 
 Bound on relative backward error of the exponential with corresponding theta.
 
@@ -167,27 +165,29 @@ The second output ``θ`` is the largest positive real number such that
 of the data type `coefftype`, which in turn defaults to the type of the
 coefficients of `graph`.
 
-The value of ``theta`` is approximated by using the built-in function `fzero`
-with starting value set to `theta_init`. By default this root-finding procedure
-uses high-precision arithmetic.
+The value of ``theta`` is estimated by approximately solving the equation
+``e_{bwd}(z) = tolerance``, using the built-in function `fzero` with starting
+value set to `theta_init`. By default this root-finding procedure uses
+high-precision arithmetic.
+
+If the kwarg `use_log` is set to `true`, then the value of ``theta`` is computed
+by approximating a solution to the equation ``log(e_{bwd}(z)) =
+log(tolerance)`` instead.
 
 The alternative form of the function accepts a function that returns a bound on
 the relative backward error. By default, the function is constructed with
 `compute_bnd_rel_bwd_err_exp` and the default values for the kwargs in the first form.
-
 """
-function compute_bwd_theta_exp(bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph;
-                                                                       coefftype=coefftype,
-                                                                           numterms=numterms,
-                                                                           numdigits=100),
-                                       tolerance=eps(coefftyp)e/2,
-                                       theta_init=big"0.2") where T
+function compute_bwd_theta_exp(;bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph),
+                               tolerance=eps(coefftype)/2,
+                               theta_init=big"0.2",
+                               use_log=false) where T
     # Find point where bound on relative backward error equals tolerance.
     e_bwd=bnd_rel_err
-    h(z)=e_bwd(z) - tolerance
+    h(z)=use_log ? log(e_bwd(z)/tolerance) : e_bwd(z) - tolerance
     theta_bwd=fzero(h, theta_init)
 
-    return e_bwd,convert(coefftype,theta_bwd)
+    return e_bwd,theta_bwd
 end
 
 function compute_bwd_theta_exp(graph::Compgraph{T};
@@ -195,11 +195,13 @@ function compute_bwd_theta_exp(graph::Compgraph{T};
                                numterms=100,
                                numdigits=100,
                                tolerance=eps(coefftype)/2,
-                               theta_init=big"0.2") where T
+                               theta_init=big"0.2",
+                               use_log=false) where T
     return compute_bwd_theta_exp(bnd_rel_err=compute_bnd_rel_bwd_err_exp(graph;
                                                                          coefftype=coefftype,
                                                                          numterms=numterms,
-                                                                         numdigits=100),
+                                                                         numdigits=numdigits),
                                  tolerance=tolerance,
-                                 theta_init=theta_init)
+                                 theta_init=theta_init,
+                                 use_log=use_log)
 end
