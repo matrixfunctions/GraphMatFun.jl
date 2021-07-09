@@ -7,13 +7,15 @@ using Polynomials
     for (k,Ak,m) = [(0,0.0001,:ps_degopt), (1,0.001,:ps_degopt), (2,0.1,:ps_degopt), (3,1.1,:y1s), (4,2.9,:y1s), (6,5.1,:h2m), (8,16.5,:z1ps)] # Where do I find these limits?
         A = randn(100,100)/20 * Ak
         for i = 1:2
-            if i == 1
-                (graph,cref) = graph_sastre_exp(k,m)
-            else
-                (graph,cref) = graph_sastre_exp(k,:auto)
+            @testset "k = $k, and i=$i" begin
+                if i == 1
+                    (graph,cref) = graph_sastre_exp(k,m)
+                else
+                    (graph,cref) = graph_sastre_exp(k,:auto)
+                end
+                @test eval_graph(graph,A) ≈ exp(A)
+                @test sum(values(graph.operations) .== :mult) == k
             end
-            @test eval_graph(graph,A) ≈ exp(A)
-            @test sum(values(graph.operations) .== :mult) == k
         end
     end
 
