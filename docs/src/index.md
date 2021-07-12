@@ -11,10 +11,10 @@ for working with computational [graphs](https://en.wikipedia.org/wiki/Graph_(abs
 
 ## Installation
 
-The latest release of the package can be installed as
+The package can be installed with the command
 ```julia-repl
 julia> ]
-(v1.6) pkg> add GraphMatFun
+(v1.7) pkg> add https://github.com/matrixfunctions/GraphMatFun.jl.git
 ```
 When installed, the package can be loaded into the current session by writing
 ```julia-repl
