@@ -1,7 +1,7 @@
 
 # Graphs and their manipulation
 
-    
+
 ## The computational graph -- Compgraph
 
 The computational graph is represented by a struct `Compgraph{T}`, where `T` is the type of the coefficients.
@@ -54,8 +54,9 @@ set_coeffs!
 
 ## Errors and error bounds
 ```@docs
+compute_bwd_theta
 compute_fwd_theta
-compute_bwd_theta_exponential
+compute_bnd_rel_bwd_err
 eval_runerr
 ```
 
@@ -75,4 +76,3 @@ eltype
 big
 complex
 ```
-
