@@ -1,6 +1,5 @@
 using GraphMatFun
 using Test
-
 @testset "GraphMatFun.jl" begin
     include("bbc_sid_exp.jl")
     include("bbcs_cheb_exp.jl")
