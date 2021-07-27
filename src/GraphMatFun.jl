@@ -5,8 +5,7 @@ include("compgraph_struct_IO.jl")
 include("eval.jl")
 include("compress_graph.jl")
 include("merge.jl")
-include("degopt.jl");
-
+include("degopt.jl")
 
 # Optimization routines
 include("optimization/opt_common.jl")
