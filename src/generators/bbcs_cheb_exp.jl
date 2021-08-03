@@ -14,7 +14,8 @@ Reference:
 
 [^BBCS21]: P. Bader, S. Blanes, F. Casas, M. Seydaoglu. "An efficient algorithm
     to compute the exponential of skew-Hermitian matrices for the time integration
-    of the Schrödinger equation". arXiv:2103.10132, 2021.
+    of the Schrödinger equation".
+    [arXiv:2103.10132 [math.NA]](https://arxiv.org/abs/2103.10132), 2021.
 """
 function graph_bbcs_cheb_exp(k; T = Complex{BigFloat})
     CBF = Complex{BigFloat}

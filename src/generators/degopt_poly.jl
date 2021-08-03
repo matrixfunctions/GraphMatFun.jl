@@ -27,7 +27,8 @@ coefficients, all coeffs will be set to one. The general recursion is Equation
 Reference:
 
 [^BBC19]: P. Bader, S. Blanes, and F. Casas, "Computing the matrix exponential
-    with an optimized Taylor polynomial approximation", Mathematics, 7(12), 2019.
+    with an optimized Taylor polynomial approximation", Mathematics, 7(12),
+    2019. DOI: [10.3390/math7121174](https://doi.org/10.3390/math7121174)
 """
 function graph_degopt(x, z; input = :A)
     T = promote_type(eltype(eltype(eltype(x))), eltype(z))
