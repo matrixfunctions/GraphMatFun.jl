@@ -9,7 +9,7 @@ coefficieents. More precily, it corresponds to evaluation of the polynomial
 
     p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1).
 
-    The code follows the description in [^F19].
+The code follows the description in [^F19].
 
 Reference:
 
