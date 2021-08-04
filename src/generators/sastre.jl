@@ -25,11 +25,11 @@ Not all combinations of `k` and `method` are implemented. Available ones are:
 The default option `method=:auto` will choose method according to the value of
 `k`, as prescribed above.
 
-Reference:
+*Reference:*
 
-[1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
-    its Applications, 539:229-250, 2018. DOI:
-    [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
+1. J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
+   its Applications, 539:229-250, 2018.
+   DOI: [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
 """
 function graph_sastre_exp(k, method = :auto)
     if (method == :auto)

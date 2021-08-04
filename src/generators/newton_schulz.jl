@@ -25,14 +25,14 @@ The recursion is implemented using the graph-operations
 and the kwargs `Z`, `Q`, and `V` determines the naming of the corresponding
 intermediate steps.
 
-References:
+*References:*
 
-[1] G. Schulz. "Iterative Berechnung der reziproken Matrix". Zeitschrift für
-    Angewandte Mathematik und Mechanik, 13:57–59, 1933. DOI:
-    [10.1002/zamm.19330130111](https://doi.org/10.1002/zamm.19330130111)
+1. G. Schulz. "Iterative Berechnung der reziproken Matrix". Zeitschrift für
+   Angewandte Mathematik und Mechanik, 13:57–59, 1933.
+   DOI: [10.1002/zamm.19330130111](https://doi.org/10.1002/zamm.19330130111)
 
-[2] N. J. Higham. "Functions of Matrices". SIAM, Philadelphia, PA, 2008.
-    DOI: [10.1137/1.9780898717778](https://doi.org/10.1137/1.9780898717778)
+2. N. J. Higham. "Functions of Matrices". SIAM, Philadelphia, PA, 2008.
+   DOI: [10.1137/1.9780898717778](https://doi.org/10.1137/1.9780898717778)
 """
 function graph_newton_schulz(
     k,
