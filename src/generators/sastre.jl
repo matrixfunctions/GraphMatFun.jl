@@ -7,7 +7,7 @@ Computes a polynomial evaluation approximating the exponential using `k` matrix
 multiplications following a `method` given in the reference. The schemes are
 embedded into `degop`-format, see [`graph_degopt`](@ref).
 
-The methods from [1] are:
+The methods are (from the paper referenced below):
 
   - `:ps_degopt`, Paterson–Stockmeyer method embedded into `degopt`-format.
   - `:y1s`, given by equations (34)-(35)
@@ -171,9 +171,9 @@ according to Example 3.1 in the reference.
 
 **Reference**
 
-[1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
-    its Applications, 539:229-250, 2018. DOI:
-    [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
+1. J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
+   its Applications, 539:229-250, 2018. DOI:
+   [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
 """
 function graph_sastre_poly(b)
     # Equations (16) - (32)
@@ -249,9 +249,9 @@ length `s`. (Note: In the first vector the constant for I is set to zero) and
 
 **Reference**
 
-[1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
-    its Applications, 539:229-250, 2018. DOI:
-    [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
+1. J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
+   its Applications, 539:229-250, 2018. DOI:
+   [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
 """
 function graph_sastre_yks_degopt(k, s, c)
     T = eltype(eltype(eltype(c)))

@@ -21,8 +21,8 @@ The `x`-values are given in the argument `x`, which is a
 `Vector{Tuple{Vector,Vector}}`, containing the elements of each sum. The
 `z`-vector contains the elements to form the output, and `input` determines the
 name of the matrix A above. If the parameter `k` is supplied instead of the
-coefficients, all coeffs will be set to one. The general recursion
-[Equation (9), 1].
+coefficients, all coeffs will be set to one. The general recursion is given in
+(9) in the paper referenced below.
 
 **Reference**
 
