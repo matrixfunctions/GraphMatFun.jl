@@ -23,7 +23,7 @@ graph_degopt
 grow!
 scale!
 square!
-normalize!
+LinearAlgebra.normalize!(::Degopt,::Any)
 get_degopt_coeffs
 get_degopt_crefs
 get_topo_order_degopt
