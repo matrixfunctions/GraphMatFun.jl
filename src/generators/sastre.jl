@@ -171,8 +171,8 @@ according to Example 3.1 in the reference.
 
 Reference:
 
-[^S18]: J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra
-    and its Applications, 539:229-250, 2018. DOI:
+[1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
+    its Applications, 539:229-250, 2018. DOI:
     [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
 """
 function graph_sastre_poly(b)
@@ -249,8 +249,8 @@ length `s`. (Note: In the first vector the constant for I is set to zero) and
 
 Reference:
 
-[^S18]: J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra
-    and its Applications, 539:229-250, 2018. DOI:
+[1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
+    its Applications, 539:229-250, 2018. DOI:
     [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
 """
 function graph_sastre_yks_degopt(k, s, c)
