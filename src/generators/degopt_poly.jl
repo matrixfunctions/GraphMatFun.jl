@@ -24,7 +24,7 @@ name of the matrix A above. If the parameter `k` is supplied instead of the
 coefficients, all coeffs will be set to one. The general recursion
 [Equation (9), 1].
 
-*Reference:*
+**Reference**
 
 1. P. Bader, S. Blanes, and F. Casas, "Computing the matrix exponential
    with an optimized Taylor polynomial approximation", Mathematics, 7(12),

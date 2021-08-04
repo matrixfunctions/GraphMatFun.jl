@@ -10,7 +10,7 @@ directly copied from the paper.
 The evaluation is embedded in the `degopt`-format, see [`graph_degopt`](@ref),
 and for `k`<3, the evaluation is using the Paterson–Stockmeyer method.
 
-*Reference:*
+**Reference**
 
 1. P. Bader, S. Blanes, and F. Casas. "Computing the matrix exponential with an
    optimized Taylor polynomial approximation". Mathematics, 7(12), 2019.

@@ -13,7 +13,7 @@ The evaluation is embedded in the degopt-format, see [`graph_degopt`](@ref),
 using the function [`graph_sastre_yks_degopt`](@ref). Moreover, for `k`<=3 it
 uses the Paterson–Stockmeyer method.
 
-*Reference:*
+**Reference**
 
 1. J. Sastre, J. Ibáñez, E. Defez. "Boosting the computation of the matrix
    exponential". Applied Mathematics of Computation, 340:206-220, 2019.

@@ -25,7 +25,7 @@ Not all combinations of `k` and `method` are implemented. Available ones are:
 The default option `method=:auto` will choose method according to the value of
 `k`, as prescribed above.
 
-*Reference:*
+**Reference**
 
 1. J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
    its Applications, 539:229-250, 2018.
@@ -169,7 +169,7 @@ Computes the degree-8 polynomial
 
 according to Example 3.1 in the reference.
 
-Reference:
+**Reference**
 
 [1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
     its Applications, 539:229-250, 2018. DOI:
@@ -247,7 +247,7 @@ length `s`. (Note: In the first vector the constant for I is set to zero) and
     [[0.0, 1], [0, c8, c9], [c7, 1], [0, c6, 0], [c4, c5], [c1, c2, c3]], # (59)
     ]
 
-Reference:
+**Reference**
 
 [1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
     its Applications, 539:229-250, 2018. DOI:

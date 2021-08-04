@@ -11,7 +11,7 @@ coefficieents. More precily, it corresponds to evaluation of the polynomial
 
 The code follows the description in [2].
 
-*References:*
+**References**
 
 1. M. Paterson and L. Stockmeyer. "On the number of nonscalar multiplications
    necessary to evaluate polynomials". SIAM Journal on Scientific Computing,

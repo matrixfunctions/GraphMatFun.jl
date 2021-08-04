@@ -8,7 +8,7 @@ square root, using k iterations. The kwarg `cref_mode` specifies if references
 to all X and Y (`cref_mode=0`) should be stored or just Y (`cref_mode=-1`) or
 just X (`cref_mode=1`).
 
-*Reference:*
+**Reference**
 
 1. E. Denman and A. Beavers. "The matrix sign function and computations in
    systems". Applied Mathematics and Computation, 2(1), 1976. DOI:

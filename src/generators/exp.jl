@@ -60,7 +60,7 @@ length of the Padé approximant and the number of squares applied, as well as
 determining the type of the coefficients. The kwarg `input` determines the name
 of the matrix, in the graph.
 
-*References:*
+**References**
 
 1. N. J. Higham. "Functions of Matrices". SIAM, Philadelphia, PA, 2008.
    DOI: [10.1137/1.9780898717778](https://doi.org/10.1137/1.9780898717778)

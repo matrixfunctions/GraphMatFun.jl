@@ -25,7 +25,7 @@ The recursion is implemented using the graph-operations
 and the kwargs `Z`, `Q`, and `V` determines the naming of the corresponding
 intermediate steps.
 
-*References:*
+**References**
 
 1. G. Schulz. "Iterative Berechnung der reziproken Matrix". Zeitschrift für
    Angewandte Mathematik und Mechanik, 13:57–59, 1933.
