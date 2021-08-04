@@ -12,9 +12,9 @@ and for `k`<3, the evaluation is using the Paterson–Stockmeyer method.
 
 Reference:
 
-[^BBC19]: P. Bader, S. Blanes, and F. Casas. "Computing the matrix exponential
-    with an optimized Taylor polynomial approximation". Mathematics, 7(12),
-    2019. DOI: [10.3390/math7121174](https://doi.org/10.3390/math7121174)
+[1] P. Bader, S. Blanes, and F. Casas. "Computing the matrix exponential with an
+    optimized Taylor polynomial approximation". Mathematics, 7(12), 2019. DOI:
+    [10.3390/math7121174](https://doi.org/10.3390/math7121174)
 """
 function graph_bbc_exp(k; T = Float64)
     if (k < 3)

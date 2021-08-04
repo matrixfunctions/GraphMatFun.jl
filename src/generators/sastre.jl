@@ -7,7 +7,7 @@ Computes a polynomial evaluation approximating the exponential using `k` matrix
 multiplications following a `method` given in the reference. The schemes are
 embedded into `degop`-format, see [`graph_degopt`](@ref).
 
-Methods are:
+The methods from [1] are:
 
   - `:ps_degopt`, Paterson–Stockmeyer method embedded into `degopt`-format.
   - `:y1s`, given by equations (34)-(35)
@@ -27,8 +27,8 @@ The default option `method=:auto` will choose method according to the value of
 
 Reference:
 
-[^S18]: J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra
-    and its Applications, 539:229-250, 2018. DOI:
+[1] J. Sastre. "Efficient evaluation of matrix polynomials". Linear Algebra and
+    its Applications, 539:229-250, 2018. DOI:
     [10.1016/j.laa.2017.11.010](https://doi.org/10.1016/j.laa.2017.11.010)
 """
 function graph_sastre_exp(k, method = :auto)

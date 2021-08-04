@@ -21,12 +21,12 @@ The `x`-values are given in the argument `x`, which is a
 `Vector{Tuple{Vector,Vector}}`, containing the elements of each sum. The
 `z`-vector contains the elements to form the output, and `input` determines the
 name of the matrix A above. If the parameter `k` is supplied instead of the
-coefficients, all coeffs will be set to one. The general recursion is Equation
-(9) in [^BBC19].
+coefficients, all coeffs will be set to one. The general recursion
+[Equation (9), 1].
 
 Reference:
 
-[^BBC19]: P. Bader, S. Blanes, and F. Casas, "Computing the matrix exponential
+[1] P. Bader, S. Blanes, and F. Casas, "Computing the matrix exponential
     with an optimized Taylor polynomial approximation", Mathematics, 7(12),
     2019. DOI: [10.3390/math7121174](https://doi.org/10.3390/math7121174)
 """

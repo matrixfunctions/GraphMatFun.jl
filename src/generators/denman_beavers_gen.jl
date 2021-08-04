@@ -10,7 +10,7 @@ just X (`cref_mode=1`).
 
 Reference:
 
-[^DB76]: E. Denman and A. Beavers. "The matrix sign function and computations in
+[1] E. Denman and A. Beavers. "The matrix sign function and computations in
     systems". Applied Mathematics and Computation, 2(1), 1976. DOI:
     [10.1016/0096-3003(76)90020-5](https://doi.org/10.1016/0096-3003(76)90020-5)
 """

@@ -15,8 +15,8 @@ uses the Paterson–Stockmeyer method.
 
 Reference:
 
-[^SID19]: J. Sastre, J. Ibáñez, E. Defez. "Boosting the computation of the
-    matrix exponential". Applied Mathematics of Computation, 340:206-220, 2019.
+[1] J. Sastre, J. Ibáñez, E. Defez. "Boosting the computation of the matrix
+    exponential". Applied Mathematics of Computation, 340:206-220, 2019.
     DOI: [10.1016/j.amc.2018.08.017](https://doi.org/10.1016/j.amc.2018.08.017)
 """
 function graph_sid_exp(k; T = Float64)
