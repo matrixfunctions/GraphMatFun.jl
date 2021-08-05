@@ -1,5 +1,6 @@
 # Degree-optimal polynomials
-export Degopt, grow!, get_degopt_crefs, scale!, square!, get_degopt_coeffs;
+export Degopt,
+    grow!, get_degopt_crefs, scale!, normalize!, square!, get_degopt_coeffs;
 
 struct Degopt{T}
     x::Vector{Tuple{Vector{T},Vector{T}}}
