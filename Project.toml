@@ -12,9 +12,9 @@ Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
 julia = "1.6"
-GenericSVD = "^0.3"
-Polynomials = "^1.2"
-Roots = "^1.0"
+GenericSVD = "0.3"
+Polynomials = "1.2"
+Roots = "1.0"
 
 
 [extras]
