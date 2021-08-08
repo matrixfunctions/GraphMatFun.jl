@@ -83,5 +83,7 @@ If you find this software useful please cite it by using this citation data:
   author = {E. Jarlebring and M. Fasi and E. Ringh},
   title  = {Computational graphs for matrix functions},
   year   = {2021},
+  eprint = {arXiv:2107.12198},
+  note   = {https://github.com/matrixfunctions/GraphMatFun.jl},
 }
 ```
