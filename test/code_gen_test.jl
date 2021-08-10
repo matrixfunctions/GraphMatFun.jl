@@ -14,17 +14,22 @@ using LinearAlgebra
         add_ldiv!(graph, :R0, :A2, :P0)
         clear_outputs!(graph)
         add_output!(graph, :R0)
-        for t1 in (true, false)
-            A = [3 4.0; 5.5 0.1]
-            lang = LangJulia(t1)
-            fname = tempname() * ".jl"
-            ti = time_ns()
-            gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
-            # and execution
-            include(fname)
-            @test eval_graph(graph, A) ≈ eval(Symbol("dummy_$(ti)"))(A)
-            rm(fname)
+        for t3 in (true, false)
+            for t2 in (true, false)
+                for t1 in (true, false)
+                    A = [3 4.0; 5.5 0.1]
+                    lang = LangJulia(t1,t2,t3)
+                    fname = tempname() * ".jl"
+                    ti = time_ns()
+                    gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
+                    # and execution
+                    include(fname)
+                    @test eval_graph(graph, A) ≈ eval(Symbol("dummy_$(ti)"))(A)
+                    rm(fname)
+                end
+            end
         end
+
     end
 
     for i = 1:4 #Not high-precision test for Matlab and C
