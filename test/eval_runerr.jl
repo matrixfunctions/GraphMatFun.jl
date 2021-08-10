@@ -1,5 +1,6 @@
 using LinearAlgebra
-@testset "eval_runerr" begin
+@testset "error analyis" begin
+    # Eval runerr
     # Same as Example 17 in manuscript
     graph = Compgraph(Float64);
     add_lincomb!(graph, :y, 1, :I, 1, :x)
@@ -11,4 +12,11 @@ using LinearAlgebra
     x = 2. .^ -27
     running_error_bound = eval_runerr(graph, x, input = :x)
     @test running_error_bound < 3e-7;
+
+    # compute theta
+    (graph,_)=graph_ps([1.0,1.0, 1 / 2, 1 /6])
+    q=compute_bnd_rel_bwd_err(:exp,graph,numterms=10,numdigits=30)
+    @test q(0.1) < 1e-04
+
+
 end
