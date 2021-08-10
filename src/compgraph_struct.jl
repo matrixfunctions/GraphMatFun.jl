@@ -372,6 +372,25 @@ function set_coeffs!(graph, x, cref = get_all_cref(graph))
 end
 
 
+
+"""
+    x=get_coeffs(graph, cref=get_all_cref(graph))
+
+Gets the coefficient values for the coefficients specified in `cref::Vector`.
+"""
+function get_coeffs(graph, cref = get_all_cref(graph))
+    if (cref isa Tuple) #Workaround for single coefficient
+        cref = [cref]
+    end
+    T = eltype(graph)
+    x = Vector{T}(undef, length(cref))
+    for (idx, k) in enumerate(cref)
+        x[idx] = graph.coeffs[k[1]][k[2]]
+    end
+    return x
+end
+
+
 ## Misc helpers
 """
     T=eltpye(graph::Compgraph{T})

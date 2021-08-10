@@ -94,7 +94,8 @@ end
     (x,z)=get_degopt_crefs(k)
     (x,z)=get_degopt_crefs(graph)
 
-Retruns crefs related to [`graph_degopt`](@ref). Specifically
+Returns linear combination references (crefs) related
+to [`graph_degopt`](@ref). Specifically
 `x` is a `Vector{Tuple{Vector{Tuple{Symbol,Int}},Vector{Tuple{Symbol,Int}}}}`
 such that `x[2][1]` corresponds to the coefficients of the left hand side of the
 multiplication
