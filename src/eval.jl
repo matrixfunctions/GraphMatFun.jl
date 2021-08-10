@@ -436,7 +436,13 @@ function error_prop!(
 end
 
 # Initiate the Dict relerr with different types via dispatch. Create if needed
-function init_relerrs_eval_runerr!(relerrs, T, x, add_relerr, input)
+function init_relerrs_eval_runerr!(
+    relerrs,
+    T,
+    x,
+    add_relerr,
+    input
+)
     if relerrs == nothing
         T_big = big(T)
         relerrs = Dict{Symbol,T_big}()

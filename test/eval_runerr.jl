@@ -13,6 +13,10 @@ using LinearAlgebra
     running_error_bound = eval_runerr(graph, x, input = :x)
     @test running_error_bound < 3e-7;
 
+    x = [1., 2.] .^ -27
+    running_error_bound = eval_runerr(graph, x, input = :x)
+    @test all(running_error_bound .< [2e-7, 3e-7])
+
     # compute theta
     (graph,_)=graph_ps([1.0,1.0, 1 / 2, 1 /6])
     q=compute_bnd_rel_bwd_err(:exp,graph,numterms=10,numdigits=30)
