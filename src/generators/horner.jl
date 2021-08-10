@@ -13,7 +13,7 @@ as the recursion
     Cj=s*B{j+1}
     Bj=a[j]*I+α*Cj,
 
-where α=`scaling`.
+where `α=scaling`.
 
 The kwargs `B` and `C` specifies the base-names of these intermediate variables.
 """

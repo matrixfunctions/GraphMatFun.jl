@@ -15,8 +15,8 @@ of a matrix A (name given by `input`), i.e., the recursion
 
     V_k+1 = V_k*(2*I - A*V_k),
 
-with V_0=A.
-The recursion is implemented using the graph-operations
+with `V_0=A`.
+The recursion is implemented using the graph operations
 
     Z_i=A*V_i
     Q_i=2*I-Z_i

@@ -8,7 +8,7 @@ multiplications following the procedure in the reference. The coefficients are
 directly copied from the paper.
 
 The evaluation is embedded in the `degopt`-format, see [`graph_degopt`](@ref),
-and for `k`< 3, the evaluation is using the Paterson–Stockmeyer method.
+and for `k< 3`, the evaluation is using the Paterson–Stockmeyer method.
 
 **Reference**
 

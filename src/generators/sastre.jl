@@ -16,11 +16,11 @@ The methods are (from the paper referenced below):
 
 Not all combinations of `k` and `method` are implemented. Available ones are:
 
-  - `k`<3, `method`=`:ps_degopt`
-  - `k`=3, `method`=`:y1s`, as per Table 4 in the reference
-  - `k`=4, `method`=`:y1s`
-  - `k`=6, `method`=`:h2m`, as per Table 11 in the reference
-  - `k`=8, `method`=`:z1ps`, as per Table 7 in the reference
+  - `k<3`, `method`=`:ps_degopt`
+  - `k=3`, `method`=`:y1s`, as per Table 4 in the reference
+  - `k=4`, `method`=`:y1s`
+  - `k=6`, `method`=`:h2m`, as per Table 11 in the reference
+  - `k=8`, `method`=`:z1ps`, as per Table 7 in the reference
 
 The default option `method=:auto` will choose method according to the value of
 `k`, as prescribed above.
@@ -223,16 +223,16 @@ end
     (graph,cref)=graph_sastre_yks_degopt(k,s,c)
 
 Transforms the polynomial evaluation format given by equations (62)-(65) in the
-reference to `degop`-format. The `graph` is a representation of y_{`k` `s`}.
+reference to `degop`-format. The `graph` is a representation of ```y_{k,s}```.
 Input `c` is a grouping of the coefficients as given by the representation
-(62)-(65). `c` is a `Vector{Vector{Vector}}` of length `k`+1, representing
+(62)-(65). `c` is a `Vector{Vector{Vector}}` of length `k+1`, representing
 
-[
-[c_i^{(0,1)}, c_i^{(0,2)}]
-[c_i^{(1,1)}, c_i^{(1,2)}, c_i^{(1,3)}, c_i^{(1,4)}, c_i^{(1,5)}, c_i^{(1,6)}]
-...
-[c_i^{(k,1)}, c_i^{(k,2)}, c_i^{(k,3)}, c_i^{(k,4)}, c_i^{(k,5)}, c_i^{(k,6)}]
-]
+    [
+    [c_i^{(0,1)}, c_i^{(0,2)}]
+    [c_i^{(1,1)}, c_i^{(1,2)}, c_i^{(1,3)}, c_i^{(1,4)}, c_i^{(1,5)}, c_i^{(1,6)}]
+    ...
+    [c_i^{(k,1)}, c_i^{(k,2)}, c_i^{(k,3)}, c_i^{(k,4)}, c_i^{(k,5)}, c_i^{(k,6)}]
+    ]
 
 Hence, `c[1]` contains two vectors, the first of length `s`-1 and the second of
 length `s`. (Note: In the first vector the constant for I is set to zero) and

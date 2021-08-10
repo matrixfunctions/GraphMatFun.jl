@@ -5,7 +5,7 @@ export graph_ps, graph_ps_degopt
                           B_base=:B, C_base=:C, P_base=:P)
 
 Generates the graph for the Paterson–Stockmeyer procedure with monomial basis
-coefficieents. More precily, it corresponds to evaluation of the polynomial
+coefficieents. More precisely, it corresponds to evaluation of the polynomial
 
     p(s) = a[1] + a[2]*s + ... + a[n]*s^(n-1).
 
