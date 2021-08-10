@@ -11,3 +11,15 @@ This package contains functionality to represent, manipulate and optimize algori
 * Features and examples are described in the manuscript [Computation graph for matrix functions](https://arxiv.org/abs/2107.12198).
 * Functions and usage is described in the [online package documentation](https://matrixfunctions.github.io/GraphMatFun.jl/dev/).
 * Data files for various matrix functions are available in [the package GraphMatFunData](https://github.com/matrixfunctions/GraphMatFunData).
+
+
+## Installation
+
+The package is registered with the Julia central registry and can be installed with the command:
+
+```
+julia> ]
+(v1.7) pkg> add GraphMatFun
+```
+
+You can now follow the examples in the [online package documentation](https://matrixfunctions.github.io/GraphMatFun.jl/dev/).
