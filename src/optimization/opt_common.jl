@@ -1,3 +1,4 @@
+using GenericLinearAlgebra
 export adjust_for_errtype!, solve_linlsqr!
 
 """
@@ -58,7 +59,6 @@ function solve_linlsqr!(A, b, linlsqr, droptol)
             b = vcat(real(b), imag(b))
         end
         if (eltype(A) == BigFloat || eltype(A) == Complex{BigFloat})
-            # You must use include "using GenericSVD"
             Sfact = svd!(A; full = false, alg = nothing)
         else
             Sfact = svd(A)

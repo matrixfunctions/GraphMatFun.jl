@@ -1,4 +1,3 @@
-using LinearAlgebra, GenericSVD
 @testset "Opt common" begin
     function graph_test_setting(d = 0)
         coeffs = [4.0 - 0.5im, 0.1im, 2.0 - 0.2im]
