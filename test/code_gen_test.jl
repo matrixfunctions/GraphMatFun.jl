@@ -1,4 +1,4 @@
-using LinearAlgebra
+using LinearAlgebra, StaticArrays
 @testset "code gen" begin
     a = Vector{Number}(undef, 6)
     a[1] = 0.11
@@ -31,6 +31,19 @@ using LinearAlgebra
         end
 
     end
+
+    # Test Statically sized matrix
+    (graph, crefs) = graph_ps([3 4 2 10.0])
+    fname = tempname() * ".jl"
+    gen_code(fname, graph, funname = "thisfunction")
+    # and execution
+    include(fname)
+    rm(fname)
+
+    A=[  0.704017  -0.358008   0.0649856;  -1.50413    0.0251634  0.0170085;  0.348764   0.334011   0.0915101]
+    Am=MMatrix{3,3}(A);
+    @test thisfunction(A)≈thisfunction(Am)
+
 
     for i = 1:4 #Not high-precision test for Matlab and C
         (graph, crefs) = graph_ps([3 4 2 a[i]])
