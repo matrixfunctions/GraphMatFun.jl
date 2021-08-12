@@ -167,7 +167,7 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
     )
     jj=size(precomputed_nodes,1);
     precomp_nodes_string = join(repeat("A",jj),",");
-    push_code!(code, "memslots=[$(precomp_nodes_string),[similar(A,T) for j=($jj+1):max_memslots]...]")
+    push_code!(code, "memslots=[$(precomp_nodes_string),[similar(A,T) for j=$(jj+1):max_memslots]...]")
 
     for (i, n) in enumerate(precomputed_nodes)
         Ak_slot_name = get_slot_name(mem, n)
