@@ -160,13 +160,15 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
     # Allocate memory for memory slots.
     push_code!(code, "max_memslots=$max_nodes")
     push_code!(code, "n=size(A,1)")
-    push_code!(code, "memslots=[similar(A,T) for j=1:max_memslots]")
-
     # Allocate input.
     push_comment!(
         code,
         "The first slots are precomputed nodes $precomputed_nodes",
     )
+    jj=size(precomputed_nodes,1);
+    precomp_nodes_string = join(repeat("A",jj),",");
+    push_code!(code, "memslots=[$(precomp_nodes_string),[similar(A,T) for j=($jj+1):max_memslots]...]")
+
     for (i, n) in enumerate(precomputed_nodes)
         Ak_slot_name = get_slot_name(mem, n)
         if (lang.overwrite_input)
