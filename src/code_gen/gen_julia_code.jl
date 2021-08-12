@@ -159,11 +159,8 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
 
     # Allocate memory for memory slots.
     push_code!(code, "max_memslots=$max_nodes")
-    push_code!(code, "memslots=Vector{Matrix{T}}(undef,max_memslots)")
     push_code!(code, "n=size(A,1)")
-    push_code!(code, "for j=1:max_memslots")
-    push_code!(code, "memslots[j]=Matrix{T}(undef,n,n)", ind_lvl = 2)
-    push_code!(code, "end")
+    push_code!(code, "memslots=[similar(A,T) for j=1:max_memslots]")
 
     # Allocate input.
     push_comment!(
