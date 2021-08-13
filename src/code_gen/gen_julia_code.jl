@@ -133,7 +133,14 @@ function function_definition(
     )
     # Generate version a bang version of the function.
     if (lang.overwrite_input)
-        copy_input = "copy(" * join(precomputed_nodes, "), copy(") * ")"
+        #
+        eltype_precomputed = join(map(x->"eltype($x)", precomputed_nodes),",");
+        push_code!(code,"T=promote_type($eltype_precomputed,$T)");
+
+        for n in precomputed_nodes
+            push_code!(code,"$(n)_copy=similar($n,T); $(n)_copy .= $n;");
+        end
+        copy_input = join(map(x->"$(x)_copy", precomputed_nodes),",");
         push_code!(code, "return $(funname)!($copy_input)")
         push_code!(code, "end", ind_lvl = 0)
         push_code!(code, "", ind_lvl = 0)

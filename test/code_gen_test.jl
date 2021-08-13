@@ -17,7 +17,6 @@ using LinearAlgebra, StaticArrays
         for t3 in (true, false)
             for t2 in (true, false)
                 for t1 in (true, false)
-                    @show i,t1,t2,t3
                     TT = eltype(a);
                     A = convert.(TT,[3 4.0; 5.5 0.1]);
                     lang = LangJulia(t1,t2,t3)
