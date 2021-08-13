@@ -165,7 +165,7 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
     max_nodes = size(mem.slots, 1)
 
     # Allocate memory for memory slots.
-    push_code!(code, "max_memslots=$max_nodes")
+    push_comment!(code, "max_memslots=$max_nodes")
     push_code!(code, "n=size(A,1)")
     # Allocate input.
     push_comment!(
