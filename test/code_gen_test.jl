@@ -17,7 +17,9 @@ using LinearAlgebra, StaticArrays
         for t3 in (true, false)
             for t2 in (true, false)
                 for t1 in (true, false)
-                    A = [3 4.0; 5.5 0.1]
+                    @show i,t1,t2,t3
+                    TT = eltype(a);
+                    A = convert.(TT,[3 4.0; 5.5 0.1]);
                     lang = LangJulia(t1,t2,t3)
                     fname = tempname() * ".jl"
                     ti = time_ns()
@@ -44,6 +46,13 @@ using LinearAlgebra, StaticArrays
     Am=MMatrix{3,3}(A);
     @test thisfunction(A)≈thisfunction(Am)
 
+    # Test precomputed nodes
+    fname = tempname() * ".jl"
+    gen_code(fname, graph, funname = "thisfunction2",precomputed_nodes=[:A,:A2])
+    # and execution
+    include(fname)
+    rm(fname)
+    @test thisfunction2(Am,Am*Am)≈thisfunction(Am)
 
     for i = 1:4 #Not high-precision test for Matlab and C
         (graph, crefs) = graph_ps([3 4 2 a[i]])
