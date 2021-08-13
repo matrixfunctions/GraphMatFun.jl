@@ -21,7 +21,7 @@ end
 # Language specific operations.
 comment(::LangJulia, s) = "# $s"
 
-slotname(::LangJulia, i) = "memslots[$i]"
+slotname(::LangJulia, i) = "memslots$i"
 
 function assign_coeff(lang::LangJulia, v, i)
     if v == 1
@@ -165,10 +165,18 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
         code,
         "The first slots are precomputed nodes $precomputed_nodes",
     )
-    jj=size(precomputed_nodes,1);
-    precomp_nodes_string = join(repeat("A",jj),",");
-    push_code!(code, "memslots=[$(precomp_nodes_string),[similar(A,T) for j=$(jj+1):max_memslots]...]")
+    jj = size(precomputed_nodes,1);
+    if (!lang.overwrite_input)
+        jj = 0;
+    end
+    for i=jj+1:max_nodes
+        thisslotname = slotname(lang, i);
+        push_code!(code,"$thisslotname = similar(A,T)");
+    end
 
+    push_comment!(code,"Assign precomputed nodes memslots ");
+
+    precomp_nodes_string = join(repeat("A",jj),",");
     for (i, n) in enumerate(precomputed_nodes)
         Ak_slot_name = get_slot_name(mem, n)
         if (lang.overwrite_input)
@@ -182,6 +190,7 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
             push_code!(code, "copy!($Ak_slot_name,$n)")
         end
     end
+
 
     # If needed, allocate identity matrix.
     if has_identity_lincomb(graph)
@@ -398,7 +407,7 @@ function execute_operation_basic!(
         if parent2 == :I
             push_code!(code, "$nodemem=inv($parent1mem)")
         else
-            push_code!(code, "$nodemem=$parent1mem\\$parent2mem")
+            push_code!(code, "$nodemem .=$parent1mem\\$parent2mem")
         end
 
     elseif op == :lincomb
