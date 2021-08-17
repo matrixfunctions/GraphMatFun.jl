@@ -7,22 +7,23 @@ struct LangJulia
     dot_fusing::Any # Allow dot fusion
     axpby_header::Any
     alloc_function
+    only_overwrite
 end
 default_alloc_function(k)="similar(A,T)"
 
 """
-    LangJulia(overwrite_input=true,inline=true,dot_fusing=true,axpby_header=:auto,alloc_function)
+    LangJulia(overwrite_input=true,inline=true,dot_fusing=true,axpby_header=:auto,alloc_function,only_overwrite=false)
 
 Code generation in julia language, with optional overwriting of input, inlining
-the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`).
+the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The `only_overwrite` specifies if `f` should be created if the overwrite funtion `f!` contains the actual code.
 """
-LangJulia() = LangJulia(true, true, true, :auto, default_alloc_function)
-LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function)
+LangJulia() = LangJulia(true, true, true, :auto, default_alloc_function,false)
+LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function,false)
 function LangJulia(overwrite_input, inline)
-    return LangJulia(overwrite_input, inline, true, :auto, default_alloc_function)
+    return LangJulia(overwrite_input, inline, true, :auto, default_alloc_function,false)
 end
 function LangJulia(overwrite_input, inline, dot_fusing)
-    return LangJulia(overwrite_input, inline, dot_fusing, :auto, default_alloc_function)
+    return LangJulia(overwrite_input, inline, dot_fusing, :auto, default_alloc_function,false)
 end
 
 # Language specific operations.
@@ -138,27 +139,36 @@ function function_definition(
 
     input_variables = join(precomputed_nodes, ", ")
     inline_string = lang.inline ? "@inline " : ""
-    push_code!(
-        code,
-        inline_string * "function $funname($input_variables)",
-        ind_lvl = 0,
-    )
     # Generate version a bang version of the function.
     if (lang.overwrite_input)
-        #
-        eltype_precomputed = join(map(x->"eltype($x)", precomputed_nodes),",");
-        push_code!(code,"T=promote_type($eltype_precomputed,$T)");
+        if (!lang.only_overwrite)
+            push_code!(
+                code,
+                inline_string * "function $funname($input_variables)",
+                ind_lvl = 0,
+            )
+            #
+            eltype_precomputed = join(map(x->"eltype($x)", precomputed_nodes),",");
+            push_code!(code,"T=promote_type($eltype_precomputed,$T)");
 
-        for n in precomputed_nodes
-            push_code!(code,"$(n)_copy=similar($n,T); copyto!($(n)_copy, $n);");
+            for n in precomputed_nodes
+                push_code!(code,"$(n)_copy=similar($n,T); copyto!($(n)_copy, $n);");
+            end
+            copy_input = join(map(x->"$(x)_copy", precomputed_nodes),",");
+            push_code!(code, "return $(funname)!($copy_input)")
+            push_code!(code, "end", ind_lvl = 0)
         end
-        copy_input = join(map(x->"$(x)_copy", precomputed_nodes),",");
-        push_code!(code, "return $(funname)!($copy_input)")
-        push_code!(code, "end", ind_lvl = 0)
+
         push_code!(code, "", ind_lvl = 0)
         push_code!(
             code,
             inline_string * "function $(funname)!($input_variables)",
+            ind_lvl = 0,
+        )
+    else
+        push_code!(
+            code,
+            inline_string * "function $funname($input_variables)",
             ind_lvl = 0,
         )
     end
