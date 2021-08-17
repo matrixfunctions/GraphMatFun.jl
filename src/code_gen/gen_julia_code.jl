@@ -5,17 +5,21 @@ struct LangJulia
     overwrite_input::Any # Overwrite input
     inline::Any
     dot_fusing::Any # Allow dot fusion
+    axpby_header::Any
 end
 """
-    LangJulia(overwrite_input=true,inline=true,dot_fusing=true)
+    LangJulia(overwrite_input=true,inline=true,dot_fusing=true,axpby_header=:auto)
 
 Code generation in julia language, with optional overwriting of input, inlining
-the function and optional usage of dot fusion.
+the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file.
 """
-LangJulia() = LangJulia(true, true, true)
-LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true)
+LangJulia() = LangJulia(true, true, true, :auto)
+LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true,:auto)
 function LangJulia(overwrite_input, inline)
-    return LangJulia(overwrite_input, inline, true)
+    return LangJulia(overwrite_input, inline, true, :auto)
+end
+function LangJulia(overwrite_input, inline, dot_fusing)
+    return LangJulia(overwrite_input, inline, dot_fusing, :auto)
 end
 
 # Language specific operations.
@@ -108,6 +112,11 @@ function function_definition(
     precomputed_nodes,
 )
     code = init_code(lang)
+    axpby_header = lang.axpby_header
+    if (lang.axpby_header == :auto)
+        axpby_header = !lang.dot_fusing
+    end
+
     push_code!(code, "using LinearAlgebra", ind_lvl = 0)
     # If graph has linear combinations, add corresponding axpby functions.
     if any(values(graph.operations) .== :lincomb)
@@ -117,10 +126,10 @@ function function_definition(
         filter(x -> graph.operations[x] == :lincomb, keys(graph.operations))
     lincomb_with_I =
         filter(y -> any(map(x -> x == :I, graph.parents[y])), lincomb_nodes)
-    if (!isempty(lincomb_with_I))
+    if (!isempty(lincomb_with_I) && axpby_header)
         push_code_matfun_axpby_I!(code)
     end
-    if (!isempty(setdiff!(lincomb_nodes, lincomb_with_I)))
+    if (!isempty(setdiff!(lincomb_nodes, lincomb_with_I)) && axpby_header)
         push_code_matfun_axpby!(code)
     end
 
