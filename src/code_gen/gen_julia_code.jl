@@ -6,20 +6,23 @@ struct LangJulia
     inline::Any
     dot_fusing::Any # Allow dot fusion
     axpby_header::Any
+    alloc_function
 end
+default_alloc_function(k)="similar(A,T)"
+
 """
-    LangJulia(overwrite_input=true,inline=true,dot_fusing=true,axpby_header=:auto)
+    LangJulia(overwrite_input=true,inline=true,dot_fusing=true,axpby_header=:auto,alloc_function)
 
 Code generation in julia language, with optional overwriting of input, inlining
-the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file.
+the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`).
 """
-LangJulia() = LangJulia(true, true, true, :auto)
-LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true,:auto)
+LangJulia() = LangJulia(true, true, true, :auto, default_alloc_function)
+LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function)
 function LangJulia(overwrite_input, inline)
-    return LangJulia(overwrite_input, inline, true, :auto)
+    return LangJulia(overwrite_input, inline, true, :auto, default_alloc_function)
 end
 function LangJulia(overwrite_input, inline, dot_fusing)
-    return LangJulia(overwrite_input, inline, dot_fusing, :auto)
+    return LangJulia(overwrite_input, inline, dot_fusing, :auto, default_alloc_function)
 end
 
 # Language specific operations.
@@ -187,7 +190,7 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
     end
     for i=jj+1:max_nodes
         thisslotname = slotname(lang, i);
-        push_code!(code,"$thisslotname = similar(A,T)");
+        push_code!(code,"$thisslotname = "*lang.alloc_function(i));
     end
 
     push_comment!(code,"Assign precomputed nodes memslots ");
