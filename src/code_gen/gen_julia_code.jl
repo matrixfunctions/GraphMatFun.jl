@@ -150,7 +150,7 @@ function function_definition(
         push_code!(code,"T=promote_type($eltype_precomputed,$T)");
 
         for n in precomputed_nodes
-            push_code!(code,"$(n)_copy=similar($n,T); $(n)_copy .= $n;");
+            push_code!(code,"$(n)_copy=similar($n,T); copyto!($(n)_copy, $n);");
         end
         copy_input = join(map(x->"$(x)_copy", precomputed_nodes),",");
         push_code!(code, "return $(funname)!($copy_input)")
