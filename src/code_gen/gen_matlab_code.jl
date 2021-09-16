@@ -15,7 +15,7 @@ slotname(::LangMatlab, i) = "memslots{$i}"
 
 function assign_coeff(::LangMatlab, v, i)
     if imag(v) == 0
-        ("coeff$i", "coeff$i = $(v)")
+        ("coeff$i", "coeff$i = $(real(v))")
     else
         ("coeff$i", "coeff$i = $(real(v)) + 1i*$(imag(v))")
     end
