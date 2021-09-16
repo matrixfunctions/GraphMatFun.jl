@@ -93,6 +93,7 @@ end
 """
     (x,z)=get_degopt_crefs(k)
     (x,z)=get_degopt_crefs(graph)
+    (x,z)=get_degopt_crefs(degopt)
 
 Returns linear combination references (crefs) related
 to [`graph_degopt`](@ref). Specifically
@@ -143,6 +144,31 @@ end
 function get_degopt_crefs(graph::Compgraph)
     return get_degopt_crefs(count(values(graph.operations) .== :mult))
 end
+
+function get_degopt_crefs(degopt::Degopt)
+    return get_degopt_crefs(size(degopt.x,1))
+end
+
+"""
+    get_degopt_crefs_matrix(m) -> (Ha,Hb,y)
+
+Returns the coefficient references similar to `get_degopt_crefs`, but organized in
+a matrix similar to `Degopt(Ha,Hb,y)`. The parameter `m` is an integer (number of multiplication) or a `Compgraph` or a `Degopt`.
+
+"""
+function get_degopt_crefs_matrix(m)
+    all_crefs=get_degopt_crefs(m);
+    TT=eltype(all_crefs[end]);
+    Ha=Matrix{TT}(undef,m,m+1);
+    Hb=Matrix{TT}(undef,m,m+1);
+    for i=1:m
+        Ha[i,1:(i+1)]=all_crefs[1][i][1]
+        Hb[i,1:(i+1)]=all_crefs[1][i][2]
+    end
+    y=all_crefs[2]
+    return (Ha,Hb,y)
+end
+
 
 """
     scale!(degopt::Degopt,α)
