@@ -110,7 +110,7 @@ function compress_graph_zero_coeff!(
                                 end
 
                                 cc = [graph.coeffs[pkey]...]
-                                cc[z] *= cc[z] * v[other_s]
+                                cc[z] = cc[z] * v[other_s]
 
                                 pp[z] = graph.parents[key][other_s]
                                 # Overwrite
