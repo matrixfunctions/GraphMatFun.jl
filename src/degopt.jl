@@ -231,6 +231,7 @@ function normalize!(degopt::Degopt, tp = :row1)
             Ha[j,1]=0;
             Hb[j,1]=0;
 
+            # The remainder/compansator to be inserted into later rows
             compensator=(cb*fa+ca*fb);
             compensator[1]+=c;
             for k=j+1:m
