@@ -212,8 +212,8 @@ import LinearAlgebra.normalize!; # for overloading
     normalize!(degopt::Degopt,tp=:row1)
 
 Normalizes the [`Degopt`](@ref) coefficients, in the way specified by `tp`. If
-the `rp==:row1` the `degopt` will be transformed to an equivalent
-[`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.
+the `tp==:row1` the `degopt` will be transformed to an equivalent
+[`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.  If `tp==:col1` the first column in the Ha and Hb matrices will be transformed to zero
 """
 function normalize!(degopt::Degopt, tp = :row1)
     if (tp == :row1)
@@ -237,6 +237,37 @@ function normalize!(degopt::Degopt, tp = :row1)
         degopt.x[1][2][2] = 1
 
         return degopt
+    elseif (tp == :col1)
+        (Ha,Hb,y)=get_degopt_coeffs(degopt);
+        # For loop through all rows
+        m=size(Ha,1);
+        for j=1:m
+            # For each row make the expansion
+            # (ca*I+fa)(cb*I+fb)=ca*cb*I+cb*fa+ca*fb+ fa*fb
+            # Let the new row be just fa*fb and compensate for
+            #   ca*cb*I+cb*fa+ca*fb
+            # in all subsequent rows in the Ha, Hb and y
+
+            ca=Ha[j,1];
+            cb=Hb[j,1];
+            c=ca*cb;
+            fa=[0;Ha[j,2:j+1]];
+            fb=[0;Hb[j,2:j+1]];
+
+            Ha[j,1]=0;
+            Hb[j,1]=0;
+
+            compensator=(cb*fa+ca*fb);
+            compensator[1]+=c;
+            for k=j+1:m
+                Ha[k,1:j+1] += compensator*Ha[k,j+2];
+                Hb[k,1:j+1] += compensator*Hb[k,j+2];
+            end
+            y[1:j+1] += compensator*y[j+2];
+        end
+        degopt2=Degopt(Ha,Hb,y);
+        degopt.x[:]=degopt2.x[:];
+        degopt.y[:]=degopt2.y[:];
     else
         error("Unknown normalization")
     end
