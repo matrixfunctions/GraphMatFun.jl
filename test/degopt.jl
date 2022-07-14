@@ -27,6 +27,12 @@ using LinearAlgebra
 
     @test eval_graph(g1, -3.0) == eval_graph(g3, -3.0)
 
+
+    (x_crefs2,y_crefs2)=get_degopt_crefs(g1);
+    @test x_crefs == x_crefs2
+    @test y_crefs == y_crefs2
+
+
     # Test scale!
 
     degopt4 = deepcopy(degopt1)
@@ -46,15 +52,30 @@ using LinearAlgebra
     (g6, _) = graph_degopt(degopt6)
     @test eval_graph(g6, 10.0) == eval_graph(g1, 10.0)
 
-    # Normalization
+    # Normalization (row1)
 
     degopt8 = normalize!(deepcopy(degopt1))
     (g8, _) = graph_degopt(degopt8)
     (g1, _) = graph_degopt(degopt1)
     @test eval_graph(g8, pi) ≈ eval_graph(g1, pi)
 
+
+    # Normalize (col1)
+    degopt9 = normalize!(deepcopy(degopt1),:col1)
+    (g9, _) = graph_degopt(degopt9)
+    (Ha,Hb,y)=get_degopt_coeffs(normalize!(degopt9,:col1))
+    @test eval_graph(g9, pi) ≈ eval_graph(g1, pi)
+    @test all(Ha[:,1] .≈ 0)
+    @test all(Hb[:,1] .≈ 0)
+
+
+
     # get_degopt_coeff
     (HA, HB, y) = get_degopt_coeffs(g8)
     (g9, _) = graph_degopt(Degopt(HA, HB, y))
     @test eval_graph(g8, pi) == eval_graph(g9, pi)
+
+
+    # get degopt_crefs (graph)
+
 end

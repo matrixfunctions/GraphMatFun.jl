@@ -183,11 +183,11 @@ end
 
 import LinearAlgebra.normalize!; # for overloading
 """
-    normalize!(degopt::Degopt,tp=:row1)
+    normalize!(degopt::Degopt,tp=:row1) -> degopt
 
 Normalizes the [`Degopt`](@ref) coefficients, in the way specified by `tp`. If
 the `tp==:row1` the `degopt` will be transformed to an equivalent
-[`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.  If `tp==:col1` the first column in the Ha and Hb matrices will be transformed to zero
+[`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.  If `tp==:col1` the first column in the `Ha` and `Hb` matrices will be transformed to zero.
 """
 function normalize!(degopt::Degopt, tp = :row1)
     if (tp == :row1)
@@ -243,6 +243,7 @@ function normalize!(degopt::Degopt, tp = :row1)
         degopt2=Degopt(Ha,Hb,y);
         degopt.x[:]=degopt2.x[:];
         degopt.y[:]=degopt2.y[:];
+        return degopt
     else
         error("Unknown normalization")
     end
