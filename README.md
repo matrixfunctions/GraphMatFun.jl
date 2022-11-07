@@ -9,7 +9,7 @@
 
 This package contains functionality to represent, manipulate and optimize algorithms for matrix functions using directed acyclic graphs. It also contains code generate features for other languages (Julia, MATLAB, C/BLAS).
 
-* Features and examples are described in the manuscript [Computation graph for matrix functions](https://arxiv.org/abs/2107.12198).
+* Features and examples are described in the journal article [Computational graphs for matrix functions](https://doi.org/10.1145/3568991) (a preprint of the accepted version is [available on ArXiv](https://arxiv.org/abs/2107.12198)).
 * Functions and usage is described in the [online package documentation](https://matrixfunctions.github.io/GraphMatFun.jl/dev/).
 * Data files for various matrix functions are available in [the package GraphMatFunData](https://github.com/matrixfunctions/GraphMatFunData).
 
