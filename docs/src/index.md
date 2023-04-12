@@ -76,14 +76,18 @@ julia> get_polynomial_coefficients(graph)
 
 ## How do I cite it?
 
-We are finalizing a software paper for this work.
-If you find this software useful please cite it by using this citation data:
+If you find this software useful, please cite the open access [article](https://doi.org/10.1145/3568991):
 ```bibtex
-@Misc{,
-  author = {E. Jarlebring and M. Fasi and E. Ringh},
-  title  = {Computational graphs for matrix functions},
-  year   = {2021},
-  eprint = {arXiv:2107.12198},
-  note   = {https://github.com/matrixfunctions/GraphMatFun.jl},
-}
+@Article{jfr22,
+  author = "Jarlebring, Elias and Fasi, Massimiliano and Ringh, Emil",
+  title = "Computational Graphs for Matrix Functions",
+  journal = "ACM Trans. Math. Software",
+  year = 2023,
+  volume = 48,
+  number = 4,
+  pages = "1-35",
+  month = mar,
+  doi = "10.1145/3568991"
+  }
 ```
+Previous versions of the manuscript are available as [arXiv:2107.12198 [math.NA]](https://arxiv.org/abs/2107.12198) and [MIMS Eprint 2021.12](https://eprints.maths.manchester.ac.uk/2858/).
