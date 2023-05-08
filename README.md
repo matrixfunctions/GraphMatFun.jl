@@ -2,7 +2,7 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://matrixfunctions.github.io/GraphMatFun.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://matrixfunctions.github.io/GraphMatFun.jl/dev)
-[![Tests](https://img.shields.io/github/workflow/status/matrixfunctions/GraphMatFun.jl/ContinuousIntegration?label=tests)](https://github.com/matrixfunctions/GraphMatFun.jl/actions/workflows/ContinuousIntegration.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/matrixfunctions/GraphMatFun.jl/ContinuousIntegration.yml?branch=main&label=tests)](https://github.com/matrixfunctions/GraphMatFun.jl/actions/workflows/ContinuousIntegration.yml)
 [![codecov](https://codecov.io/gh/matrixfunctions/GraphMatFun.jl/branch/main/graph/badge.svg?token=ZTKNBNMDEZ)](https://codecov.io/gh/matrixfunctions/GraphMatFun.jl)
 [![GitHub](https://img.shields.io/github/license/matrixfunctions/GraphMatFun.jl)](LICENSE.md)
 
