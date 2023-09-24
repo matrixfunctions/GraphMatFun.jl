@@ -113,7 +113,7 @@ function carry_out!(
         (α1, α2) = graph.coeffs[node]
         # Assumes second argument is copy(parentval2)
         vals[node] = copy(parentval2)
-        BLAS.axpby!(α1, parentval1, α2, vals[node])
+        axpby!(α1, parentval1, α2, vals[node])
         #result[:]=α1*parentval1+α2*parentval2 # equivalent
     elseif (op == :ldiv)
         vals[node] = parentval1 \ parentval2
