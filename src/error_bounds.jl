@@ -207,7 +207,7 @@ function compute_bwd_theta(;
     tolerance = eps(coefftype) / 2,
     theta_init = big"0.2",
     use_log = false,
-) where {T}
+)
     # Find point where bound on relative backward error equals tolerance.
     e_bwd = bnd_rel_err
     h(z) = use_log ? log(e_bwd(z) / tolerance) : e_bwd(z) - tolerance
