@@ -58,10 +58,7 @@ operations, or just `Any`.
 function Compgraph(T, orggraph::Compgraph)
     newcoeffs = Dict{Symbol,Tuple{T,T}}()
     for node in keys(orggraph.coeffs)
-        t = (
-            convert(T, orggraph.coeffs[node][1]),
-            convert(T, orggraph.coeffs[node][2]),
-        )
+        t = convert.(T,orggraph.coeffs[node])
         newcoeffs[node] = t
     end
     return Compgraph(
