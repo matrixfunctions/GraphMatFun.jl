@@ -390,16 +390,6 @@ function merge_rename_exp_native_jl_degopt!(graph, cref, M)
     for N in ["VB", "UB"]
         for k in reverse(2:M)
             rename_node!(graph, Symbol(string(N, "$k")), Symbol("B$(k)"), cref)
-            for NN in ["a", "b"]
-                for kk in reverse(2:k-1)
-                    rename_node!(
-                        graph,
-                        Symbol(string(N, NN, "$(k)_$(kk)")),
-                        Symbol(string("B", NN, "$(k)_$(kk)")),
-                        cref,
-                    )
-                end
-            end
         end
     end
 end
