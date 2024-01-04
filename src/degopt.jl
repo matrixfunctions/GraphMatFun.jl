@@ -115,13 +115,13 @@ function get_degopt_crefs(k)
 
     for s = 2:k+1
         for (b, base) in enumerate(["Ba$s", "Bb$s"])
-            for i=1:s-1
+            for i=1:s
                 x[s-1][b][i]=(Symbol(base),i)
             end
         end
     end
 
-    z = map(i-> Symbol(:y,i), 1:k+2)
+    z = map(i-> (Symbol(:y),i), 1:k+2)
     return (x, z)
 end
 
