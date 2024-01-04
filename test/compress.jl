@@ -90,7 +90,7 @@ using LinearAlgebra
     @test cref == [(:P1, 1), (:P1, 2)]
     @test graph2.operations == Dict(:P0 => :mult, :P1 => :lincomb, :P2 => :mult)
     @test graph2.parents ==
-          Dict(:P0 => (:P1, :P2), :P1 => (:A, :I), :P2 => (:A, :A))
+          Dict(:P0 => collect((:P1, :P2)), :P1 => collect((:A, :I)), :P2 => collect((:A, :A)))
     @test graph2.outputs == [:P0]
 
     ## Test function to remove redundant nodes.
