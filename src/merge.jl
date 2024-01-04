@@ -31,7 +31,7 @@ function change_keywords!(
                 for s = 1:2
                     val[s] = translate(val[s])
                 end
-                dict_org[new_key] = Tuple(val)
+                dict_org[new_key] = collect(val)
             end
         end
     end
