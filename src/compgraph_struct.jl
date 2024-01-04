@@ -197,13 +197,8 @@ function rename_node!(graph, src, dest, cref = Vector())
     end
     # Update also parent pointers
     for (key, value) in graph.parents
-        newval = [value[1]; value[2]]
-        for s = 1:2
-            if (value[s] == src)
-                newval[s] = dest
-            end
-        end
-        graph.parents[key] = Tuple(newval)
+        newval = map(x-> x==src ? dest : x, val)
+        graph.parents[key] = newval
     end
     if node_type == :input_node
         return
