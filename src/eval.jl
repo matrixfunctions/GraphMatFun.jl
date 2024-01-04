@@ -64,7 +64,7 @@ function carry_out!(graph, vals, parentvals, node)
     # Generic type: Treat as "scalar"
     op = graph.operations[node]
     if (op == :mult)
-        if (parentsvals[1] isa Vector)
+        if (parentvals[1] isa Vector)
             vals[node] = parentvals[1] .* parentvals[2]
         else
             vals[node] = parentvals[1] * parentvals[2]
@@ -72,7 +72,7 @@ function carry_out!(graph, vals, parentvals, node)
     elseif (op == :lincomb)
         vals[node] = sum(graph.coeffs[node].*parentvals);
     elseif (op == :ldiv)
-        if (parentsvals[1] isa Vector)
+        if (parentvals[1] isa Vector)
             vals[node] = parentvals[1] .\ parentvals[2]
         else
             vals[node] = parentvals[1] \ parentvals[2]
