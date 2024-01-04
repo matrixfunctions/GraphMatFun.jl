@@ -348,15 +348,10 @@ function set_coeffs!(graph, x, cref = get_all_cref(graph))
     for (idx, k) in enumerate(cref)
         node = k[1]
         parentnr = k[2]
-        if parentnr == 1
-            other = graph.coeffs[node][2]
-            graph.coeffs[node] = (x[idx], other)
-        elseif parentnr == 2
-            other = graph.coeffs[node][1]
-            graph.coeffs[node] = (other, x[idx])
-        else
-            error("This is undefined: Unknown parent.")
-        end
+        # Update only one element in the Tuple of coeffs.
+        new_coeffs=collect(graph.coeffs[node]);
+        new_coeffs[parentnr]=x[idx];
+        graph.coeffs[node]=Tuple(new_coeffs);
     end
     return nothing
 end
