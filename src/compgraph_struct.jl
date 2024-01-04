@@ -472,8 +472,6 @@ function get_topo_order(
         now_computable = Dict{Symbol,Float64}()
         for node in uncomputed
             nof_parents = size(graph.parents[node], 1)
-            parent1 = graph.parents[node][1]
-            parent2 = graph.parents[node][2]
             if (all(map(x -> haskey(is_computed, x), graph.parents[node])))
                 # Parents are computed, i.e., this node is currently computable.
 
@@ -501,7 +499,7 @@ function get_topo_order(
                         can_dealloc_parent[i] && !(p in will_not_dealloc)
                 end
 
-                if all(can_dealloc_parent) && !(parent1 == parent2)
+                if all(can_dealloc_parent) && !(allequal(graph.parents[node]))
                     # Prioritize if parent can be deallocated Set to
                     # -2*free_mem_bonus if two memory slots can deallocate after
                     # this.
@@ -516,7 +514,7 @@ function get_topo_order(
 
         if !isempty(now_computable)
             # "compute" the node, i.e., update what is computed and uncomputed
-            compute_node = findmin(now_computable)[2] #Locally greedy selection
+            compute_node = argmin(now_computable) #Locally greedy selection
             nof_parents = size(graph.parents[compute_node], 1)
 
             is_computed[compute_node] = true
@@ -533,8 +531,7 @@ function get_topo_order(
                     delete!(is_still_needed, parent)
                     push!(can_be_deallocated[comp_node_nr], parent)
                 end
-                if graph.parents[compute_node][1] ==
-                   graph.parents[compute_node][2]
+                if allequal(graph.parents[compute_node])
                     break
                 end
             end
