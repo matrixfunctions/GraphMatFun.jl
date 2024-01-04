@@ -2,8 +2,8 @@
 # It can add more than two matrices. Only used in code generation.
 struct MultiLincombCompgraph{T}
     operations::Dict{Symbol,Symbol}
-    parents::Dict{Symbol,NTuple{<:Any,Symbol}}
-    coeffs::Dict{Symbol,NTuple{<:Any,T}}
+    parents::Dict{Symbol,Vector{Symbol}}
+    coeffs::Dict{Symbol,Vector{T}}
     outputs::Vector{Symbol}
 end
 
@@ -11,8 +11,8 @@ function MultiLincombCompgraph(g::Compgraph)
     T = eltype(g)
     extgraph = MultiLincombCompgraph(
         Dict{Symbol,Symbol}(),
-        Dict{Symbol,NTuple{<:Any,Symbol}}(),
-        Dict{Symbol,NTuple{<:Any,T}}(),
+        Dict{Symbol,Vector{Symbol}}(),
+        Dict{Symbol,Vector{T}}(),
         Vector{Symbol}(),
     )
     Z = extract_sums(g)
@@ -30,8 +30,8 @@ function MultiLincombCompgraph(g::Compgraph)
         key = s[3][end]
         p = size(coeff_list, 1)
         extgraph.operations[key] = :lincomb
-        extgraph.coeffs[key] = NTuple{p,T}(coeff_list)
-        extgraph.parents[key] = NTuple{p,Symbol}(symbol_list)
+        extgraph.coeffs[key] = collect(coeff_list)
+        extgraph.parents[key] = collect(symbol_list)
     end
     for k in g.outputs
         push!(extgraph.outputs, k)
