@@ -56,7 +56,7 @@ Note that `T` can be a `Number` but can be other objects with defined
 operations, or just `Any`.
 """
 function Compgraph(T, orggraph::Compgraph)
-    newcoeffs = Dict{Symbol,NTuple{<:Any,T}}()
+    newcoeffs = Dict{Symbol,Vector{T}}()
     for node in keys(orggraph.coeffs)
         t = convert.(T,orggraph.coeffs[node])
         newcoeffs[node] = t
@@ -365,7 +365,7 @@ function set_coeffs!(graph, x, cref = get_all_cref(graph))
         # Update only one element in the Tuple of coeffs.
         new_coeffs=collect(graph.coeffs[node]);
         new_coeffs[parentnr]=x[idx];
-        graph.coeffs[node]=Tuple(new_coeffs);
+        graph.coeffs[node]=collect(new_coeffs);
     end
     return nothing
 end
