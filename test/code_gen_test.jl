@@ -22,10 +22,13 @@ using LinearAlgebra, StaticArrays
                     lang = LangJulia(t1,t2,t3)
                     fname = tempname() * ".jl"
                     ti = time_ns()
-                    gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
-                    # and execution
-                    include(fname)
-                    @test eval_graph(graph, A) ≈ eval(Symbol("dummy_$(ti)"))(A)
+                    begin # To avoid generated codes interfere
+                        gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
+                        # and execution
+                        include(fname)
+                        @test eval_graph(graph, A) ≈ eval(Symbol("dummy_$(ti)"))(A)
+                    end
+
                     rm(fname)
                 end
             end
