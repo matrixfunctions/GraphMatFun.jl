@@ -115,16 +115,9 @@ function get_degopt_crefs(k)
 
     for s = 2:k+1
         for (b, base) in enumerate(["Ba$s", "Bb$s"])
-            if s == 2
-                x[s-1][b][1] = (Symbol(base), 1)
+            for i=1:s-1
+                x[s-1][b][i]=(Symbol(base),i)
             end
-            for i = 2:s-1
-                if i == 2
-                    x[s-1][b][1] = (Symbol("$(base)_2"), 1)
-                end
-                x[s-1][b][i] = (Symbol("$(base)_$(i)"), 2)
-            end
-            x[s-1][b][s] = (Symbol(base), 2)
         end
     end
 
