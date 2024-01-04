@@ -30,8 +30,8 @@ export get_sorted_keys
 # Hash tables representing a computation graph
 struct Compgraph{T}
     operations::Dict{Symbol,Symbol}
-    parents::Dict{Symbol,Tuple{Symbol,Symbol}}
-    coeffs::Dict{Symbol,Tuple{T,T}}
+    parents::Dict{Symbol,NTuple{<:Any,Symbol}}
+    coeffs::Dict{Symbol,NTuple{<:Any,T}}
     outputs::Vector{Symbol}
 end
 
