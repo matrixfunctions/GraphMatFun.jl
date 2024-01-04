@@ -73,9 +73,9 @@ function carry_out!(graph, vals, parentvals, node)
         vals[node] = sum(graph.coeffs[node].*parentvals);
     elseif (op == :ldiv)
         if (parentsvals[1] isa Vector)
-            vals[node] = parentvals[1] \ parentvals[2]
-        else
             vals[node] = parentvals[1] .\ parentvals[2]
+        else
+            vals[node] = parentvals[1] \ parentvals[2]
         end
     else
         error("Unknown operation")
