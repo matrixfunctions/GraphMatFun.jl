@@ -30,8 +30,8 @@ export get_sorted_keys
 # Hash tables representing a computation graph
 struct Compgraph{T}
     operations::Dict{Symbol,Symbol}
-    parents::Dict{Symbol,NTuple{<:Any,Symbol}}
-    coeffs::Dict{Symbol,NTuple{<:Any,T}}
+    parents::Dict{Symbol,Vector{Symbol}}
+    coeffs::Dict{Symbol,Vector{T}}
     outputs::Vector{Symbol}
 end
 
@@ -43,8 +43,8 @@ Creates an empty computation graph of with coefficients of type `T`.
 function Compgraph(T::Type = ComplexF64)
     return Compgraph(
         Dict{Symbol,Symbol}(),
-        Dict{Symbol,NTuple{<:Any,Symbol}}(),
-        Dict{Symbol,NTuple{<:Any,T}}(),
+        Dict{Symbol,Vector{Symbol}}(),
+        Dict{Symbol,Vector{T}}(),
         Vector{Symbol}(),
     )
 end
