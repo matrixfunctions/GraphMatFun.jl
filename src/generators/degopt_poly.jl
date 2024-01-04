@@ -42,8 +42,8 @@ function graph_degopt(x, z; input = :A)
     for s = 2:k+1
         push!(z_nodes, Symbol("B$s"))
     end
-    key = Symbol("T2k$(k+3)")
-    crefs_new = add_sum!(graph, key, z, z_nodes, Symbol("T2k"))
+    key = Symbol("y")
+    crefs_new = add_lincomb!(graph, key, z, z_nodes)
     append!(crefs, crefs_new)
 
     # Set the output
