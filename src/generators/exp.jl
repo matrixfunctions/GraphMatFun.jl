@@ -315,7 +315,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
 
     zU = vcat(zeros(T, 6), one(T))
     (graphU, crefU) = graph_degopt(xU, zU, input = C)
-    rename_node!(graphU, :T2k8, :U, crefU)
+    rename_node!(graphU, graphU.outputs[1], :U, crefU)
 
     # V  = A6 * (CC[13].*A6 .+ CC[11].*A4 .+ CC[9].*A2) .+
     #            CC[7].*A6 .+ CC[5].*A4 .+ CC[3].*A2 .+ CC[1].*Inn
@@ -332,7 +332,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
     a = view(CC, 3:2:7)
     zV = vcat(CC[1], zero(T), a, one(T))
     (graphV, crefV) = graph_degopt(xV, zV, input = C)
-    rename_node!(graphV, :T2k7, :V, crefV)
+    rename_node!(graphV, graphV.outputs[1], :V, crefV)
 
     graph = merge_graphs(
         graphU,
