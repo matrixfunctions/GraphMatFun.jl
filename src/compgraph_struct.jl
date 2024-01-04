@@ -320,12 +320,11 @@ Returns a list with references to all coefficients in the graph.
 The list is sorted.
 """
 function get_all_cref(graph)
-    k = sort(collect(keys(graph.coeffs)))
-    kv = Vector{Tuple{Symbol,Int}}(undef, 2 * length(k))
-    for i = 1:length(k)
-        idx = 2 * (i - 1) + 1
-        kv[idx] = (k[i], 1)
-        kv[idx+1] = (k[i], 2)
+    kv = Vector{Tuple{Symbol,Int}}()
+    for key = keys(graph.coeffs)
+        for (i,_)=enumerate(graph.coeffs[key])
+            push!(kv,(key,i));
+        end
     end
     return kv
 end
