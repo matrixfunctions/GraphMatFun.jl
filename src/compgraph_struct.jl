@@ -101,7 +101,7 @@ Adds a multiplication of node `p1` and `p2` to the
 function add_mult!(graph, node, p1, p2)
     check_node_name_legality(graph, node)
     graph.operations[node] = :mult
-    graph.parents[node] = (p1, p2)
+    graph.parents[node] = [p1; p2];
     return nothing
 end
 
@@ -116,8 +116,8 @@ See also [`add_sum!`](@ref).
 function add_lincomb!(graph, node, α1, p1, α2, p2)
     check_node_name_legality(graph, node)
     graph.operations[node] = :lincomb
-    graph.parents[node] = (p1, p2)
-    graph.coeffs[node] = (α1, α2)
+    graph.parents[node] = [p1; p2]
+    graph.coeffs[node] = [α1; α2]
     return nothing
 end
 """
@@ -129,8 +129,8 @@ multiplied with coeffs (Vector or Tuple)
 function add_lincomb!(graph, node, coeffs, nodes)
     check_node_name_legality(graph, node)
     graph.operations[node] = :lincomb
-    graph.parents[node] = Tuple(nodes)
-    graph.coeffs[node] = Tuple(coeffs)
+    graph.parents[node] = collect(nodes)
+    graph.coeffs[node] = collect(coeffs)
     return nothing
 end
 
@@ -144,7 +144,7 @@ The result is stored in node `node`.
 function add_ldiv!(graph, node, p1, p2)
     check_node_name_legality(graph, node)
     graph.operations[node] = :ldiv
-    graph.parents[node] = (p1, p2)
+    graph.parents[node] = [p1; p2]
     return nothing
 end
 
