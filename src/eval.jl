@@ -105,7 +105,7 @@ end
 function carry_out!(
     graph,
     vals,
-    parentvals::NTuple{<:Any,AbstractMatrix}
+    parentvals::NTuple{<:Any,AbstractMatrix},
     node,
 )
     parentval1=parentvals[1];
