@@ -95,6 +95,7 @@ function merge_graphs(
     # Make the coeff types the same
     g1=Compgraph(T,g1);
     g2=Compgraph(T,g2);
+    coeffs = merge(g1.coeffs, g2.coeffs);
 
     outputs = vcat(g1.outputs, g2.outputs)
 
@@ -104,6 +105,7 @@ function merge_graphs(
     empty!(cref1)
     empty!(cref2)
 
+
     for c in cref1_copy
         push!(cref1, (Symbol(prefix1 * String(c[1])), c[2]))
     end
@@ -111,5 +113,5 @@ function merge_graphs(
         push!(cref2, (Symbol(prefix2 * String(c[1])), c[2]))
     end
 
-    return Compgraph(operations, parents, coeffs, outputs)
+    return Compgraph{T}(operations, parents, coeffs, outputs)
 end
