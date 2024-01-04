@@ -53,13 +53,18 @@ function eval_graph(
     for node in comporder
         parentval1 = vals[graph.parents[node][1]]
         parentval2 = vals[graph.parents[node][2]]
-        carry_out!(graph, vals, parentval1, parentval2, node)
+        carry_out!(graph, vals, (parentval1, parentval2), node)
     end
     return vals[graph.outputs[output]]
 end
 
 # carry_out! -- Perform the operations with different types via dispatch
-function carry_out!(graph, vals, parentval1, parentval2, node)
+function carry_out!(graph, vals, parentvals, node)
+
+
+    parentval1=parentvals[1];
+    parentval2=parentvals[2];
+
     # Generic type: Treat as "scalar"
     op = graph.operations[node]
     if (op == :mult)
@@ -77,10 +82,12 @@ end
 function carry_out!(
     graph,
     vals,
-    parentval1::AbstractVector,
-    parentval2::AbstractVector,
+    parentvals::NTuple{<:Any,AbstractVector},
     node,
 )
+
+    parentval1=parentvals[1];
+    parentval2=parentvals[2];
     # Vectors: Operate on all points in parallell
     op = graph.operations[node]
     if (op == :mult)
@@ -98,10 +105,11 @@ end
 function carry_out!(
     graph,
     vals,
-    parentval1::AbstractMatrix,
-    parentval2::AbstractMatrix,
+    parentvals::NTuple{<:Any,AbstractMatrix}
     node,
 )
+    parentval1=parentvals[1];
+    parentval2=parentvals[2];
     # Matrices: Optimized operations
     op = graph.operations[node]
     if (op == :mult)
