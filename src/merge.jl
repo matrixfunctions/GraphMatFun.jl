@@ -27,10 +27,8 @@ function change_keywords!(
             new_key = translate(key)
             dict_org[new_key] = value
             if (dict_org == graph.parents) # Also translate parents
-                val = [value...] # Turn into vector
-                for s = 1:2
-                    val[s] = translate(val[s])
-                end
+                # Value is a Vector of symbols
+                val=translate.(value)
                 dict_org[new_key] = collect(val)
             end
         end
@@ -94,14 +92,10 @@ function merge_graphs(
     operations = merge(g1.operations, g2.operations)
     parents = merge(g1.parents, g2.parents)
 
-    # Type logic for the coefficients
-    coeffs = Dict{Symbol,Vector{T}}()
-    for dict in (g1.coeffs, g2.coeffs)
-        for (key, value) in dict
-            val = [convert(T, value[1]); convert(T, value[2])]
-            coeffs[key] = [convert(T, value[1]); convert(T, value[2])]
-        end
-    end
+    # Make the coeff types the same
+    g1=Compgraph(T,g1);
+    g2=Compgraph(T,g2);
+
     outputs = vcat(g1.outputs, g2.outputs)
 
     cref1_copy = copy(cref1)
