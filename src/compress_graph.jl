@@ -224,8 +224,7 @@ function has_identity_lincomb(graph)
     has_identity_lincomb = false
     for (key, parents) in graph.parents
         if graph.operations[key] == :lincomb &&
-           parents[1] == :I &&
-           parents[2] == :I
+           all(parents .== :I)
             has_identity_lincomb = true
             break
         end
