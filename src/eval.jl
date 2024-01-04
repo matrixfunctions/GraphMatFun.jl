@@ -61,70 +61,14 @@ end
 # carry_out! -- Perform the operations with different types via dispatch
 function carry_out!(graph, vals, parentvals, node)
 
-
-    parentval1=parentvals[1];
-    parentval2=parentvals[2];
-
     # Generic type: Treat as "scalar"
     op = graph.operations[node]
     if (op == :mult)
-        vals[node] = parentval1 * parentval2
+        vals[node] = parentvals[1] * parentvals[2]
     elseif (op == :lincomb)
-        (α1, α2) = graph.coeffs[node]
-        vals[node] = α1 * parentval1 + α2 * parentval2
+        vals[node] = sum(graph.coeffs[node].*parentvals);
     elseif (op == :ldiv)
-        vals[node] = parentval1 \ parentval2
-    else
-        error("Unknown operation")
-    end
-    return nothing
-end
-function carry_out!(
-    graph,
-    vals,
-    parentvals::NTuple{<:Any,AbstractVector},
-    node,
-)
-
-    parentval1=parentvals[1];
-    parentval2=parentvals[2];
-    # Vectors: Operate on all points in parallell
-    op = graph.operations[node]
-    if (op == :mult)
-        vals[node] = parentval1 .* parentval2
-    elseif (op == :lincomb)
-        (α1, α2) = graph.coeffs[node]
-        vals[node] = α1 * parentval1 + α2 * parentval2
-    elseif (op == :ldiv)
-        vals[node] = parentval1 .\ parentval2
-    else
-        error("Unknown operation")
-    end
-    return nothing
-end
-function carry_out!(
-    graph,
-    vals,
-    parentvals::NTuple{<:Any,AbstractMatrix},
-    node,
-)
-    parentval1=parentvals[1];
-    parentval2=parentvals[2];
-    # Matrices: Optimized operations
-    op = graph.operations[node]
-    if (op == :mult)
-        # result[:]=parentval1*parentval2
-        vals[node] = similar(parentval2)
-        mul!(vals[node], parentval1, parentval2)
-        #BLAS.gemm!('N','N',1.0,parentval1,parentval2,0.0,result)
-    elseif (op == :lincomb)
-        (α1, α2) = graph.coeffs[node]
-        # Assumes second argument is copy(parentval2)
-        vals[node] = copy(parentval2)
-        axpby!(α1, parentval1, α2, vals[node])
-        #result[:]=α1*parentval1+α2*parentval2 # equivalent
-    elseif (op == :ldiv)
-        vals[node] = parentval1 \ parentval2
+        vals[node] = parentvals[1] \ parentvals[2]
     else
         error("Unknown operation")
     end
