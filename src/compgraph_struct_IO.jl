@@ -102,10 +102,10 @@ function export_compgraph(
                 ";",
             )
         elseif op == :lincomb
-            for i = 1:2
-                print(file, "coeff$i=", real(graph.coeffs[node][i]))
+            for (i,c) = enumerate(graph.coeffs[node])
+                print(file, "coeff$i=", real(c))
                 if T <: Complex
-                    t = imag(graph.coeffs[node][i])
+                    t = imag(c)
                     if t >= 0
                         print(file, " + ", t)
                     else
@@ -115,15 +115,14 @@ function export_compgraph(
                 end
                 println(file, ";")
             end
+            terms=map(x-> "coeff$(x[1])*$(x[2])",
+                      enumerate(String.(graph.parents[node])))
+
             println(
                 file,
                 String(node),
                 "=",
-                "coeff1*",
-                String(graph.parents[node][1]),
-                "+",
-                "coeff2*",
-                String(graph.parents[node][2]),
+                join(terms,"+"),
                 ";",
             )
         end
