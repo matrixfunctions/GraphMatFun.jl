@@ -19,9 +19,11 @@ using LinearAlgebra, StaticArrays
                 for t1 in (true, false)
                     TT = eltype(a);
                     A = convert.(TT,[3 4.0; 5.5 0.1]);
-                    lang = LangJulia(t1,t2,t3)
-                    fname = tempname() * ".jl"
                     ti = time_ns()
+                    lang = LangJulia(t1,t2,t3,
+                                     value_one_name="ValueOne_"*string(ti),
+                                     axpby_name="matfun_axpby_"*string(ti)*"!")
+                    fname = tempname() * ".jl"
                     begin # To avoid generated codes interfere
                         gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
                         # and execution
@@ -39,8 +41,11 @@ using LinearAlgebra, StaticArrays
     # Test Statically sized matrix
     (graph, crefs) = graph_ps([3 4 2 10.0])
     fname = tempname() * ".jl"
+    lang = LangJulia(true,true,true,
+                     value_one_name="ValueOne_"*string(time_ns()),
+                     axpby_name="matfun_axpby_"*string(time_ns())*"!")
     begin
-        gen_code(fname, graph, funname = "thisfunction")
+        gen_code(fname, graph, funname = "thisfunction",lang=lang)
         # and execution
         include(fname)
         rm(fname)
@@ -52,6 +57,9 @@ using LinearAlgebra, StaticArrays
 
     # Test precomputed nodes
     fname = tempname() * ".jl"
+    lang = LangJulia(true,true,true,
+                     value_one_name="ValueOne_"*string(time_ns()),
+                     axpby_name="matfun_axpby_"*string(time_ns())*"!")
     begin
         gen_code(fname, graph, funname = "thisfunction2",precomputed_nodes=[:A,:A2])
         # and execution
@@ -60,7 +68,6 @@ using LinearAlgebra, StaticArrays
         @test thisfunction2(Am,Am*Am)≈thisfunction(Am)
     end
 
-    @show "testing other langs"
     for i = 1:4 #Not high-precision test for Matlab and C
         (graph, crefs) = graph_ps([3 4 2 a[i]])
         add_ldiv!(graph, :R0, :A2, :P0)

@@ -8,6 +8,8 @@ struct LangJulia
     axpby_header::Any
     alloc_function
     only_overwrite
+    value_one_name
+    axpby_name
 end
 default_alloc_function(k)="similar(A,T)"
 
@@ -17,13 +19,13 @@ default_alloc_function(k)="similar(A,T)"
 Code generation in julia language, with optional overwriting of input, inlining
 the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The `only_overwrite` specifies if `f` should be created if the overwrite funtion `f!` contains the actual code.
 """
-LangJulia() = LangJulia(true, true, true, :auto, default_alloc_function,false)
-LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function,false)
+LangJulia() = LangJulia(true, true, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
+LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 function LangJulia(overwrite_input, inline)
-    return LangJulia(overwrite_input, inline, true, :auto, default_alloc_function,false)
+    return LangJulia(overwrite_input, inline, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 end
-function LangJulia(overwrite_input, inline, dot_fusing)
-    return LangJulia(overwrite_input, inline, dot_fusing, :auto, default_alloc_function,false)
+function LangJulia(overwrite_input, inline, dot_fusing; value_one_name="ValueOne",axpby_name="matfun_axpby!")
+    return LangJulia(overwrite_input, inline, dot_fusing, :auto, default_alloc_function,false,value_one_name,axpby_name)
 end
 
 # Language specific operations.
@@ -66,38 +68,42 @@ function preprocess_codegen(graph, lang::LangJulia)
 end
 
 # Code generation.
-function push_code_matfun_axpby_I!(code)
+function push_code_matfun_axpby_I!(lang,code)
     # Add code for matfun_axpby! using UniformScaling.
+    value_one_name=lang.value_one_name;
+    axpby_name=lang.axpby_name
     return push_code_verbatim_string!(
         code,
         "
 # Compute X <- a X + b I.
-function matfun_axpby!(X,a,b,Y::UniformScaling)
+function $axpby_name(X,a,b,Y::UniformScaling)
     m,n=size(X)
-    if ~(a isa ValueOne)
+    if ~(a isa $value_one_name)
         rmul!(X,a)
     end
     @inbounds for i=1:n
-        X[i,i]+=(b isa ValueOne) ? 1 : b
+        X[i,i]+=(b isa $value_one_name) ? 1 : b
     end
 end\n",
     )
 end
 
-function push_code_matfun_axpby!(code)
+function push_code_matfun_axpby!(lang,code)
     # Add code for generic matfun_axpby! function.
+    value_one_name=lang.value_one_name;
+    axpby_name=lang.axpby_name
     return push_code_verbatim_string!(
         code,
         "
 # Compute X <- a X + b Y.
-function matfun_axpby!(X,a,b,Y)
+function $axpby_name(X,a,b,Y)
     m,n=size(X)
-    if ~(a isa ValueOne)
+    if ~(a isa $value_one_name)
         rmul!(X,a)
     end
     @inbounds for i=1:m
         @inbounds for j=1:n
-            if (b isa ValueOne)
+            if (b isa $value_one_name)
                 X[i,j]+=Y[i,j]
             else
                 X[i,j]+=b*Y[i,j]
@@ -124,17 +130,17 @@ function function_definition(
     push_code!(code, "using LinearAlgebra", ind_lvl = 0)
     # If graph has linear combinations, add corresponding axpby functions.
     if any(values(graph.operations) .== :lincomb)
-        push_code!(code, "\nstruct ValueOne; end\nValueOne()", ind_lvl = 0)
+        push_code!(code, "\nstruct $(lang.value_one_name); end\n$(lang.value_one_name)()", ind_lvl = 0)
     end
     lincomb_nodes =
         filter(x -> graph.operations[x] == :lincomb, keys(graph.operations))
     lincomb_with_I =
         filter(y -> any(map(x -> x == :I, graph.parents[y])), lincomb_nodes)
     if (!isempty(lincomb_with_I) && axpby_header)
-        push_code_matfun_axpby_I!(code)
+        push_code_matfun_axpby_I!(lang,code)
     end
     if (!isempty(setdiff!(lincomb_nodes, lincomb_with_I)) && axpby_header)
-        push_code_matfun_axpby!(code)
+        push_code_matfun_axpby!(lang,code)
     end
 
     input_variables = join(precomputed_nodes, ", ")
@@ -235,7 +241,7 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
 
     # If needed, initialize variable of type ValueOne for axpby with a=1 or b=1.
     if (any(map(x -> any(x .== 1), values(graph.coeffs))))
-        push_code!(code, "value_one=ValueOne()")
+        push_code!(code, "value_one=$(lang.value_one_name)()")
     end
 
     return code
@@ -272,6 +278,7 @@ function execute_julia_I_op(
     non_I_parent_mem,
     non_I_parent_coeff,
     I_parent_coeff,
+    lang
 )
     push_comment!(code, "Add lincomb with identity.")
 
@@ -283,7 +290,7 @@ function execute_julia_I_op(
 
     return push_code!(
         code,
-        "matfun_axpby!($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)",
+        "$(lang.axpby_name)($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)",
     )
 end
 
@@ -475,17 +482,18 @@ function execute_operation_basic!(
                     non_I_parent_mem,
                     non_I_parent_coeff,
                     I_parent_coeff,
+                    lang
                 )
             else
                 if (recycle_parent == parent1)
                     push_code!(
                         code,
-                        "matfun_axpby!($nodemem,$coeff1,$coeff2,$parent2mem)",
+                        "$(lang.axpby_name)($nodemem,$coeff1,$coeff2,$parent2mem)",
                     )
                 else
                     push_code!(
                         code,
-                        "matfun_axpby!($nodemem,$coeff2,$coeff1,$parent1mem)",
+                        "$(lang.axpby_name)($nodemem,$coeff2,$coeff1,$parent1mem)",
                     )
                 end
             end
@@ -512,6 +520,7 @@ function execute_operation_basic!(
                     non_I_parent_mem,
                     non_I_parent_coeff,
                     I_parent_coeff,
+                    lang
                 )
             elseif (parent2 == :I)
                 non_I_parent_mem = parent1mem
@@ -523,12 +532,13 @@ function execute_operation_basic!(
                     non_I_parent_mem,
                     non_I_parent_coeff,
                     I_parent_coeff,
+                    lang
                 )
             else
                 push_code!(code, "copy!($(nodemem),$parent1mem)")
                 push_code!(
                     code,
-                    "matfun_axpby!($(nodemem),$coeff1,$coeff2,$parent2mem)",
+                    "$(lang.axpby_name)($(nodemem),$coeff1,$coeff2,$parent2mem)",
                 )
             end
         end
