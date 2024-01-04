@@ -248,7 +248,7 @@ function graph_exp_native_jl_low_degopt(C, input)
         (vcat(zeros(T, 1), one(T), zeros(T, s + 1)), vcat(C[2], zero(T), a))
     zU = vcat(zeros(T, s + 2), one(T))
     (graphU, crefU) = graph_degopt(xU, zU, input = input)
-    rename_node!(graphU, Symbol("T2k$(4+s)"), :U, crefU)
+    rename_node!(graphU, graphU.outputs[1], :U, crefU)
 
     # V
     xV = Vector{Tuple{Vector{T},Vector{T}}}(undef, s)
@@ -256,7 +256,7 @@ function graph_exp_native_jl_low_degopt(C, input)
     a = view(C, 3:2:n-1)
     zV = vcat(C[1], zero(T), a)
     (graphV, crefV) = graph_degopt(xV, zV, input = input)
-    rename_node!(graphV, Symbol("T2k$(3+s)"), :V, crefV)
+    rename_node!(graphV, graphV.outputs[1], :V, crefV)
 
     graph = merge_graphs(
         graphU,
