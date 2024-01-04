@@ -117,7 +117,6 @@ function export_compgraph(
             end
             terms=map(x-> "coeff$(x[1])*$(x[2])",
                       enumerate(String.(graph.parents[node])))
-
             println(
                 file,
                 String(node),
