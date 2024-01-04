@@ -82,25 +82,21 @@ function graph_degopt_B(x, T; input = :A)
 
         # First poly
         c_a = x[s-1][1]
-        crefs_a = add_sum!(
+        crefs_a = add_lincomb!(
             graph,
             Symbol(base_a),
             c_a,
-            useful_syms,
-            Symbol("$(base_a)_"),
-        )
+            useful_syms)
 
         append!(cref, crefs_a)
 
         # Second poly
         c_b = x[s-1][2]
-        crefs_b = add_sum!(
+        crefs_b = add_lincomb!(
             graph,
             Symbol(base_b),
             c_b,
-            useful_syms,
-            Symbol("$(base_b)_"),
-        )
+            useful_syms)
         append!(cref, crefs_b)
 
         # Multiply them together

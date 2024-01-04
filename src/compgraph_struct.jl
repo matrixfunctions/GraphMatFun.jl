@@ -124,14 +124,14 @@ end
     add_lincomb!(graph,node,coeffs,nodes)
 
 Adds a linear combination of the nodes (Vector or Tuple)
-multiplied with coeffs (Vector or Tuple)
+multiplied with coeffs (Vector or Tuple). Returns cref vector.
 """
 function add_lincomb!(graph, node, coeffs, nodes)
     check_node_name_legality(graph, node)
     graph.operations[node] = :lincomb
     graph.parents[node] = collect(nodes)
     graph.coeffs[node] = collect(coeffs)
-    return nothing
+    return map(i-> (node,i), 1:size(coeffs,1))
 end
 
 
