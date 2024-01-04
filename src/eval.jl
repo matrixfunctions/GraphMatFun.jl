@@ -190,12 +190,11 @@ function eval_der(graph, x, c, vals, comporder, output)
     der[c[1]] = vals[graph.parents[c[1]][c[2]]]
 
     # Loop over topological sorting
-    # Only compute if parent has a nonzero derivative
     for node in comporder
-        if haskey(der, graph.parents[node][1]) ||
-           haskey(der, graph.parents[node][2])
+        # Only compute if parent has a nonzero derivative
+        if any(map(n-> haskey(der, n),graph.parents[node]))
             der[node] = zeros(T, length(x))
-            for (i,parent_node) = enumerate(graph.parent[node])
+            for (i,parent_node) = enumerate(graph.parents[node])
                 if haskey(der, parent_node)
                     der_prop!(
                         graph,
