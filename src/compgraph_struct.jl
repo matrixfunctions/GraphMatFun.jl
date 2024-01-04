@@ -184,8 +184,7 @@ function rename_node!(graph, src, dest, cref = Vector())
     # Check whether node exists in the graph, and whether is an input node.
     if src in keys(graph.parents)
         node_type = :full_node
-    elseif src in getindex.(values(graph.parents), 1) ||
-           src in getindex.(values(graph.parents), 2)
+    elseif src in Iterators.flatten(values(graph.parents))
         node_type = :input_node
     else
         error("Node $src not present in the graph.")
