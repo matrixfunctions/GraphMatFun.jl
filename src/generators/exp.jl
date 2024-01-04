@@ -245,7 +245,7 @@ function graph_exp_native_jl_low_degopt(C, input)
     # U
     a = view(C, 4:2:n)
     xU[s+1] =
-        (vcat(zeros(T, 1), one(T), zeros(T, s + 1)), vcat(C[2], zero(T), a))
+        (vcat(zeros(T, 1), one(T), zeros(T, s)), vcat(C[2], zero(T), a))
     zU = vcat(zeros(T, s + 2), one(T))
     (graphU, crefU) = graph_degopt(xU, zU, input = input)
     rename_node!(graphU, graphU.outputs[1], :U, crefU)
@@ -388,8 +388,5 @@ end
 # Remove redundant creation of monomial basis, e.g., VB3 == UB3 and VBa4_3 == UBa4_3
 function merge_rename_exp_native_jl_degopt!(graph, cref, M)
     for N in ["VB", "UB"]
-        for k in reverse(2:M)
-            rename_node!(graph, Symbol(string(N, "$k")), Symbol("B$(k)"), cref)
-        end
     end
 end
