@@ -196,15 +196,12 @@ function eval_der(graph, x, c, vals, comporder, output)
            haskey(der, graph.parents[node][2])
             der[node] = zeros(T, length(x))
             for i = 1:2 # Two parents. One or both has a nonzeros derivative
-                curr_parent = graph.parents[node][i]
-                other_parent = graph.parents[node][(i == 1) ? 2 : 1]
                 if haskey(der, curr_parent)
                     der_prop!(
                         graph,
                         der,
                         vals,
                         node,
-                        (curr_parent, other_parent),
                         i,
                     )
                 end
@@ -214,9 +211,11 @@ function eval_der(graph, x, c, vals, comporder, output)
     return der[graph.outputs[output]]
 end
 
-# der_prop! -- Derivative forward propagation
-function der_prop!(graph, der, vals, node, parents, i)
-    (curr_parent,other_parent)=parents;
+# der_prop! -- Derivative forward propagation.
+# i denotes the node in the graph.parents[node] whose derivative we currently consider
+function der_prop!(graph, der, vals, node, i)
+    curr_parent = graph.parents[node][i]
+    other_parent = graph.parents[node][(i == 1) ? 2 : 1]
     op = graph.operations[node]
     if (op == :mult)
         der[node][:] = der[node][:] + vals[other_parent] .* der[curr_parent]
