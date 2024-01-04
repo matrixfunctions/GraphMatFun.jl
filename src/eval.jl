@@ -64,7 +64,7 @@ function carry_out!(graph, vals, parentvals, node)
     # Generic type: Treat as "scalar"
     op = graph.operations[node]
     if (op == :mult)
-        if (parentvals[1] isa Vector)
+        if (parentvals[1] isa AbstractVector)
             vals[node] = parentvals[1] .* parentvals[2]
         else
             vals[node] = parentvals[1] * parentvals[2]
@@ -72,7 +72,7 @@ function carry_out!(graph, vals, parentvals, node)
     elseif (op == :lincomb)
         vals[node] = sum(graph.coeffs[node].*parentvals);
     elseif (op == :ldiv)
-        if (parentvals[1] isa Vector)
+        if (parentvals[1] isa AbstractVector)
             vals[node] = parentvals[1] .\ parentvals[2]
         else
             vals[node] = parentvals[1] \ parentvals[2]
@@ -204,8 +204,7 @@ function eval_der(graph, x, c, vals, comporder, output)
                         der,
                         vals,
                         node,
-                        curr_parent,
-                        other_parent,
+                        (curr_parent, other_parent),
                         i,
                     )
                 end
@@ -216,7 +215,8 @@ function eval_der(graph, x, c, vals, comporder, output)
 end
 
 # der_prop! -- Derivative forward propagation
-function der_prop!(graph, der, vals, node, curr_parent, other_parent, i)
+function der_prop!(graph, der, vals, node, parents, i)
+    (curr_parent,other_parent)=parents;
     op = graph.operations[node]
     if (op == :mult)
         der[node][:] = der[node][:] + vals[other_parent] .* der[curr_parent]
