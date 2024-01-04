@@ -56,7 +56,7 @@ Note that `T` can be a `Number` but can be other objects with defined
 operations, or just `Any`.
 """
 function Compgraph(T, orggraph::Compgraph)
-    newcoeffs = Dict{Symbol,Tuple{T,T}}()
+    newcoeffs = Dict{Symbol,NTuple{<:Any,T}}()
     for node in keys(orggraph.coeffs)
         t = convert.(T,orggraph.coeffs[node])
         newcoeffs[node] = t
