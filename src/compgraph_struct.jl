@@ -43,8 +43,8 @@ Creates an empty computation graph of with coefficients of type `T`.
 function Compgraph(T::Type = ComplexF64)
     return Compgraph(
         Dict{Symbol,Symbol}(),
-        Dict{Symbol,Tuple{Symbol,Symbol}}(),
-        Dict{Symbol,Tuple{T,T}}(),
+        Dict{Symbol,NTuple{<:Any,Symbol}}(),
+        Dict{Symbol,NTuple{<:Any,T}}(),
         Vector{Symbol}(),
     )
 end
@@ -120,6 +120,20 @@ function add_lincomb!(graph, node, α1, p1, α2, p2)
     graph.coeffs[node] = (α1, α2)
     return nothing
 end
+"""
+    add_lincomb!(graph,node,coeffs,nodes)
+
+Adds a linear combination of the nodes (Vector or Tuple)
+multiplied with coeffs (Vector or Tuple)
+"""
+function add_lincomb!(graph, node, coeffs, nodes)
+    check_node_name_legality(graph, node)
+    graph.operations[node] = :lincomb
+    graph.parents[node] = Tuple(nodes)
+    graph.coeffs[node] = Tuple(coeffs)
+    return nothing
+end
+
 
 """
     add_ldiv!(graph,node,p1,p2)
