@@ -41,18 +41,12 @@ function compress_graph_dangling!(graph, cref = []; verbose = false)
         for (key, parents) in graph.parents
             nof_children = 0
             for (pkey, pparents) in graph.parents
-                if (pparents[1] == key || pparents[2] == key)
-                    nof_children += 1
-                end
+                nof_children += sum(pparents .== key)
             end
 
             if (nof_children == 0 && !(key in graph.outputs))
                 conditional_println("Delete dangling: $key", verbose)
-                delete!(graph.parents, key)
-                delete!(graph.operations, key)
-                if (haskey(graph.coeffs, key))
-                    delete!(graph.coeffs, key)
-                end
+                del_node!(graph,key)
                 delete_crefs!(cref, key)
                 modified = true
                 break
