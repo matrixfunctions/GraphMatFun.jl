@@ -8,13 +8,14 @@ using LinearAlgebra, Polynomials
     add_lincomb!(graph, :C, 1.0, :I, 1 / 5, :A)
     add_mult!(graph, :Csqr, :C, :C)
     add_lincomb!(graph, :N, 1.0, :I, 1 / 2, :Csqr)
-    add_lincomb!(graph, :D, 1.0, :I, 2, :C)
-    add_ldiv!(graph, :out, :D, :N)
+    add_lincomb!(graph, :D, [1.0, 2, -2], [:I, :C, :Csqr])
+    add_ldiv!(graph, :out0, :D, :N)
+    add_lincomb!(graph, :out, [2.0], [:out0]); # Single term
     add_output!(graph, :out)
 
     A = 0.3
     E = eval_graph(graph, A)
-    Z = (I + 2 * (I + A / 5)) \ (I + 1 / 2 * (I + A / 5)^2)
+    Z = 2 * ((I + 2 * (I + A / 5)- 2 * (I + A / 5)^2) \ (I + 1 / 2 * (I + A / 5)^2))
     @test Z ≈ E
 
     A = [0.5; 0.4]
