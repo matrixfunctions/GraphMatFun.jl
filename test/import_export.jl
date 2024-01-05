@@ -41,7 +41,6 @@ using LinearAlgebra
         dom = "[-2,0.1]",
         err = "???",
         genby = basename(@__FILE__),
-        main_output = :pade,
         order = order,
     )
     graph2 = import_compgraph(fname)
