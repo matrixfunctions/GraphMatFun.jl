@@ -10,7 +10,7 @@ using LinearAlgebra, StaticArrays
 
     # Test julia code generation
     for i = 1:length(a)
-        (graph, crefs) = graph_ps([3 4 2 a[i]])
+        (graph, crefs) = graph_ps([3 4 2 -1 2 a[i]])
         add_ldiv!(graph, :R0, :A2, :P0)
         clear_outputs!(graph)
         add_output!(graph, :R0)
@@ -39,7 +39,7 @@ using LinearAlgebra, StaticArrays
     end
 
     # Test Statically sized matrix
-    (graph, crefs) = graph_ps([3 4 2 10.0])
+    (graph, crefs) = graph_ps([3 4 2 1 0.1 1.0])
     fname = tempname() * ".jl"
     lang = LangJulia(true,true,true,
                      value_one_name="ValueOne_"*string(time_ns()),
@@ -69,7 +69,7 @@ using LinearAlgebra, StaticArrays
     end
 
     for i = 1:4 #Not high-precision test for Matlab and C
-        (graph, crefs) = graph_ps([3 4 2 a[i]])
+        (graph, crefs) = graph_ps([3 4 2 a[i]] 1 0)
         add_ldiv!(graph, :R0, :A2, :P0)
         clear_outputs!(graph)
         add_output!(graph, :R0)
