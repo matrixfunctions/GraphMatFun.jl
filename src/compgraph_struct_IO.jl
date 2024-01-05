@@ -6,7 +6,6 @@ export export_compgraph, import_compgraph;
     function export_compgraph(
             graph,
         fname;
-        main_output = nothing,
         order = get_topo_order(graph)[1],
         fun = "",
         dom = "",
@@ -29,7 +28,6 @@ These kwargs are strings or values that are stored as comments in the file
 These kwarg influence how the graph is stored:
 
   - `order` specifies an order the graph nodes are stored
-  - `main_output` is a `Symbol` specifying what is the output.
 
 CGR format:
 
@@ -125,16 +123,11 @@ function export_compgraph(
                 ";",
             )
         end
-
-        if any(graph.outputs .== node) && !(node == main_output)
-            println(file, "output$nof_written_outputs", "=", String(node))
-            nof_written_outputs += 1
-        end
+    end
+    for (i,node) = enumerate(graph.outputs)
+        println(file, "output$i", "=", String(node))
     end
 
-    if !isnothing(main_output)
-        println(file, "output$nof_written_outputs", "=", String(main_output))
-    end
     return close(file)
 end
 
