@@ -486,7 +486,7 @@ function compress_graph_passthrough!(graph,
             node=lincomb_keys[i];
             parent=graph.parents[node][1];
             conditional_println(
-                "Remove node: $node is replaced by $parent because of one mult lincomb"
+                "Remove node: $node is replaced by $parent because of one mult lincomb", verbose
             )
             # node is computed using only one single scaling.
             GraphMatFun.replace_node!(graph,node,parent,cref);
