@@ -22,5 +22,6 @@ using Test
     include("polynomials.jl")
     include("rational.jl")
     include("sastre.jl")
+    include("bigraph.jl")
     include("topo_order.jl")
 end

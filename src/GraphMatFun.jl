@@ -25,6 +25,7 @@ include("generators/horner.jl")
 include("generators/newton_schulz.jl")
 include("generators/exp.jl")
 include("generators/sastre.jl")
+include("generators/bigraph.jl")
 
 # Error bounds
 include("error_bounds.jl")
