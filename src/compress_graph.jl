@@ -213,15 +213,24 @@ end
 
 # Check if node is trivial because of an identity on the left (:mult or :ldiv).
 function is_trivial_left(graph, node)
-    return (
-        graph.parents[node][1] == :I &&
-        (graph.operations[node] == :mult || graph.operations[node] == :ldiv)
-    )
+    op = graph.operations[node]
+    if (op == :lincomb)
+        return false;
+    else
+        return graph.parents[node][1] == :I &&
+            (op == :mult || op == :ldiv)
+    end
 end
 
 # Check if node is trivial because of an identity on the right (:mult).
 function is_trivial_right(graph, node)
-    return (graph.parents[node][2] == :I && graph.operations[node] == :mult)
+
+    op = graph.operations[node]
+    if (op == :lincomb)
+        return false;
+    else
+        return (graph.parents[node][2] == :I && op == :mult)
+    end
 end
 
 # Return a parent that can replace a node.
@@ -291,11 +300,12 @@ end
 """
     compress_graph_trivial!(graph,cref=[];verbose=false)
 
-Removes from the graph trivial nodes, that is, multiplications by the identity
-or linear systems whose coefficient is the identity matrix.
+Removes from graph the following operations
+   I\\B -> B
+   I*B -> B
+   B*I -> B
 """
 function compress_graph_trivial!(graph, cref = []; verbose = false)
-    # cref is not used as this function does not remove lincomb nodes.
     ismodified = true
     while ismodified
         ismodified = false
@@ -459,7 +469,7 @@ Identifies lincombs lincomb of length one with coeff equal to one. The node has 
 """
 
 function compress_graph_passthrough!(graph,
-                                     cref=[],
+                                     cref=[];
                                      verbose = false)
     modified = true;
     while modified
