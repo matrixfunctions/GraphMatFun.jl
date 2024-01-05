@@ -9,7 +9,6 @@ function unused_base_name(graph,inspired_by)
         ismodified=false;
         if (any(map(n-> startswith(string(n),string(inspired_by)) && n != inspired_by, collect(keys(graph.parents)))))
             # problematic case
-            @show inspired_by
             inspired_by=Symbol(string(inspired_by)*"_bigraph");
             ismodified=true;
         end
