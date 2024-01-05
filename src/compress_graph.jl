@@ -455,43 +455,34 @@ end
 """
     compress_graph_passthrough!(graph,cref=[];verbose=false);
 
-Identifies lincombs that have coefficients (0 1) or (1 0) which correspond to
-identity operations. It redirect appropriately.
+Identifies lincombs lincomb of length one with coeff equal to one. The node has no effect. It redirect appropriately.
 """
-function compress_graph_passthrough!(graph, cref = []; verbose = false)
-    ismodified = true
-    while ismodified
-        ismodified = false
-        for (key, coeffs) in graph.coeffs
-            if coeffs == (0, 1)
-                k_one = 2
-                k_zero = 1
-            elseif coeffs == (1, 0)
-                k_one = 1
-                k_zero = 2
-            else
-                continue
-            end
-            # k_one is to keep
-            # k_zero connection not important
-            conditional_println("Redirect node: $key to $k_one.", verbose)
 
-            p_passthrough = graph.parents[key][k_one]
+function compress_graph_passthrough!(graph,
+                                     cref=[],
+                                     verbose = false)
+    modified = true;
+    while modified
+        # all lincomb  keys
+        lincomb_keys=collect(keys(graph.coeffs))
+        lincomb_coeffs=map(x->graph.coeffs[x],lincomb_keys);
 
-            # Find all nodes that use key and redirect them
-            for (key2, parents) in graph.parents
-                if (parents[1] == key)
-                    parents = (p_passthrough, parents[2])
-                    ismodified = true
-                end
-                if (parents[2] == key)
-                    parents = (parents[1], p_passthrough)
-                    ismodified = true
-                end
-                graph.parents[key2] = parents
-            end
+        # Find first occurance with one coeff and equal to 1
+        i=findfirst(map(z-> z==[1], lincomb_coeffs))
+
+        modified = false;
+        if (!isnothing(i))
+            modified = true
+            node=lincomb_keys[i];
+            parent=graph.parents[node][1];
+            conditional_println(
+                "Remove node: $node is replaced by $parent because of one mult lincomb"
+            )
+            # node is computed using only one single scaling.
+            GraphMatFun.replace_node!(graph,node,parent,cref);
         end
     end
+    return graph
 end
 
 """
