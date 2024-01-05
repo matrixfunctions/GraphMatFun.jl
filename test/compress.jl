@@ -122,4 +122,19 @@ using LinearAlgebra
     @test Set(get_all_cref(graph1))==Set(cref1)
     @test eval_graph(graph1, A) == eval_graph(graph, A)
 
+
+
+    # Zero coeff removal and passthrough
+    graph = Compgraph()
+    add_mult!(graph,:A2,:A,:A);
+    add_lincomb!(graph, :Ax, [0,0.0,1.0], [:A, :I, :A2])
+    add_ldiv!(graph, :out,:Ax,:A);
+    add_output!(graph,:out);
+
+    cref=get_all_cref(graph);
+    graph1=deepcopy(graph);
+    compress_graph_zero_coeff!(graph1,cref)
+    compress_graph_passthrough!(graph1,cref)
+    @test eval_graph(graph,A) == eval_graph(graph1,A)
+
 end
