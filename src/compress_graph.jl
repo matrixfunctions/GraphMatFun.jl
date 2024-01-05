@@ -3,7 +3,6 @@
 
 export compress_graph_dangling!
 export compress_graph_zero_coeff!
-export compress_graph_output_cleaning!
 export has_identity_lincomb
 export has_trivial_nodes
 export compress_graph_trivial!
@@ -174,34 +173,6 @@ function compress_graph_zero_coeff_old!(
             end
             if (big_break)
                 break
-            end
-        end
-    end
-end
-"""
-    compress_graph_output_cleaning!(graph,cref=[];verbose=false)
-
-Checks if the output is computed from the linear combination that can be
-compressed.
-"""
-function compress_graph_output_cleaning!(graph, cref = []; verbose = false)
-    ismodified = false
-    while ismodified
-        ismodified = false
-        for (i, n) in enumerate(graph.outputs)
-            if (graph.operations[n] == :lincomb)
-                for s = 1:2
-                    other_s = 3 - s
-                    if (
-                        graph.coeffs[n][s] == 1.0 &&
-                        graph.coeffs[n][other_s] == 0.0
-                    )
-                        # Redirect since it is just a copy of
-                        # another node
-                        graph.outputs[i] = graph.parents[n][s]
-                        ismodified = true
-                    end
-                end
             end
         end
     end
@@ -503,7 +474,6 @@ function it represents. Corresponding references in the `cref`-vector are
 removed.
 """
 function compress_graph!(graph, cref = []; verbose = false)
-    compress_graph_output_cleaning!(graph, cref, verbose = verbose)
     compress_graph_zero_coeff!(graph, cref, verbose = verbose)
     compress_graph_trivial!(graph, cref, verbose = verbose)
     compress_graph_passthrough!(graph, cref, verbose = verbose)
