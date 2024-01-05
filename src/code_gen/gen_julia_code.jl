@@ -4,7 +4,6 @@ export LangJulia
 struct LangJulia
     overwrite_input::Any # Overwrite input
     inline::Any
-    dot_fusing::Any # Allow dot fusion
     axpby_header::Any
     alloc_function
     only_overwrite
@@ -14,18 +13,17 @@ end
 default_alloc_function(k)="similar(A,T)"
 
 """
-    LangJulia(overwrite_input=true,inline=true,dot_fusing=true,axpby_header=:auto,alloc_function,only_overwrite=false)
+    LangJulia(overwrite_input=true,inline=true,axpby_header=:auto,alloc_function,only_overwrite=false)
 
-Code generation in julia language, with optional overwriting of input, inlining
-the function and optional usage of dot fusion. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The `only_overwrite` specifies if `f` should be created if the overwrite funtion `f!` contains the actual code.
+Code generation in julia language, with optional overwriting of input. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The `only_overwrite` specifies if `f` should be created if the overwrite funtion `f!` contains the actual code.
 """
-LangJulia() = LangJulia(true, true, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
+LangJulia() = LangJulia(true, true,  :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 function LangJulia(overwrite_input, inline)
-    return LangJulia(overwrite_input, inline, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
+    return LangJulia(overwrite_input, inline, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 end
-function LangJulia(overwrite_input, inline, dot_fusing; value_one_name="ValueOne",axpby_name="matfun_axpby!")
-    return LangJulia(overwrite_input, inline, dot_fusing, :auto, default_alloc_function,false,value_one_name,axpby_name)
+function LangJulia(overwrite_input, inline ; value_one_name="ValueOne",axpby_name="matfun_axpby!")
+    return LangJulia(overwrite_input, inline,  :auto, default_alloc_function,false,value_one_name,axpby_name)
 end
 
 # Language specific operations.
@@ -60,11 +58,7 @@ function assign_coeff_basic(lang::LangJulia, v, i)
 end
 
 function preprocess_codegen(graph, lang::LangJulia)
-    if (lang.dot_fusing)
-        return MultiLincombCompgraph(graph) # Merge many lincombs for dot fusion
-    else
-        return graph
-    end
+    return graph # Merge many lincombs for dot fusion
 end
 
 # Code generation.
@@ -297,7 +291,7 @@ end
 function execute_operation!(
     lang::LangJulia,
     T,
-    graph::MultiLincombCompgraph,
+    graph,
     node,
     dealloc_list,
     mem,
@@ -397,10 +391,6 @@ function execute_operation!(
 
         return (code, nodemem)
     end
-end
-
-function execute_operation!(lang::LangJulia, T, graph, node, dealloc_list, mem)
-    return execute_operation_basic!(lang, T, graph, node, dealloc_list, mem)
 end
 
 # The general base case. Separated for dispatch.

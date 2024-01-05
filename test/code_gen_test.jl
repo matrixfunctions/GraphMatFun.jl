@@ -14,25 +14,24 @@ using LinearAlgebra, StaticArrays
         add_ldiv!(graph, :R0, :B4, graph.outputs[1])
         clear_outputs!(graph)
         add_output!(graph, :R0)
-        for t3 in (true, false)
-            for t2 in (true, false)
-                for t1 in (true, false)
-                    TT = eltype(a);
-                    A = convert.(TT,[3 4.0; 5.5 0.1]);
-                    ti = time_ns()
-                    lang = LangJulia(t1,t2,t3,
-                                     value_one_name="ValueOne_"*string(ti),
-                                     axpby_name="matfun_axpby_"*string(ti)*"!")
-                    fname = tempname() * ".jl"
-                    begin # To avoid generated codes interfere
-                        gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
-                        # and execution
-                        include(fname)
-                        @test eval_graph(graph, A) ≈ eval(Symbol("dummy_$(ti)"))(A)
-                    end
 
-                    rm(fname)
+        for t2 in (true, false)
+            for t1 in (true, false)
+                TT = eltype(a);
+                A = convert.(TT,[3 4.0; 5.5 0.1]);
+                ti = time_ns()
+                lang = LangJulia(t1,t2,
+                                 value_one_name="ValueOne_"*string(ti),
+                                 axpby_name="matfun_axpby_"*string(ti)*"!")
+                fname = tempname() * ".jl"
+                begin # To avoid generated codes interfere
+                    gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
+                    # and execution
+                    include(fname)
+                    @test eval_graph(graph, A) ≈ eval(Symbol("dummy_$(ti)"))(A)
                 end
+
+                rm(fname)
             end
         end
 
