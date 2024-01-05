@@ -23,17 +23,18 @@ using LinearAlgebra, Polynomials
     Z = zero(A)
     for i = 1:2
         a = A[i]
-        Z[i] = (I + 2 * (I + a / 5)) \ (I + 1 / 2 * (I + a / 5)^2)
+        Z[i] = 2 * ((I + 2 * (I + a / 5)- 2 * (I + a / 5)^2) \ (I + 1 / 2 * (I + a / 5)^2))
     end
     @test Z ≈ E
 
     A = [0.4 0.2; 1.1 0.3]
     E = eval_graph(graph, A)
-    Z = (I + 2 * (I + A / 5)) \ (I + 1 / 2 * (I + A / 5)^2)
+    Z = 2 * ((I + 2 * (I + A / 5)- 2 * (I + A / 5)^2) \ (I + 1 / 2 * (I + A / 5)^2))
     @test Z ≈ E
 
     # Node removal.
     del_node!(graph, :D) #Remove rational part
+    del_node!(graph, :out0)
     del_output!(graph, :out)
     @test isempty(graph.outputs)
     del_node!(graph, :out)
