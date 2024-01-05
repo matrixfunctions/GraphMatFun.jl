@@ -40,7 +40,7 @@ using LinearAlgebra, StaticArrays
     # Test Statically sized matrix
     (graph, crefs) = graph_ps_degopt([3 4 2 1 0.1 1.0])
     fname = tempname() * ".jl"
-    lang = LangJulia(true,true,true,
+    lang = LangJulia(true,true,
                      value_one_name="ValueOne_"*string(time_ns()),
                      axpby_name="matfun_axpby_"*string(time_ns())*"!")
     begin
@@ -56,7 +56,7 @@ using LinearAlgebra, StaticArrays
 
     # Test precomputed nodes
     fname = tempname() * ".jl"
-    lang = LangJulia(true,true,true,
+    lang = LangJulia(true,true,
                      value_one_name="ValueOne_"*string(time_ns()),
                      axpby_name="matfun_axpby_"*string(time_ns())*"!")
     begin
