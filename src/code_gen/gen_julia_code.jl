@@ -118,7 +118,7 @@ function function_definition(
     code = init_code(lang)
     axpby_header = lang.axpby_header
     if (lang.axpby_header == :auto)
-        axpby_header = !lang.dot_fusing
+        axpby_header = false
     end
 
     push_code!(code, "using LinearAlgebra", ind_lvl = 0)
