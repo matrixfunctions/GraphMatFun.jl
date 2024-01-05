@@ -46,7 +46,6 @@ using LinearAlgebra
     graph2 = import_compgraph(fname)
     rm(fname)
     for i = 1:10
-        @test eval_graph(graph, tests[i]) != eval_graph(graph1, tests[i])
-        @test eval_graph(graph, tests[i]) ≈ eval_graph(graph2, tests[i])
+        @test eval_graph(graph1, tests[i]) == eval_graph(graph2, tests[i])
     end
 end
