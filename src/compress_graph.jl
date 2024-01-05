@@ -58,10 +58,55 @@ end
 """
     compress_graph_zero_coeff!(graph,cref=[];droptol=0;verbose=false)
 
-Searches for linear combinations with zero coeff value and tries to compress by
-redirecting node references.
+Searches for linear combinations with zero coeff and removes those. The cref
+list deletes references to zero coeffs and updates all other crefs.
 """
-function compress_graph_zero_coeff!(
+function compress_graph_zero_coeff_new!(
+    graph,
+    cref = [];
+    droptol = 0,
+    verbose = false,
+)
+    modified = true
+    while (modified)
+        modified = false
+        all_crefs=get_all_cref(graph);
+        vals=get_coeffs(graph,  all_crefs)
+        i=findfirst(abs.(vals) .<= droptol )
+        if (!isnothing(i)) # We found a zero element
+            node=all_crefs[i][1];
+            idx=all_crefs[i][2];
+
+            conditional_println(
+                "Remove node: One coefficient in the computation of $node can be removed " *
+                string(vals[i]) *
+                " ≈ 0",
+                verbose,
+            )
+
+            deleteat!(graph.parents[node],idx);
+            deleteat!(graph.coeffs[node],idx);
+            modified=true;
+
+
+            # Update the cref list
+
+            # Remove the occurance of this cref
+            rm_cref=all_crefs[i];
+            filter!(x->x≠rm_cref,cref)
+            # Update all the pointers in cref list
+            for j = findall(map(x-> x[1] == node, cref))
+                if (cref[j][2] > idx)
+                    cref[j] = (cref[j][1],cref[j][2]-1) # Reduce by one. Tuple is immutable
+                end
+            end
+            #
+        end
+    end
+end
+
+# Keep in order to not lose functionality.
+function compress_graph_zero_coeff_old!(
     graph,
     cref = [];
     droptol = 0,
