@@ -11,6 +11,9 @@ using LinearAlgebra
     num_coeffs = 10 * randn(7)
 
     (graph, cref) = graph_rational(den_coeffs, num_coeffs, graph_ps)
+    add_lincomb!(graph,:Qnew,[1.0, -1.0, 3.3], [graph.outputs[1],:I, :A])
+    clear_outputs!(graph);
+    add_output!(graph,:Qnew)
     fname = string(tempname(), ".cgr")
     export_compgraph(graph, fname)
     graph2 = import_compgraph(fname)
