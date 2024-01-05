@@ -11,7 +11,8 @@ using LinearAlgebra, StaticArrays
     # Test julia code generation
     for i = 1:length(a)
         (graph, crefs) = graph_ps_degopt([3 4 2 -1 2 a[i]])
-        add_ldiv!(graph, :R0, :B4, graph.outputs[1])
+        add_lincomb!(graph,:Q,[2.0],graph.outputs) # Check
+        add_ldiv!(graph, :R0, :B4, :Q)
         clear_outputs!(graph)
         add_output!(graph, :R0)
 
