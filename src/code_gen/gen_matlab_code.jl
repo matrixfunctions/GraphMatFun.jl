@@ -61,21 +61,26 @@ end
 function execute_operation!(lang::LangMatlab, T, graph, node, dealloc_list, mem)
     op = graph.operations[node]
     parent1 = graph.parents[node][1]
-    parent2 = graph.parents[node][2]
 
     code = init_code(lang)
     push_comment!(code, "Computing $node with operation: $op")
     # Needs to be updated
     if op == :mult
+        parent2 = graph.parents[node][2]
         push_code!(code, "$node = $parent1 * $parent2;")
     elseif op == :ldiv
+        parent2 = graph.parents[node][2]
         push_code!(code, "$node = $parent1 \\ $parent2;")
     elseif op == :lincomb
-        (coeff1, coeff1_code) = assign_coeff(lang, graph.coeffs[node][1], 1)
-        push_code!(code, "$coeff1_code;")
-        (coeff2, coeff2_code) = assign_coeff(lang, graph.coeffs[node][2], 2)
-        push_code!(code, "$coeff2_code;")
-        push_code!(code, "$node = $coeff1*$parent1 + $coeff2*$parent2;")
+
+        coeff_names=Vector();
+        for (i,coeff) = enumerate(graph.coeffs[node])
+            (coeff, coeff_code) = assign_coeff(lang, graph.coeffs[node][i], i)
+            push_code!(code, "$coeff_code;")
+            push!(coeff_names,coeff)
+        end
+        sum_code=join((coeff_names.*"*") .* string.(graph.parents[node])," + ")
+        push_code!(code, "$node = $sum_code;")
     end
     return (code, "$node")
 end
