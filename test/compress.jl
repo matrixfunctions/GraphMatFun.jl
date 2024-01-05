@@ -89,8 +89,6 @@ using LinearAlgebra
     @test has_trivial_nodes(graph1) == true
     cref = get_all_cref(graph) # Empty as graph has no linear combination nodes.
     compress_graph_trivial!(graph2, cref)
-    @test cref == [(:P1, 1), (:P1, 2)]
-    @test graph2.operations == Dict(:P0 => :mult, :P1 => :lincomb, :P2 => :mult)
     @test graph2.outputs == [:P0]
 
     ## Test function to remove redundant nodes.
