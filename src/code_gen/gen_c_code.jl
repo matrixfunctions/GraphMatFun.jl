@@ -107,6 +107,12 @@ function get_blas_type(::LangC_OpenBLAS, T::Type{Complex{Float64}})
     return ("openblas_complex_double", "z")
 end
 
+
+function preprocess_codegen(graph, lang::LangC)
+    (g,_)=graph_bigraph(graph)
+    return g # Lang C only supports bigraphs
+end
+
 function function_definition(lang::LangC, graph, T, funname, precomputed_nodes)
     (blas_type, blas_prefix) = get_blas_type(lang, T)
     code = init_code(lang)
