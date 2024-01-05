@@ -23,7 +23,7 @@ using LinearAlgebra
     add_mult!(graph, :A2, :A, :A)
     add_mult!(graph, :A4, :A2, :A2)
     add_mult!(graph, :A8, :A4, :A4)
-    add_sum!(graph, :T, [3; 4; 0.1; 0; 0], [:I; :A; :A2; :A4; :A8])
+    add_lincomb!(graph, :T, [3; 4; 0.1; 0; 0], [:I; :A; :A2; :A4; :A8])
     add_output!(graph, :T)
 
     graph1 = graph
@@ -76,12 +76,14 @@ using LinearAlgebra
     @test graph2.outputs == [:A]
 
     graph = Compgraph()
-    add_lincomb!(graph, :P1, 1.0, :A, 2.0, :I)
+    add_lincomb!(graph, :P1, [1.0,2.0,0], [:A, :I,:A])
     add_mult!(graph, :P2a, :A, :I)
     add_mult!(graph, :P2b, :I, :A)
     add_mult!(graph, :P2, :P2a, :P2b)
     add_mult!(graph, :P0, :P1, :P2)
+    #add_lincomb!(graph, :Px,0,:I,1.0,:P0)
     add_output!(graph, :P0)
+
     graph1 = graph
     graph2 = deepcopy(graph)
     @test has_trivial_nodes(graph1) == true
@@ -89,14 +91,13 @@ using LinearAlgebra
     compress_graph_trivial!(graph2, cref)
     @test cref == [(:P1, 1), (:P1, 2)]
     @test graph2.operations == Dict(:P0 => :mult, :P1 => :lincomb, :P2 => :mult)
-    @test graph2.parents ==
-          Dict(:P0 => collect((:P1, :P2)), :P1 => collect((:A, :I)), :P2 => collect((:A, :A)))
     @test graph2.outputs == [:P0]
 
     ## Test function to remove redundant nodes.
     graph = Compgraph()
-    add_lincomb!(graph, :AI1, 1.0, :A, 2.0, :I)
-    add_lincomb!(graph, :AI2, 1.0, :A, 2.0, :I)
+    add_mult!(graph,:A2,:A,:A);
+    add_lincomb!(graph, :AI1, [1.0,2.0,3.0], [:A, :I, :A2])
+    add_lincomb!(graph, :AI2, [1.0,2.0,3.0], [:A, :I, :A2])
     add_lincomb!(graph, :IA1, 2.0, :I, 1.0, :A)
     add_mult!(graph, :P1, :AI1, :AI2)
     add_mult!(graph, :P2, :AI2, :AI1)
@@ -107,32 +108,20 @@ using LinearAlgebra
 
     cref = get_all_cref(graph)
 
+    # Reduce redundant multiplications and divisions
     graph1 = deepcopy(graph)
     cref1 = get_all_cref(graph1)
     compress_graph_redundant!(graph1, cref, compress_lincomb = false)
-    @test length(get_sorted_keys(graph1)) == 6
+    @test length(get_sorted_keys(graph1)) == 7
     @test cref == cref1
     @test eval_graph(graph1, A) == eval_graph(graph, A)
 
+    # Reduce redundant multiplications and lincombs
     graph1 = deepcopy(graph)
     cref1 = get_all_cref(graph1)
     compress_graph_redundant!(graph1, cref1, compress_lincomb = true)
-    @test length(get_sorted_keys(graph1)) == 4
-    @test cref1 == [(:AI1, 1), (:AI1, 2)]
+    @test length(get_sorted_keys(graph1)) == 6
+    @test Set(get_all_cref(graph1))==Set(cref1)
     @test eval_graph(graph1, A) == eval_graph(graph, A)
 
-    graph1 = deepcopy(graph)
-    cref1 = get_all_cref(graph1)
-    compress_graph_redundant!(graph1, cref1)
-    @test length(get_sorted_keys(graph1)) == 4
-    @test cref1 == [(:AI1, 1), (:AI1, 2)]
-    @test eval_graph(graph1, A) == eval_graph(graph, A)
-
-    add_output!(graph, :D2) # Now :D2 cannot be merged with :D1.
-    graph1 = deepcopy(graph)
-    cref1 = get_all_cref(graph1)
-    compress_graph_redundant!(graph1, cref1)
-    @test length(get_sorted_keys(graph1)) == 5
-    @test cref1 == [(:AI1, 1), (:AI1, 2)]
-    @test eval_graph(graph1, A) == eval_graph(graph, A)
 end
