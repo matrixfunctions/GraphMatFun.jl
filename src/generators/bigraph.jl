@@ -35,8 +35,6 @@ function graph_bigraph(graph0)
         elseif (length(coeffs)==1) # Expand by a trivial multiplication
             graph.parents[node]=[:I;parents[1]];
             graph.coeffs[node]=[0;coeffs[1]];
-        else
-            # Nothing to do. We're good
         end
     end
     cref=get_all_cref(graph);

@@ -13,6 +13,7 @@
     (graph0,_)=graph_ps_degopt(x);
     compress_graph_zero_coeff!(graph0)
     graph0.coeffs[:Bb2][1]=-0.9;
+    rename_node!(graph0,:Ba5,:Bb42) # Improve test coverage
     x=[3.0 4; 1.1 0.1];
     (graph1,_)=graph_bigraph(graph0)
     @test eval_graph(graph0,x) == eval_graph(graph1,x)
