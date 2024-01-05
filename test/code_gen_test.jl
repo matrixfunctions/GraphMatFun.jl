@@ -68,7 +68,7 @@ using LinearAlgebra, StaticArrays
     end
 
     for i = 1:4 #Not high-precision test for Matlab and C
-        (graph, crefs) = graph_ps([3 4 2 a[i] 1 0])
+        (graph, crefs) = graph_ps_degopt([3 4 2 a[i] 1 0])
         add_ldiv!(graph, :R0, :B4, graph.outputs[1])
         clear_outputs!(graph)
         add_output!(graph, :R0)

@@ -19,9 +19,6 @@ Code generation in julia language, with optional overwriting of input. The `axpb
 """
 LangJulia() = LangJulia(true, true,  :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
-function LangJulia(overwrite_input, inline)
-    return LangJulia(overwrite_input, inline, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
-end
 function LangJulia(overwrite_input, inline ; value_one_name="ValueOne",axpby_name="matfun_axpby!")
     return LangJulia(overwrite_input, inline,  :auto, default_alloc_function,false,value_one_name,axpby_name)
 end
