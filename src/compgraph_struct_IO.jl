@@ -39,7 +39,6 @@ See also [`export_compgraph`](@ref).
 function export_compgraph(
     graph,
     fname;
-    main_output = nothing,
     order = get_topo_order(graph)[1],
     fun = "",
     dom = "",
