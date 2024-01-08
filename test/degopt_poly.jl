@@ -10,7 +10,7 @@ using LinearAlgebra
     (graph, crefs) = graph_degopt(x, z)
 
     x0 = 3.1415
-    ev1 = eval_graph(graph, x0, comporder = get_topo_order_degopt(2))
+    ev1 = eval_graph(graph, x0)
 
     # Manual evaluation
     β1 = (x1a[1] + x1a[2] * x0) * (x1b[1] + x1b[2] * x0)
@@ -38,7 +38,7 @@ using LinearAlgebra
     (graph2, crefs2) = graph_degopt(x, z)
 
     x1 = 0.3
-    @test eval_graph(graph, x1, comporder = get_topo_order_degopt(2)) ==
+    @test eval_graph(graph, x1) ==
           eval_graph(graph2, x1)
 
     for k = 1:7

@@ -11,6 +11,9 @@ using LinearAlgebra
     num_coeffs = 10 * randn(7)
 
     (graph, cref) = graph_rational(den_coeffs, num_coeffs, graph_ps)
+    add_lincomb!(graph,:Qnew,[1.0, -1.0, 3.3], [graph.outputs[1],:I, :A])
+    clear_outputs!(graph);
+    add_output!(graph,:Qnew)
     fname = string(tempname(), ".cgr")
     export_compgraph(graph, fname)
     graph2 = import_compgraph(fname)
@@ -38,13 +41,11 @@ using LinearAlgebra
         dom = "[-2,0.1]",
         err = "???",
         genby = basename(@__FILE__),
-        main_output = :pade,
         order = order,
     )
     graph2 = import_compgraph(fname)
     rm(fname)
     for i = 1:10
-        @test eval_graph(graph, tests[i]) != eval_graph(graph1, tests[i])
-        @test eval_graph(graph, tests[i]) ≈ eval_graph(graph2, tests[i])
+        @test eval_graph(graph1, tests[i]) == eval_graph(graph2, tests[i])
     end
 end

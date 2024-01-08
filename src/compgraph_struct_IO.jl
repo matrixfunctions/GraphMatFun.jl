@@ -6,7 +6,6 @@ export export_compgraph, import_compgraph;
     function export_compgraph(
             graph,
         fname;
-        main_output = nothing,
         order = get_topo_order(graph)[1],
         fun = "",
         dom = "",
@@ -29,7 +28,6 @@ These kwargs are strings or values that are stored as comments in the file
 These kwarg influence how the graph is stored:
 
   - `order` specifies an order the graph nodes are stored
-  - `main_output` is a `Symbol` specifying what is the output.
 
 CGR format:
 
@@ -41,7 +39,6 @@ See also [`export_compgraph`](@ref).
 function export_compgraph(
     graph,
     fname;
-    main_output = nothing,
     order = get_topo_order(graph)[1],
     fun = "",
     dom = "",
@@ -125,16 +122,11 @@ function export_compgraph(
                 ";",
             )
         end
-
-        if any(graph.outputs .== node) && !(node == main_output)
-            println(file, "output$nof_written_outputs", "=", String(node))
-            nof_written_outputs += 1
-        end
+    end
+    for (i,node) = enumerate(graph.outputs)
+        println(file, "output$i", "=", String(node))
     end
 
-    if !isnothing(main_output)
-        println(file, "output$nof_written_outputs", "=", String(main_output))
-    end
     return close(file)
 end
 
@@ -161,25 +153,27 @@ function import_compgraph(fname)
         line = readline(file)
 
         if startswith(line, "coeff1=") #Start of three lines defining :lincomb
-            α = Vector{T}(undef, 2)
-            for i = 1:2
+            α = Vector{T}()
+            while occursin(r"^coeff(\d+)=", line)
                 # Remove everything upto "=" inclusive.
                 num = replace(line, r".*=" => "")
-                α[i] = parse(T, num[1:end-1])
+                push!(α,parse(T, num[1:end-1]))
                 line = readline(file)
             end
+            nof_coeffs=length(α)
             parts = split(line, "=") # Split string on "="
             target = Symbol(parts[1])
             subparts = split(parts[2], "+")
-            if endswith(subparts[2], ";")
-                subparts[2] = subparts[2][1:end-1]
+            if endswith(subparts[end], ";")
+                subparts[end] = subparts[end][1:end-1]
             end
-            p = Vector{Symbol}(undef, 2)
-            for i = 1:2
+
+            p = Vector{Symbol}(undef, nof_coeffs)
+            for i = 1:nof_coeffs
                 # Remove everything upto "*" inclusive
                 p[i] = Symbol(replace(subparts[i], r".*\*" => ""))
             end
-            add_lincomb!(graph, target, α[1], p[1], α[2], p[2])
+            add_lincomb!(graph, target, α, p)
         elseif occursin(r"\*", line) # Looks for "*". Found :mult
             parts = split(line, "=") # Split string on "="
             target = Symbol(parts[1])

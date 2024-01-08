@@ -245,10 +245,10 @@ function graph_exp_native_jl_low_degopt(C, input)
     # U
     a = view(C, 4:2:n)
     xU[s+1] =
-        (vcat(zeros(T, 1), one(T), zeros(T, s + 1)), vcat(C[2], zero(T), a))
+        (vcat(zeros(T, 1), one(T), zeros(T, s )), vcat(C[2], zero(T), a))
     zU = vcat(zeros(T, s + 2), one(T))
     (graphU, crefU) = graph_degopt(xU, zU, input = input)
-    rename_node!(graphU, Symbol("T2k$(4+s)"), :U, crefU)
+    rename_node!(graphU, graphU.outputs[1], :U, crefU)
 
     # V
     xV = Vector{Tuple{Vector{T},Vector{T}}}(undef, s)
@@ -256,7 +256,7 @@ function graph_exp_native_jl_low_degopt(C, input)
     a = view(C, 3:2:n-1)
     zV = vcat(C[1], zero(T), a)
     (graphV, crefV) = graph_degopt(xV, zV, input = input)
-    rename_node!(graphV, Symbol("T2k$(3+s)"), :V, crefV)
+    rename_node!(graphV, graphV.outputs[1], :V, crefV)
 
     graph = merge_graphs(
         graphU,
@@ -315,7 +315,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
 
     zU = vcat(zeros(T, 6), one(T))
     (graphU, crefU) = graph_degopt(xU, zU, input = C)
-    rename_node!(graphU, :T2k8, :U, crefU)
+    rename_node!(graphU, graphU.outputs[1], :U, crefU)
 
     # V  = A6 * (CC[13].*A6 .+ CC[11].*A4 .+ CC[9].*A2) .+
     #            CC[7].*A6 .+ CC[5].*A4 .+ CC[3].*A2 .+ CC[1].*Inn
@@ -332,7 +332,7 @@ function graph_exp_native_jl_high_degopt(CC, s, input)
     a = view(CC, 3:2:7)
     zV = vcat(CC[1], zero(T), a, one(T))
     (graphV, crefV) = graph_degopt(xV, zV, input = C)
-    rename_node!(graphV, :T2k7, :V, crefV)
+    rename_node!(graphV, graphV.outputs[1], :V, crefV)
 
     graph = merge_graphs(
         graphU,
@@ -390,16 +390,6 @@ function merge_rename_exp_native_jl_degopt!(graph, cref, M)
     for N in ["VB", "UB"]
         for k in reverse(2:M)
             rename_node!(graph, Symbol(string(N, "$k")), Symbol("B$(k)"), cref)
-            for NN in ["a", "b"]
-                for kk in reverse(2:k-1)
-                    rename_node!(
-                        graph,
-                        Symbol(string(N, NN, "$(k)_$(kk)")),
-                        Symbol(string("B", NN, "$(k)_$(kk)")),
-                        cref,
-                    )
-                end
-            end
         end
     end
 end

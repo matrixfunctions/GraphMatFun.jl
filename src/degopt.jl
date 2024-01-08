@@ -115,28 +115,13 @@ function get_degopt_crefs(k)
 
     for s = 2:k+1
         for (b, base) in enumerate(["Ba$s", "Bb$s"])
-            if s == 2
-                x[s-1][b][1] = (Symbol(base), 1)
+            for i=1:s
+                x[s-1][b][i]=(Symbol(base),i)
             end
-            for i = 2:s-1
-                if i == 2
-                    x[s-1][b][1] = (Symbol("$(base)_2"), 1)
-                end
-                x[s-1][b][i] = (Symbol("$(base)_$(i)"), 2)
-            end
-            x[s-1][b][s] = (Symbol(base), 2)
         end
     end
 
-    zlength = k + 2
-    z = Vector{TT}(undef, zlength)
-    z[1] = (:T2k2, 1)
-    z[2] = (:T2k2, 2)
-    for i = 3:zlength-1
-        z[i] = (Symbol("T2k$(i)"), 2)
-    end
-    z[k+2] = (Symbol("T2k$(k+3)"), 2)
-
+    z = map(i-> (Symbol(:y),i), 1:k+2)
     return (x, z)
 end
 

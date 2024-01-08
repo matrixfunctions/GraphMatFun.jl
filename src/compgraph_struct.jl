@@ -30,8 +30,8 @@ export get_sorted_keys
 # Hash tables representing a computation graph
 struct Compgraph{T}
     operations::Dict{Symbol,Symbol}
-    parents::Dict{Symbol,Tuple{Symbol,Symbol}}
-    coeffs::Dict{Symbol,Tuple{T,T}}
+    parents::Dict{Symbol,Vector{Symbol}}
+    coeffs::Dict{Symbol,Vector{T}}
     outputs::Vector{Symbol}
 end
 
@@ -43,8 +43,8 @@ Creates an empty computation graph of with coefficients of type `T`.
 function Compgraph(T::Type = ComplexF64)
     return Compgraph(
         Dict{Symbol,Symbol}(),
-        Dict{Symbol,Tuple{Symbol,Symbol}}(),
-        Dict{Symbol,Tuple{T,T}}(),
+        Dict{Symbol,Vector{Symbol}}(),
+        Dict{Symbol,Vector{T}}(),
         Vector{Symbol}(),
     )
 end
@@ -56,7 +56,7 @@ Note that `T` can be a `Number` but can be other objects with defined
 operations, or just `Any`.
 """
 function Compgraph(T, orggraph::Compgraph)
-    newcoeffs = Dict{Symbol,Tuple{T,T}}()
+    newcoeffs = Dict{Symbol,Vector{T}}()
     for node in keys(orggraph.coeffs)
         t = convert.(T,orggraph.coeffs[node])
         newcoeffs[node] = t
@@ -101,7 +101,7 @@ Adds a multiplication of node `p1` and `p2` to the
 function add_mult!(graph, node, p1, p2)
     check_node_name_legality(graph, node)
     graph.operations[node] = :mult
-    graph.parents[node] = (p1, p2)
+    graph.parents[node] = [p1; p2];
     return nothing
 end
 
@@ -116,10 +116,24 @@ See also [`add_sum!`](@ref).
 function add_lincomb!(graph, node, α1, p1, α2, p2)
     check_node_name_legality(graph, node)
     graph.operations[node] = :lincomb
-    graph.parents[node] = (p1, p2)
-    graph.coeffs[node] = (α1, α2)
+    graph.parents[node] = [p1; p2]
+    graph.coeffs[node] = [α1; α2]
     return nothing
 end
+"""
+    add_lincomb!(graph,node,coeffs,nodes)
+
+Adds a linear combination of the nodes (Vector or Tuple)
+multiplied with coeffs (Vector or Tuple). Returns cref vector.
+"""
+function add_lincomb!(graph, node, coeffs, nodes)
+    check_node_name_legality(graph, node)
+    graph.operations[node] = :lincomb
+    graph.parents[node] = collect(nodes)
+    graph.coeffs[node] = collect(coeffs)
+    return map(i-> (node,i), 1:size(coeffs,1))
+end
+
 
 """
     add_ldiv!(graph,node,p1,p2)
@@ -130,7 +144,7 @@ The result is stored in node `node`.
 function add_ldiv!(graph, node, p1, p2)
     check_node_name_legality(graph, node)
     graph.operations[node] = :ldiv
-    graph.parents[node] = (p1, p2)
+    graph.parents[node] = [p1; p2]
     return nothing
 end
 
@@ -351,7 +365,7 @@ function set_coeffs!(graph, x, cref = get_all_cref(graph))
         # Update only one element in the Tuple of coeffs.
         new_coeffs=collect(graph.coeffs[node]);
         new_coeffs[parentnr]=x[idx];
-        graph.coeffs[node]=Tuple(new_coeffs);
+        graph.coeffs[node]=collect(new_coeffs);
     end
     return nothing
 end

@@ -1,4 +1,4 @@
-export graph_degopt, get_topo_order_degopt
+export graph_degopt
 
 """
     (graph,crefs)=graph_degopt(k;T=ComplexF64,input=:A)
@@ -42,8 +42,8 @@ function graph_degopt(x, z; input = :A)
     for s = 2:k+1
         push!(z_nodes, Symbol("B$s"))
     end
-    key = Symbol("T2k$(k+3)")
-    crefs_new = add_sum!(graph, key, z, z_nodes, Symbol("T2k"))
+    key = Symbol("y")
+    crefs_new = add_lincomb!(graph, key, z, z_nodes)
     append!(crefs, crefs_new)
 
     # Set the output
@@ -82,25 +82,21 @@ function graph_degopt_B(x, T; input = :A)
 
         # First poly
         c_a = x[s-1][1]
-        crefs_a = add_sum!(
+        crefs_a = add_lincomb!(
             graph,
             Symbol(base_a),
             c_a,
-            useful_syms,
-            Symbol("$(base_a)_"),
-        )
+            useful_syms)
 
         append!(cref, crefs_a)
 
         # Second poly
         c_b = x[s-1][2]
-        crefs_b = add_sum!(
+        crefs_b = add_lincomb!(
             graph,
             Symbol(base_b),
             c_b,
-            useful_syms,
-            Symbol("$(base_b)_"),
-        )
+            useful_syms)
         append!(cref, crefs_b)
 
         # Multiply them together
@@ -111,30 +107,4 @@ function graph_degopt_B(x, T; input = :A)
     end
 
     return (graph, cref)
-end
-
-"""
-    order=get_topo_order_degopt(k)
-
-A special implementation of [`get_topo_order`](@ref) for degree-optimal polynomials
-generated with [`graph_degopt`](@ref). The natural order of computation is to compute
-row by row.
-
-See also [`get_degopt_crefs`](@ref).
-"""
-function get_topo_order_degopt(k)
-    (x, z) = get_degopt_crefs(k)
-    computation_order = Vector{Symbol}(undef, 0)
-    for i = 1:k
-        for n = 1:2
-            for j = 2:(i+1)
-                push!(computation_order, x[i][n][j][1])
-            end
-        end
-        push!(computation_order, Symbol("B$(i+1)"))
-    end
-    for i = 2:(2+k)
-        push!(computation_order, z[i][1])
-    end
-    return computation_order
 end

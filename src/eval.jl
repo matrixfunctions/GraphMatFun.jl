@@ -51,9 +51,8 @@ function eval_graph(
         comporder = get_topo_order(graph, input = input)[1]
     end
     for node in comporder
-        parentval1 = vals[graph.parents[node][1]]
-        parentval2 = vals[graph.parents[node][2]]
-        carry_out!(graph, vals, (parentval1, parentval2), node)
+        parentvals = map(n->vals[n], graph.parents[node]);
+        carry_out!(graph, vals, parentvals, node)
     end
     return vals[graph.outputs[output]]
 end

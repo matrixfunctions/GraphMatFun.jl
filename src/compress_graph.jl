@@ -3,7 +3,6 @@
 
 export compress_graph_dangling!
 export compress_graph_zero_coeff!
-export compress_graph_output_cleaning!
 export has_identity_lincomb
 export has_trivial_nodes
 export compress_graph_trivial!
@@ -58,8 +57,8 @@ end
 """
     compress_graph_zero_coeff!(graph,cref=[];droptol=0;verbose=false)
 
-Searches for linear combinations with zero coeff value and tries to compress by
-redirecting node references.
+Searches for linear combinations with zero coeff and removes those. The cref
+list deletes references to zero coeffs and updates all other crefs.
 """
 function compress_graph_zero_coeff!(
     graph,
@@ -70,94 +69,37 @@ function compress_graph_zero_coeff!(
     modified = true
     while (modified)
         modified = false
-        for (key, parents) in graph.parents
-            big_break = false
-            if (graph.operations[key] == :lincomb && !(key in graph.outputs)) # don't remove outputs
-                v = graph.coeffs[key]
-                for s = 1:2
-                    other_s = 3 - s
-                    if (abs(v[s]) <= droptol)
-                        conditional_println(
-                            "Remove node: $key because coeff $s is " *
-                            string(v[s]) *
-                            " ≈ 0",
-                            verbose,
-                        )
+        all_crefs=get_all_cref(graph);
+        vals=get_coeffs(graph,  all_crefs)
+        i=findfirst(abs.(vals) .<= droptol )
+        if (!isnothing(i)) # We found a zero element
+            node=all_crefs[i][1];
+            idx=all_crefs[i][2];
 
-                        # Redirect all lincombs we can find
-                        for (pkey, op) in graph.operations
-                            pp = [graph.parents[pkey]...]
-                            if (
-                                op == :lincomb &&
-                                (pp[1] == key || pp[2] == key)
-                            )
-                                # It can be merged
+            conditional_println(
+                "Remove node: One coefficient in the computation of $node can be removed " *
+                string(vals[i]) *
+                " ≈ 0",
+                verbose,
+            )
 
-                                conditional_println(
-                                    "Delete connection: $key -> $pkey",
-                                    verbose,
-                                )
-                                # z: parent connected to the node to be removed
-                                z = 1
-                                if (pp[2] == key)
-                                    z = 2
-                                end
+            deleteat!(graph.parents[node],idx);
+            deleteat!(graph.coeffs[node],idx);
+            modified=true;
 
-                                cc = [graph.coeffs[pkey]...]
-                                cc[z] = cc[z] * v[other_s]
 
-                                pp[z] = graph.parents[key][other_s]
-                                # Overwrite
-                                add_lincomb!(
-                                    graph,
-                                    pkey,
-                                    cc[1],
-                                    pp[1],
-                                    cc[2],
-                                    pp[2],
-                                )
+            # Update the cref list
 
-                                modified = true
-                                big_break = true
-                            end
-                        end
-                        if (big_break)
-                            break
-                        end
-                    end
+            # Remove the occurance of this cref
+            rm_cref=all_crefs[i];
+            filter!(x->x≠rm_cref,cref)
+            # Update all the pointers in cref list
+            for j = findall(map(x-> x[1] == node, cref))
+                if (cref[j][2] > idx)
+                    cref[j] = (cref[j][1],cref[j][2]-1) # Reduce by one. Tuple is immutable
                 end
             end
-            if (big_break)
-                break
-            end
-        end
-    end
-end
-"""
-    compress_graph_output_cleaning!(graph,cref=[];verbose=false)
-
-Checks if the output is computed from the linear combination that can be
-compressed.
-"""
-function compress_graph_output_cleaning!(graph, cref = []; verbose = false)
-    ismodified = false
-    while ismodified
-        ismodified = false
-        for (i, n) in enumerate(graph.outputs)
-            if (graph.operations[n] == :lincomb)
-                for s = 1:2
-                    other_s = 3 - s
-                    if (
-                        graph.coeffs[n][s] == 1.0 &&
-                        graph.coeffs[n][other_s] == 0.0
-                    )
-                        # Redirect since it is just a copy of
-                        # another node
-                        graph.outputs[i] = graph.parents[n][s]
-                        ismodified = true
-                    end
-                end
-            end
+            #
         end
     end
 end
@@ -168,15 +110,24 @@ end
 
 # Check if node is trivial because of an identity on the left (:mult or :ldiv).
 function is_trivial_left(graph, node)
-    return (
-        graph.parents[node][1] == :I &&
-        (graph.operations[node] == :mult || graph.operations[node] == :ldiv)
-    )
+    op = graph.operations[node]
+    if (op == :lincomb)
+        return false;
+    else
+        return graph.parents[node][1] == :I &&
+            (op == :mult || op == :ldiv)
+    end
 end
 
 # Check if node is trivial because of an identity on the right (:mult).
 function is_trivial_right(graph, node)
-    return (graph.parents[node][2] == :I && graph.operations[node] == :mult)
+
+    op = graph.operations[node]
+    if (op == :lincomb)
+        return false;
+    else
+        return (graph.parents[node][2] == :I && op == :mult)
+    end
 end
 
 # Return a parent that can replace a node.
@@ -246,11 +197,12 @@ end
 """
     compress_graph_trivial!(graph,cref=[];verbose=false)
 
-Removes from the graph trivial nodes, that is, multiplications by the identity
-or linear systems whose coefficient is the identity matrix.
+Removes from graph the following operations
+   I\\B -> B
+   I*B -> B
+   B*I -> B
 """
 function compress_graph_trivial!(graph, cref = []; verbose = false)
-    # cref is not used as this function does not remove lincomb nodes.
     ismodified = true
     while ismodified
         ismodified = false
@@ -410,43 +362,34 @@ end
 """
     compress_graph_passthrough!(graph,cref=[];verbose=false);
 
-Identifies lincombs that have coefficients (0 1) or (1 0) which correspond to
-identity operations. It redirect appropriately.
+Identifies lincombs lincomb of length one with coeff equal to one. The node has no effect. It redirect appropriately.
 """
-function compress_graph_passthrough!(graph, cref = []; verbose = false)
-    ismodified = true
-    while ismodified
-        ismodified = false
-        for (key, coeffs) in graph.coeffs
-            if coeffs == (0, 1)
-                k_one = 2
-                k_zero = 1
-            elseif coeffs == (1, 0)
-                k_one = 1
-                k_zero = 2
-            else
-                continue
-            end
-            # k_one is to keep
-            # k_zero connection not important
-            conditional_println("Redirect node: $key to $k_one.", verbose)
 
-            p_passthrough = graph.parents[key][k_one]
+function compress_graph_passthrough!(graph,
+                                     cref=[];
+                                     verbose = false)
+    modified = true;
+    while modified
+        # all lincomb  keys
+        lincomb_keys=collect(keys(graph.coeffs))
+        lincomb_coeffs=map(x->graph.coeffs[x],lincomb_keys);
 
-            # Find all nodes that use key and redirect them
-            for (key2, parents) in graph.parents
-                if (parents[1] == key)
-                    parents = (p_passthrough, parents[2])
-                    ismodified = true
-                end
-                if (parents[2] == key)
-                    parents = (parents[1], p_passthrough)
-                    ismodified = true
-                end
-                graph.parents[key2] = parents
-            end
+        # Find first occurance with one coeff and equal to 1
+        i=findfirst(map(z-> z==[1], lincomb_coeffs))
+
+        modified = false;
+        if (!isnothing(i))
+            modified = true
+            node=lincomb_keys[i];
+            parent=graph.parents[node][1];
+            conditional_println(
+                "Remove node: $node is replaced by $parent because of one mult lincomb", verbose
+            )
+            # node is computed using only one single scaling.
+            GraphMatFun.replace_node!(graph,node,parent,cref);
         end
     end
+    return graph
 end
 
 """
@@ -457,7 +400,6 @@ function it represents. Corresponding references in the `cref`-vector are
 removed.
 """
 function compress_graph!(graph, cref = []; verbose = false)
-    compress_graph_output_cleaning!(graph, cref, verbose = verbose)
     compress_graph_zero_coeff!(graph, cref, verbose = verbose)
     compress_graph_trivial!(graph, cref, verbose = verbose)
     compress_graph_passthrough!(graph, cref, verbose = verbose)

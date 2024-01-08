@@ -27,11 +27,9 @@ function change_keywords!(
             new_key = translate(key)
             dict_org[new_key] = value
             if (dict_org == graph.parents) # Also translate parents
-                val = [value...] # Turn into vector
-                for s = 1:2
-                    val[s] = translate(val[s])
-                end
-                dict_org[new_key] = Tuple(val)
+                # Value is a Vector of symbols
+                val=translate.(value)
+                dict_org[new_key] = collect(val)
             end
         end
     end
@@ -94,14 +92,11 @@ function merge_graphs(
     operations = merge(g1.operations, g2.operations)
     parents = merge(g1.parents, g2.parents)
 
-    # Type logic for the coefficients
-    coeffs = Dict{Symbol,Tuple{T,T}}()
-    for dict in (g1.coeffs, g2.coeffs)
-        for (key, value) in dict
-            val = (convert(T, value[1]), convert(T, value[2]))
-            coeffs[key] = (convert(T, value[1]), convert(T, value[2]))
-        end
-    end
+    # Make the coeff types the same
+    g1=Compgraph(T,g1);
+    g2=Compgraph(T,g2);
+    coeffs = merge(g1.coeffs, g2.coeffs);
+
     outputs = vcat(g1.outputs, g2.outputs)
 
     cref1_copy = copy(cref1)
@@ -110,6 +105,7 @@ function merge_graphs(
     empty!(cref1)
     empty!(cref2)
 
+
     for c in cref1_copy
         push!(cref1, (Symbol(prefix1 * String(c[1])), c[2]))
     end
@@ -117,5 +113,5 @@ function merge_graphs(
         push!(cref2, (Symbol(prefix2 * String(c[1])), c[2]))
     end
 
-    return Compgraph(operations, parents, coeffs, outputs)
+    return Compgraph{T}(operations, parents, coeffs, outputs)
 end

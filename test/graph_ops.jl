@@ -8,13 +8,14 @@ using LinearAlgebra, Polynomials
     add_lincomb!(graph, :C, 1.0, :I, 1 / 5, :A)
     add_mult!(graph, :Csqr, :C, :C)
     add_lincomb!(graph, :N, 1.0, :I, 1 / 2, :Csqr)
-    add_lincomb!(graph, :D, 1.0, :I, 2, :C)
-    add_ldiv!(graph, :out, :D, :N)
+    add_lincomb!(graph, :D, [1.0, 2, -2], [:I, :C, :Csqr])
+    add_ldiv!(graph, :out0, :D, :N)
+    add_lincomb!(graph, :out, [2.0], [:out0]); # Single term
     add_output!(graph, :out)
 
     A = 0.3
     E = eval_graph(graph, A)
-    Z = (I + 2 * (I + A / 5)) \ (I + 1 / 2 * (I + A / 5)^2)
+    Z = 2 * ((I + 2 * (I + A / 5)- 2 * (I + A / 5)^2) \ (I + 1 / 2 * (I + A / 5)^2))
     @test Z ≈ E
 
     A = [0.5; 0.4]
@@ -22,17 +23,18 @@ using LinearAlgebra, Polynomials
     Z = zero(A)
     for i = 1:2
         a = A[i]
-        Z[i] = (I + 2 * (I + a / 5)) \ (I + 1 / 2 * (I + a / 5)^2)
+        Z[i] = 2 * ((I + 2 * (I + a / 5)- 2 * (I + a / 5)^2) \ (I + 1 / 2 * (I + a / 5)^2))
     end
     @test Z ≈ E
 
     A = [0.4 0.2; 1.1 0.3]
     E = eval_graph(graph, A)
-    Z = (I + 2 * (I + A / 5)) \ (I + 1 / 2 * (I + A / 5)^2)
+    Z = 2 * ((I + 2 * (I + A / 5)- 2 * (I + A / 5)^2) \ (I + 1 / 2 * (I + A / 5)^2))
     @test Z ≈ E
 
     # Node removal.
     del_node!(graph, :D) #Remove rational part
+    del_node!(graph, :out0)
     del_output!(graph, :out)
     @test isempty(graph.outputs)
     del_node!(graph, :out)
@@ -90,32 +92,4 @@ using LinearAlgebra, Polynomials
     del_output!(graph, :Pout)
     @test isempty(graph.outputs)
 
-    # Test extract_sum on graph for the function:
-    # T := (I + 2*A + 3*A^2)
-    # U  := A^3 * T
-    # V  := 3*T + 4*A^3 + 5*A^4
-    # Z  := (2*U+V) \ (U-2*V)
-    # where Z is the output node
-    graph = Compgraph(Float64)
-    add_mult!(graph, :A2, :A, :A)
-    add_mult!(graph, :A3, :A, :A2)
-    add_mult!(graph, :A4, :A2, :A2)
-    add_lincomb!(graph, :T0, 1.0, :I, 2.0, :A)
-    add_lincomb!(graph, :T, 1.0, :T0, 3.0, :A2)
-    add_mult!(graph, :U, :A3, :T)
-    add_lincomb!(graph, :V1, 3.0, :T, 4.0, :A3)
-    add_lincomb!(graph, :V, 1.0, :V1, 5.0, :A4)
-    add_lincomb!(graph, :LHS, 2.0, :U, 3.0, :V)
-    add_lincomb!(graph, :RHS, 3.0, :U, -2.0, :V)
-    add_ldiv!(graph, :Z, :RHS, :LHS)
-    add_output!(graph, :Z)
-
-    Z = extract_sums(graph)
-    R = [
-        ([1.0, 2.0, 3.0], [:I, :A, :A2], [:T0, :T])
-        ([3.0, 4.0, 5.0], [:T, :A3, :A4], [:V1, :V])
-        ([2.0, 3.0], [:U, :V], [:LHS])
-        ([3.0, -2.0], [:U, :V], [:RHS])
-    ]
-    @test all(map(x -> x in R, Z)) && all(map(x -> x in Z, R))
 end
