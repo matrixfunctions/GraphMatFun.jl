@@ -4,7 +4,7 @@ export LangC_MKL, LangC_OpenBLAS
 """
      LangC_MKL(gen_main::Bool)
 
-Code generation in C using MKL implementation of BLAS.
+Code generation in C using the oneAPI MKL implementation of BLAS.
 """
 struct LangC_MKL
     gen_main::Any
@@ -14,7 +14,7 @@ end
 """
      LangC_OpenBLAS(gen_main::Bool)
 
-Code generation in C using OpenBLAS implementation of BLAS.
+Code generation in C using the OpenBLAS implementation of BLAS.
 """
 struct LangC_OpenBLAS
     gen_main::Any
@@ -32,7 +32,6 @@ end
 
 # Language specific operations.
 comment(::LangC, s) = "/* $s */"
-
 slotname(::LangC, i) = "memslots[$(i-1)]"
 
 # Variable declaration, initialization, and reference.
@@ -151,7 +150,10 @@ function function_definition(lang::LangC, graph, T, funname, precomputed_nodes)
     push_code!(code, "#include<stdlib.h>", ind_lvl = 0)
     push_code!(code, "#include<string.h>", ind_lvl = 0)
     push_code!(code, "")
-    add_auxiliary_functions(code, lang, T)
+    # Add auxiliary functions to work with MKL complex types in lincomb.
+    if :lincomb ∈ values(graph.operations)
+        add_auxiliary_functions(code, lang, T)
+    end
     push_code!(code, "")
     push_comment!(code, "Code for matrix function evaluation.", ind_lvl = 0)
     input_variables =
@@ -328,39 +330,24 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
 
     op = graph.operations[node]
 
+    code = init_code(lang)
+    push_code!(code, "")
+    push_comment!(code, "Computing $node with operation: $op")
+
     # Keep deallocation list (used for smart memory management).
     dealloc_list = deepcopy(dealloc_list)
     setdiff!(dealloc_list, keys(mem.special_names))
 
-
-    parent1 = graph.parents[node][1]
-    parent2 = graph.parents[node][2]
-
-    # TODO: Should be simplified.
-    # Check if parents have a memory slot.
-    if has_identity_lincomb(graph) # Linear combination of I.
-        p1_is_identity = p2_is_identity = false
-    else
-        p1_is_identity = parent1 == :I
-        p2_is_identity = parent2 == :I
-        setdiff!(dealloc_list, [:I])
-    end
-
-    # Get memory slots of parents, if explicitly stored.
-    if !p1_is_identity
-        parent1mem = get_slot_name(mem, parent1)
-    end
-    if !p2_is_identity
-        parent2mem = get_slot_name(mem, parent2)
-    end
-
     rzero = reference_value(lang, T, "ZERO")
     rone = reference_value(lang, T, "ONE")
 
-    code = init_code(lang)
-    push_code!(code, "")
-    push_comment!(code, "Computing $node with operation: $op")
     if op == :mult
+        # The graph has been compressed, thus we can assume that neither parent1
+        # is the identity.
+        parent1 = graph.parents[node][1]
+        parent2 = graph.parents[node][2]
+        parent1mem = get_slot_name(mem, parent1)
+        parent2mem = get_slot_name(mem, parent2)
         (nodemem_i, nodemem) = get_free_slot(mem)
         alloc_slot!(mem, nodemem_i, node)
         push_code!(
@@ -372,6 +359,11 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
             "            $rzero, $nodemem, n);",
         )
     elseif op == :ldiv
+        # Left parent cannot be the identity.
+        parent1 = graph.parents[node][1]
+        parent1mem = get_slot_name(mem, parent1)
+        # Parent 2 can be the identity, but this is dealt with below.
+        parent2 = graph.parents[node][2]
         # Find a memory slot for the LU factors.
         # As ?detrs computes the LU decomposition of parent1 in-place, we need
         # to make a copy of $parent1mem, unless parent1 is on the deallocation
@@ -389,7 +381,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
             alloc_slot!(mem, lhsmem_i, :dummy)
             push_code!(
                 code,
-                "memcpy($lhsmem, $parent1mem, " * "n*n*sizeof(*master_mem));",
+                "memcpy($lhsmem, $parent1mem, " * "n * n * sizeof(*master_mem));",
             )
         end
 
@@ -430,6 +422,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
                 setdiff!(dealloc_list, [parent2])
                 set_slot_number!(mem, get_slot_number(mem, parent2), node)
             else
+                parent2mem = get_slot_name(mem, parent2)
                 (nodemem_i, nodemem) = get_free_slot(mem)
                 alloc_slot!(mem, nodemem_i, node)
                 push_code!(
