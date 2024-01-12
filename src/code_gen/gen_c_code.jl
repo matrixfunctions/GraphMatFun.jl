@@ -102,15 +102,15 @@ end
 function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float32}})
     push_code!(code,
 "void fma_MKL_Complex8_float(MKL_Complex8 *acc,
-                            const float a,
+                            const float *a,
                             const MKL_Complex8 *b) {
-    acc->real += a * b->real;
-    acc->imag += a * b->imag;
+    acc->real += *a * b->real;
+    acc->imag += *a * b->imag;
 }
 
 void acc_MKL_Complex8_float(MKL_Complex8 *acc,
-                            const float a) {
-    acc->real += a;
+                            const float *a) {
+    acc->real += *a;
 }
 
 void fma_MKL_Complex8(MKL_Complex8 *acc,
@@ -130,15 +130,15 @@ end
 function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float64}})
     push_code!(code,
 "void fma_MKL_Complex16_double(MKL_Complex16 *acc,
-                              const double a,
+                              const double *a,
                               const MKL_Complex16 *b) {
-    acc->real += a * b->real;
-    acc->imag += a * b->imag;
+    acc->real += *a * b->real;
+    acc->imag += *a * b->imag;
 }
 
-void acc_MKL_Complex16_float(MKL_Complex16 *acc,
-                             const double a) {
-    acc->real += a;
+void acc_MKL_Complex16_double(MKL_Complex16 *acc,
+                             const double *a) {
+    acc->real += *a;
 }
 
 void fma_MKL_Complex16(MKL_Complex16 *acc,
@@ -285,30 +285,25 @@ end
 
 function add_lincomb_body(code, lang::LangC, T, nodemem,
                           coeff_names, coeff_is_real, parent_mems)
-    rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems .* " + i)"), 
+    rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems .* " + i)"),
             " + \n            ")
     for_body = "*(" * nodemem * " + i) = " * (isempty(rhs) ? "0" : rhs) * ";"
     push_code!(code, for_body; ind_lvl = 2)
 end
 
-fma_function_name(T::Type{Complex{Float32}}, coeff_real) = 
+fma_function_name(T::Type{Complex{Float32}}, coeff_real) =
     coeff_real ? "fma_MKL_Complex8_float" : "fma_MKL_Complex8"
-fma_function_name(T::Type{Complex{Float64}}, coeff_real) = 
+fma_function_name(T::Type{Complex{Float64}}, coeff_real) =
     coeff_real ? "fma_MKL_Complex16_double" : "fma_MKL_Complex16"
 function add_lincomb_body(code, lang::LangC_MKL, T::Type{Complex{S}}, nodemem,
                           coeff_names, coeff_is_real, parent_mems) where S <: Real
-    if isempty(coeff_names)
-        lhs = "*(" * nodemem * " + i)"
-        push_code!(code, lhs * ".real = 0;", ind_lvl = 2)
-        push_code!(code, lhs * ".imag = 0;", ind_lvl = 2)
-    else
-        for (it, (coeff, coeff_real, parent)) in enumerate(zip(coeff_names, coeff_is_real, parent_mems))
-            statement = fma_function_name(T, coeff_real) *
-                    "(" * nodemem * " + i, " *
-                    reference_value(lang, T, coeff) * ", " *
-                    parent * " + i);"
-            push_code!(code, statement; ind_lvl = 2)
-        end
+    for (it, (coeff, coeff_real, parent)) in
+        enumerate(zip(coeff_names, coeff_is_real, parent_mems))
+        statement = fma_function_name(T, coeff_real) *
+                "(" * nodemem * " + i, " *
+                reference_value(lang, T, coeff) * ", " *
+                parent * " + i);"
+        push_code!(code, statement; ind_lvl = 2)
     end
 end
 
@@ -316,9 +311,9 @@ function add_lincomb_identity_body(code, lang::LangC, T, nodemem, coeff_id, coef
     push_code!(code, "*(" * nodemem * " + i) += " * coeff_id * ";", ind_lvl = 2)
 end
 
-acc_function_name(T::Type{Complex{Float32}}, coeff_real) = 
+acc_function_name(T::Type{Complex{Float32}}, coeff_real) =
     coeff_real ? "acc_MKL_Complex8_float" : "acc_MKL_Complex8"
-acc_function_name(T::Type{Complex{Float64}}, coeff_real) = 
+acc_function_name(T::Type{Complex{Float64}}, coeff_real) =
     coeff_real ? "acc_MKL_Complex16_double" : "acc_MKL_Complex16"
 function add_lincomb_identity_body(code, lang::LangC_MKL, T::Type{Complex{S}},
                                    nodemem, coeff_id, coeff_real) where S <: Real
@@ -496,10 +491,13 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         end
 
         # Write the linear combination.
-        push_code!(code, "for (size_t i = 0; i < n * n; i++) {")
-        add_lincomb_body(code, lang, T, nodemem, coeff_names, coeff_is_real, parent_mems)
-        push_code!(code, "}")
-        push_code!(code, "")
+        if isempty(coeff_names)
+            push_code!(code, "memset($nodemem, 0, n * n * sizeof(*master_mem));")
+        else
+            push_code!(code, "for (size_t i = 0; i < n * n; i++) {")
+            add_lincomb_body(code, lang, T, nodemem, coeff_names, coeff_is_real, parent_mems)
+            push_code!(code, "}")
+        end
 
         if id_coefficient != 0
             (coeff_real, coeff_id, coeff_id_code) = declare_coeff(lang,
