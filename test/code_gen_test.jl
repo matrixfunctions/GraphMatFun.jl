@@ -70,7 +70,9 @@ using LinearAlgebra, StaticArrays
 
     for i = 1:4 #Not high-precision test for Matlab and C
         (graph, crefs) = graph_ps_degopt([3 4 2 a[i] 1 0])
-        add_ldiv!(graph, :R0, :B4, graph.outputs[1])
+        add_ldiv!(graph, :R1, :B4, graph.outputs[1])
+        add_lincomb!(graph,:Q, [1, 2, 3], [:I, :I, :I])
+        add_lincomb!(graph,:R0, [2, 3, 4], [:I, :Q, :R1])
         clear_outputs!(graph)
         add_output!(graph, :R0)
 
@@ -80,20 +82,16 @@ using LinearAlgebra, StaticArrays
         rm(fname)
 
         # Test C code generation
-        fname = tempname() * ".c"
-        gen_code(fname, graph, lang = LangC_MKL())
-        rm(fname)
+        for gen_main in (true, false)
+            for overwrite_input in (true, false)
+                fname = tempname() * ".c"
+                gen_code(fname, graph, lang = LangC_MKL(gen_main, overwrite_input))
+                rm(fname)
 
-        fname = tempname() * ".c"
-        gen_code(fname, graph, lang = LangC_MKL(true))
-        rm(fname)
-
-        fname = tempname() * ".c"
-        gen_code(fname, graph, lang = LangC_OpenBLAS())
-        rm(fname)
-
-        fname = tempname() * ".c"
-        gen_code(fname, graph, lang = LangC_OpenBLAS(true))
-        rm(fname)
+                fname = tempname() * ".c"
+                gen_code(fname, graph, lang = LangC_OpenBLAS(gen_main, overwrite_input))
+                rm(fname)
+            end
+        end
     end
 end
