@@ -42,13 +42,13 @@ function assign_coeff(::LangC_MKL, val::T, i) where {T<:Complex}
         "coeff$i.real = " * string(real(val)) * ";",
         "coeff$i.imag = " * string(imag(val)) * ";",
     ]
-    variable_string = "&coeff$i"
+    variable_string = "coeff$i"
     return (variable_string, assignment_string)
 end
 function assign_coeff(::LangC_OpenBLAS, val::T, i) where {T<:Complex}
     assignment_string =
-        ["coeff$i = " * string(real(val)) * " + " * string(imag(val)) * "*I;"]
-    variable_string = "&coeff$i"
+        ["coeff$i = " * string(real(val)) * " + " * string(imag(val)) * " * I;"]
+    variable_string = "coeff$i"
     return (variable_string, assignment_string)
 end
 function assign_coeff(::LangC, val::T, i) where {T<:Real}
@@ -58,25 +58,18 @@ function assign_coeff(::LangC, val::T, i) where {T<:Real}
 end
 
 # Constant declaration and reference.
-function declare_constant(::LangC_MKL, val::T, id, type) where {T<:Complex}
-    return "const $type $id = {.real = " *
-           string(real(val)) *
-           ", " *
-           ".imag = " *
-           string(imag(val)) *
-           "};"
+function declare_const(::LangC_MKL, val::T, id, type) where {T<:Complex}
+    return "const $type $id = {.real = " * string(real(val)) * ", " *
+           ".imag = " * string(imag(val)) * "};"
 end
-function declare_constant(::LangC_OpenBLAS, val::T, id, type) where {T<:Complex}
-    return "const $type $id = " *
-           string(real(val)) *
-           " + " *
-           string(imag(val)) *
-           "*I;"
+function declare_const(::LangC_OpenBLAS, val::T, id, type) where {T<:Complex}
+    return "const $type $id = " * string(real(val)) * " + " *
+           string(imag(val)) * "*I;"
 end
-function declare_constant(::LangC, val::T, id, type) where {T<:Real}
+function declare_const(::LangC, val::T, id, type) where {T<:Real}
     return "const $type $id = $val;"
 end
-reference_constant(::LangC, T, id) = (T <: Complex) ? "&$id" : "$id"
+reference_const(::LangC, T, id) = (T <: Complex) ? "&$id" : "$id"
 
 # Code generation.
 # Return MKL/OpenBLAS-specific includes.
@@ -107,10 +100,8 @@ function get_blas_type(::LangC_OpenBLAS, T::Type{Complex{Float64}})
     return ("openblas_complex_double", "z")
 end
 
-
 function preprocess_codegen(graph, lang::LangC)
-    (g,_)=graph_bigraph(graph)
-    return g # Lang C only supports bigraphs
+    return graph
 end
 
 function function_definition(lang::LangC, graph, T, funname, precomputed_nodes)
@@ -164,20 +155,17 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
     push_comment!(code, "Declarations and initializations.")
     # Allocate coefficients for linear combinations, if needed.
     if :lincomb in graph_ops
-        push_code!(code, "$blas_type coeff1, coeff2;")
+        num_coeffs = maximum(length.(values(graph.coeffs)))
+        min_coeff = has_lincomb_with_identity(graph) ? 0 : 1
+        coefficients = join(["coeff$i" for i in min_coeff:num_coeffs], ", ")
+        push_code!(code, "$blas_t " .* "$coefficients;")
     end
     # Declare constants ZERO and ONE, if needed.
     if :mult in graph_ops
-        push_code!(
-            code,
-            declare_constant(lang, convert(T, 0.0), "ZERO", blas_type),
-        )
+        push_code!(code, declare_const(lang, convert(T, 0.0), "ZERO", blas_t))
     end
     if :lincomb in graph_ops || :mult in graph_ops
-        push_code!(
-            code,
-            declare_constant(lang, convert(T, 1.0), "ONE", blas_type),
-        )
+        push_code!(code, declare_const(lang, convert(T, 1.0), "ONE", blas_t))
     end
     # Array ipiv for pivots of GEPP (needed only if graph has linear systems).
     if :ldiv in graph_ops
@@ -189,12 +177,12 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
     push_comment!(code, "Memory management.")
     push_code!(
         code,
-        "$blas_type *master_mem = malloc(n*n*max_memalloc" *
-        "*sizeof(*master_mem));",
+        "$blas_t *master_mem = malloc(n * n * max_memalloc" *
+        " * sizeof(*master_mem));",
     )
     push_code!(
         code,
-        "$blas_type *memslots[max_memslots]; " *
+        "$blas_t *memslots[max_memslots]; " *
         comment(lang, "As many slots as nodes"),
     )
 
@@ -211,26 +199,18 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
             # Otherwise make a copy
             push_code!(
                 code,
-                "memcpy($Ak_slot_name,$n,n*n*sizeof(*master_mem));",
+                "memcpy($Ak_slot_name, $n, n * n * sizeof(*master_mem));",
             )
         end
     end
 
     # Initialize pointers.
     push_comment!(code, "The other slots are pointers to allocated memory.")
-    push_code!(code, "for (j=$(num_preallocated_slots-1); j<max_memalloc; j++)")
-    push_code!(code, "memslots[j+1] = master_mem+j*n*n;", ind_lvl = 2)
-
-    # Store identity explicitly only if graph has a linear combination of I.
-    if has_identity_lincomb(graph)
-        push_comment!(code, "Graph has linear combination of identities.")
-        push_comment!(code, "The matrix I is explicitly allocated.")
-        alloc_slot!(mem, num_precomputed_nodes + 1, :I)
-        nodemem = get_slot_name(mem, :I)
-        push_code!(code, "memset($nodemem, 0, n*n*sizeof(*master_mem));")
-        push_code!(code, "for(j=0; j<n*n; j+=n+1)")
-        push_code!(code, "*($nodemem+j) = ONE;", ind_lvl = 2)
-    end
+    push_code!(
+        code, 
+        "for (j = $(num_preallocated_slots-1); j < max_memalloc; j++)"
+    )
+    push_code!(code, "memslots[j+1] = master_mem + j * n * n;", ind_lvl = 2)
 
     return code
 end
@@ -256,6 +236,8 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
     (blas_type, blas_prefix) = get_blas_type(lang, T)
 
     op = graph.operations[node]
+
+    # TODO: The following should have been done better.
     parent1 = graph.parents[node][1]
     parent2 = graph.parents[node][2]
 
@@ -263,6 +245,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
     dealloc_list = deepcopy(dealloc_list)
     setdiff!(dealloc_list, keys(mem.special_names))
 
+    # TODO: Should be simplified.
     # Check if parents have a memory slot.
     if has_identity_lincomb(graph) # Linear combination of I.
         p1_is_identity = p2_is_identity = false
@@ -280,8 +263,8 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         parent2mem = get_slot_name(mem, parent2)
     end
 
-    rzero = reference_constant(lang, T, "ZERO")
-    rone = reference_constant(lang, T, "ONE")
+    rzero = reference_const(lang, T, "ZERO")
+    rone = reference_const(lang, T, "ONE")
 
     code = init_code(lang)
     push_code!(code, "")
@@ -382,140 +365,84 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         end
 
     elseif op == :lincomb
-        coeff_vars = Vector{String}(undef, 2)
 
-        # Coefficients of graph should have type T.
-        (coeff1, coeff1_code) = assign_coeff(lang, graph.coeffs[node][1], 1)
-        for s in coeff1_code
-            push_code!(code, s)
-        end
-        (coeff2, coeff2_code) = assign_coeff(lang, graph.coeffs[node][2], 2)
-        for s in coeff2_code
-            push_code!(code, s)
-        end
+        # Don't overwrite the list
+        dealloc_list = deepcopy(dealloc_list)
+        setdiff!(dealloc_list, keys(mem.special_names))
+        setdiff!(dealloc_list, [:I])
 
-        # Reuse parent in deallocation list for output (saves memcopy).
-        if ((parent1 in dealloc_list) || (parent2 in dealloc_list))
-            recycle_parent = (parent1 in dealloc_list) ? parent1 : parent2
-            push_comment!(code, "Smart lincomb recycle $recycle_parent")
+        fused_sum = (join("x*" .* string.(graph.parents[node]), " + "))
+        push_comment!(code, "Computing $node = $fused_sum")
 
-            # Perform operation.
-            nodemem = get_slot_name(mem, recycle_parent)
-            if (recycle_parent == parent1)
-                if p2_is_identity
-                    push_code!(
-                        code,
-                        "cblas_$blas_prefix" *
-                        "scal(n*n, $coeff1, " *
-                        "$nodemem, 1);",
-                    )
-                    push_code!(
-                        code,
-                        "cblas_$blas_prefix" *
-                        "axpby(n, " *
-                        "$coeff2, &ONE, 0,\n" *
-                        "             $rone, $nodemem, n+1);",
-                    )
-                else
-                    push_code!(
-                        code,
-                        "cblas_$blas_prefix" *
-                        "axpby(n*n, " *
-                        "$coeff2, $parent2mem, 1,\n" *
-                        "             $coeff1, $nodemem, 1);",
-                    )
+        # Write the coeffs into appropriate vectors
+        coeff_names = Vector()
+        coeff_list = graph.coeffs[node]
+        parent_mems = Vector()
+        id_coefficient = 0
+        for (i, v) in enumerate(coeff_list)
+            n = graph.parents[node][i]
+            if (n != :I)
+                (coeff_i, coeff_i_code) = assign_coeff(lang, v, i)
+                for statement in coeff_i_code
+                    push_code!(code, statement)
                 end
-            else
-                if p1_is_identity
-                    push_code!(
-                        code,
-                        "cblas_$blas_prefix" *
-                        "scal(n*n, $coeff2, " *
-                        "$nodemem, 1);",
-                    )
-                    push_code!(
-                        code,
-                        "cblas_$blas_prefix" *
-                        "axpby(n, " *
-                        "$coeff1, &ONE, 0,\n" *
-                        "             $rone, $nodemem, n+1);",
-                    )
-                else
-                    push_code!(
-                        code,
-                        "cblas_$blas_prefix" *
-                        "axpby(n*n, " *
-                        "$coeff1, $parent1mem, 1,\n" *
-                        "             $coeff2, $nodemem, 1);",
-                    )
-                end
+                push!(coeff_names, coeff_i)
+                push!(parent_mems, get_slot_name(mem, n))
+            else  # The identites are added in a different vector
+                id_coefficient += v
             end
+        end
+        if id_coefficient != 0
+            (coeff_id, coeff_id_code) = assign_coeff(lang, id_coefficient, 0)
+            for statement in coeff_id_code
+                push_code!(code, statement)
+            end
+        end
 
-            # Remove output from deallocation list.
-            setdiff!(dealloc_list, [recycle_parent])
-
-            # Update CodeMem.
-            j = get_slot_number(mem, recycle_parent)
-            set_slot_number!(mem, j, node)
-        else
-            # Allocate new slot for result.
+        # Determine a target mem: nodemem
+        nodemem = nothing
+        recycle_parent = nothing
+        for n in graph.parents[node]
+            if (n in dealloc_list) # If it's about to deallocated
+                nodemem = get_slot_name(mem, n)
+                recycle_parent = n
+                break
+            end
+        end
+        if (isnothing(recycle_parent))
             (nodemem_i, nodemem) = get_free_slot(mem)
             alloc_slot!(mem, nodemem_i, node)
-
-            # Compute linear combination.
-            if p1_is_identity
-                push_code!(
-                    code,
-                    "memcpy($nodemem, $parent2mem, " *
-                    "n*n*sizeof(*master_mem));",
-                )
-                push_code!(
-                    code,
-                    "cblas_$blas_prefix" *
-                    "scal(n*n, $coeff2, " *
-                    "$nodemem, 1);",
-                )
-                push_code!(
-                    code,
-                    "cblas_$blas_prefix" *
-                    "axpby(n, " *
-                    "$coeff1, &ONE, 0,\n" *
-                    "             $rone, $nodemem, n+1);",
-                )
-            elseif p2_is_identity
-                push_code!(
-                    code,
-                    "memcpy($nodemem, $parent1mem, " *
-                    "n*n*sizeof(*master_mem));",
-                )
-                push_code!(
-                    code,
-                    "cblas_$blas_prefix" *
-                    "scal(n*n, $coeff1, " *
-                    "$nodemem, 1);",
-                )
-                push_code!(
-                    code,
-                    "cblas_$blas_prefix" *
-                    "axpby(n*n, " *
-                    "$coeff2, &ONE, 0,\n" *
-                    "             $rone, $nodemem, n+1);",
-                )
-            else
-                push_code!(
-                    code,
-                    "memcpy($nodemem, $parent2mem, " *
-                    "n*n*sizeof(*master_mem));",
-                )
-                push_code!(
-                    code,
-                    "cblas_$blas_prefix" *
-                    "axpby(n*n, " *
-                    "$coeff1, $parent1mem, 1,\n" *
-                    "             $coeff2, $nodemem, 1);",
-                )
-            end
+        else
+            push_comment!(code, "Smart lincomb recycle $recycle_parent.")
         end
+
+        # Write the linear combination.
+        push_code!(code, "for (size_t i = 0; i < n*n; i++) {")
+        rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems.* "+i)"), " + ")
+        for_body = "*(" * nodemem * " + i) = "
+        if !isempty(rhs)
+            for_body *= rhs * ";"
+        else
+            for_body *= "0;"
+        end
+        push_code!(code, for_body; ind_lvl = 2)
+        push_code!(code, "}")
+
+        if id_coefficient != 0
+            push_code!(code, "for (size_t i = 0; i < n*n; i += n + 1) {")
+            push_code!(code, "*(" * nodemem * " + i) += " * coeff_id * ";", ind_lvl = 2)
+            push_code!(code, "}")
+        end
+
+        if !(isnothing(recycle_parent))
+            # Avoid deallocate recycled parent
+            setdiff!(dealloc_list, [recycle_parent])
+
+            # Set the memory pointer
+            j = get_slot_number(mem, recycle_parent)
+            set_slot_number!(mem, j, node)
+        end
+
     else
         error("Unknown operation")
     end
@@ -554,7 +481,7 @@ function print_indented_matrix(lang::LangC, code, A; ind_lvl = 1)
 end
 
 function compilation_string(::LangC_OpenBLAS, fname)
-    return "gcc -o main_compiled $fname -labials -llapacke"
+    return "gcc -o main_compiled $fname -lblas -llapacke"
 end
 function compilation_string(::LangC_MKL, fname)
     return "gcc -o main_compiled $fname -lmkl_rt"
