@@ -145,7 +145,7 @@ function init_mem(lang::LangC, max_nof_nodes, precomputed_nodes)
 end
 
 function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
-    (blas_type, blas_prefix) = get_blas_type(lang, T)
+    (blas_t, blas_prefix) = get_blas_type(lang, T)
     code = init_code(lang)
     max_nodes = size(mem.slots, 1)
 
@@ -181,7 +181,7 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
     end
     # Array ipiv for pivots of GEPP (needed only if graph has linear systems).
     if :ldiv in graph_ops
-        push_code!(code, "lapack_int *ipiv = malloc(n*sizeof(*ipiv));")
+        push_code!(code, "lapack_int *ipiv = malloc(n * sizeof(*ipiv));")
     end
     push_code!(code, "size_t j;")
     push_code!(code, "")
@@ -241,7 +241,7 @@ function function_end(lang::LangC, graph, mem)
     retval = get_slot_name(mem, retval_node)
     push_code!(code, "")
     push_comment!(code, "Prepare output.")
-    push_code!(code, "memcpy(output, $retval, n*n*sizeof(*output));")
+    push_code!(code, "memcpy(output, $retval, n * n * sizeof(*output));")
     if :ldiv in values(graph.operations)
         push_code!(code, "free(ipiv);")
     end
@@ -535,7 +535,7 @@ function scalar_to_string(::LangC, z)
     return "$z"
 end
 function scalar_to_string(::LangC_OpenBLAS, z::T) where {T<:Complex}
-    return "$(real(z)) + $(imag(z))*I"
+    return "$(real(z)) + $(imag(z)) * I"
 end
 function scalar_to_string(::LangC_MKL, z::T) where {T<:Complex}
     return "{$(real(z)), $(imag(z))}"
@@ -596,15 +596,15 @@ function gen_main(lang::LangC, T, fname, funname; A = 10::Union{Integer,Matrix})
             n = A
             push_code!(code, "size_t n = $n;")
             push_code!(code, "srand(0);")
-            push_code!(code, "blas_type *A = malloc(n*n*sizeof(*A));")
-            push_code!(code, "for(i=0; i<n*n; i++){")
-            push_code!(code, "A[i] = rand() / (1.0*RAND_MAX);", ind_lvl = 2)
+            push_code!(code, "blas_type *A = malloc(n * n * sizeof(*A));")
+            push_code!(code, "for(i = 0; i < n * n; i++){")
+            push_code!(code, "A[i] = rand() / (1.0 * RAND_MAX);", ind_lvl = 2)
             push_code!(code, "}")
         end
 
         # Call polynomial evaluation function.
-        push_code!(code, "blas_type *B = malloc(n*n*sizeof(*A));")
-        push_code!(code, "$blas_prefix$funname(A,n,B);")
+        push_code!(code, "blas_type *B = malloc(n * n * sizeof(*A));")
+        push_code!(code, "$blas_prefix$funname(A, n, B);")
         push_code!(code, "return 0;")
         push_code!(code, "}", ind_lvl = 0)
     end
