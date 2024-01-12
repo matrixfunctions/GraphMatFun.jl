@@ -71,10 +71,12 @@ using LinearAlgebra, StaticArrays
     for i = 1:4 #Not high-precision test for Matlab and C
         (graph, crefs) = graph_ps_degopt([3 4 2 a[i] 1 0])
         add_ldiv!(graph, :R1, :B4, graph.outputs[1])
-        add_lincomb!(graph,:Q, [1, 2, 3], [:I, :I, :I])
-        add_lincomb!(graph,:R0, [2, 3, 4], [:I, :Q, :R1])
+        add_ldiv!(graph, :R2, :R1, :I)
+        add_ldiv!(graph, :R3, :B4, :A)
+        add_lincomb!(graph,:R4, [1., 2., 3.], [:I, :I, :I])
+        add_lincomb!(graph,:R5, [2., 3., 4., 5., 6.], [:I, :R1, :R2, :R2, :R4])
         clear_outputs!(graph)
-        add_output!(graph, :R0)
+        add_output!(graph, :R5)
 
         # Test Matlab code generation (not execution)
         fname = tempname() * ".m"
