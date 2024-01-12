@@ -34,12 +34,24 @@ using LinearAlgebra
     # Check that we actually removed something
     @test size(get_all_cref(graph2), 1) < size(get_all_cref(graph1), 1)
 
+    ## Test function to detect if graph has linear combination with identities
     ## Test function to detect if graph has linear combination of identities
     graph = Compgraph()
     add_lincomb!(graph, :P1, 1.0, :A, 1.0, :I)
     add_lincomb!(graph, :P2, 1.0, :I, 1.0, :I)
     add_mult!(graph, :P0, :P1, :P2)
+    @test has_lincomb_with_identity(graph) == true
     @test has_identity_lincomb(graph) == true
+
+    graph = Compgraph()
+    add_lincomb!(graph, :P, 1.0, :A, 1.0, :I)
+    @test has_lincomb_with_identity(graph) == true
+    @test has_identity_lincomb(graph) == false
+
+    graph = Compgraph()
+    add_mult!(graph, :P, :A, :A)
+    @test has_lincomb_with_identity(graph) == false
+    @test has_identity_lincomb(graph) == false
 
     ## Test trivial node detection and removal
     graph = Compgraph()
