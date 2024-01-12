@@ -36,27 +36,6 @@ slotname(::LangC, i) = "memslots[$(i-1)]"
 
 # Variable declaration, initialization, and reference.
 # In C, complex types are structures and are passed by reference.
-function assign_coeff(::LangC_MKL, val::T, i) where {T<:Complex}
-    assignment_string = [
-        "coeff$i.real = " * string(real(val)) * ";",
-        "coeff$i.imag = " * string(imag(val)) * ";",
-    ]
-    variable_string = "coeff$i"
-    return (variable_string, assignment_string)
-end
-function assign_coeff(::LangC_OpenBLAS, val::T, i) where {T<:Complex}
-    assignment_string =
-        ["coeff$i = " * string(real(val)) * " + " * string(imag(val)) * " * I;"]
-    variable_string = "coeff$i"
-    return (variable_string, assignment_string)
-end
-function assign_coeff(::LangC, val::T, i) where {T<:Real}
-    assignment_string = ["coeff$i = $val;"]
-    variable_string = "coeff$i"
-    return (variable_string, assignment_string)
-end
-
-# Constant declaration and reference.
 function initialization_string(::LangC, val::T) where {T<:Real}
     return "$val"
 end
@@ -67,8 +46,18 @@ end
 function initialization_string(::LangC_OpenBLAS, val::T) where {T<:Complex}
     return string(real(val)) * " + " * string(imag(val)) * "*I"
 end
+function declare_var(lang::LangC, val, id, type)
+    return "$type $id = " * initialization_string(lang, val) * ";"
+end
+function declare_coeff(lang::LangC, val, id, type)
+    variable_string = "coeff_$id"
+    dec_init_string = declare_var(lang, val, variable_string, type)
+    return (variable_string, dec_init_string)
+end
+
+# Constant declaration and reference.
 function declare_const(lang::LangC, val, id, type)
-    return "const $type $id = " * initialization_string(lang, val) * ";"
+    return "const " * declare_var(lang::LangC, val, id, type)
 end
 reference_value(::LangC, T, id) = (T <: Complex) ? "&$id" : "$id"
 
@@ -196,18 +185,9 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
     push_code!(code, "")
 
     push_comment!(code, "Declarations and initializations.")
-    # Allocate coefficients for linear combinations, if needed.
-    if :lincomb in graph_ops
-        num_coeffs = maximum(length.(values(graph.coeffs)))
-        min_coeff = has_lincomb_with_identity(graph) ? 0 : 1
-        coefficients = join(["coeff$i" for i in min_coeff:num_coeffs], ", ")
-        push_code!(code, "$blas_t " .* "$coefficients;")
-    end
     # Declare constants ZERO and ONE, if needed.
     if :mult in graph_ops
         push_code!(code, declare_const(lang, convert(T, 0.0), "ZERO", blas_t))
-    end
-    if :lincomb in graph_ops || :mult in graph_ops
         push_code!(code, declare_const(lang, convert(T, 1.0), "ONE", blas_t))
     end
     # Array ipiv for pivots of GEPP (needed only if graph has linear systems).
@@ -450,30 +430,28 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
 
     elseif op == :lincomb
 
-        # Don't overwrite the list
-        dealloc_list = deepcopy(dealloc_list)
-        setdiff!(dealloc_list, keys(mem.special_names))
         setdiff!(dealloc_list, [:I])
 
         fused_sum = (join("x*" .* string.(graph.parents[node]), " + "))
         push_comment!(code, "Computing $node = $fused_sum")
 
-        # Write the coeffs into appropriate vectors
+        # Set coefficients.
         coeff_names = Vector()
-        coeff_list = graph.coeffs[node]
         parent_mems = Vector()
         id_coefficient = 0
-        for (i, v) in enumerate(coeff_list)
+        for (i, v) in enumerate(graph.coeffs[node])
             n = graph.parents[node][i]
-            if (n != :I)
-                (coeff_i, coeff_i_code) = assign_coeff(lang, v, i)
-                for statement in coeff_i_code
-                    push_code!(code, statement)
-                end
+            if (n == :I)
+                # Coefficient of identities.
+                id_coefficient += v
+            else
+                # Coefficient of other nodes.
+                (blas_t, blas_prefix) = get_blas_type(lang, T)
+                (coeff_i, coeff_i_code) = declare_coeff(lang, v,
+                                                 "$node" * "_" * "$i", blas_t)
+                push_code!(code, coeff_i_code)
                 push!(coeff_names, coeff_i)
                 push!(parent_mems, get_slot_name(mem, n))
-            else  # The identites are added in a different vector
-                id_coefficient += v
             end
         end
 
@@ -501,10 +479,13 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         push_code!(code, "")
 
         if id_coefficient != 0
-            (coeff_id, coeff_id_code) = assign_coeff(lang, id_coefficient, 0)
-            for statement in coeff_id_code
-                push_code!(code, statement)
-            end
+            (blas_t, blas_prefix) = get_blas_type(lang, T)
+            (coeff_id, coeff_id_code) = declare_coeff(lang,
+                    id_coefficient, "$node" * "_0", blas_t)
+            push_code!(code, coeff_id_code)
+            # for statement in coeff_id_code
+            #    push_code!(code, statement)
+            # end
             push_code!(code, "for (size_t i = 0; i < n*n; i += n + 1) {")
             add_lincomb_identity_body(code, lang, T, nodemem, coeff_id)
             push_code!(code, "}")
