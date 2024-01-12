@@ -81,7 +81,7 @@ reference_constant(::LangC, T, id) = (T <: Complex) ? "&$id" : "$id"
 # Code generation.
 # Return MKL/OpenBLAS-specific includes.
 function get_blas_includes(::LangC_MKL)
-    return "#include<mkl/mkl.h>"
+    return "#include<mkl.h>"
 end
 function get_blas_includes(::LangC_OpenBLAS)
     return "#include<cblas.h>\n#include<lapacke.h>"

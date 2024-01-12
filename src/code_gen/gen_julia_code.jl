@@ -200,7 +200,7 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
         push_code!(code,"$thisslotname = "*lang.alloc_function(i));
     end
 
-    push_comment!(code,"Assign precomputed nodes memslots ");
+    push_comment!(code,"Assign precomputed nodes memslots");
 
     precomp_nodes_string = join(repeat("A",jj),",");
     for (i, n) in enumerate(precomputed_nodes)
