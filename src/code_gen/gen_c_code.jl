@@ -256,8 +256,8 @@ function function_end(lang::LangC, graph, mem)
 end
 
 function add_lincomb_body(code, lang::LangC, T, nodemem, coeff_names, parent_mems)
-    println(T)
-    rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems.* " + i)"), " + ")
+    rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems .* " + i)"), 
+            " + \n            ")
     for_body = "*(" * nodemem * " + i) = " * (isempty(rhs) ? "0" : rhs) * ";"
     push_code!(code, for_body; ind_lvl = 2)
 end
@@ -397,7 +397,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
                 push_code!(
                     code,
                     "memcpy($nodemem, $parent2mem, " *
-                    "n*n*sizeof(*master_mem));",
+                    "n * n*sizeof(*master_mem));",
                 )
             end
 
@@ -475,7 +475,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
             # for statement in coeff_id_code
             #    push_code!(code, statement)
             # end
-            push_code!(code, "for (size_t i = 0; i < n*n; i += n + 1) {")
+            push_code!(code, "for (size_t i = 0; i < n * n; i += n + 1) {")
             add_lincomb_identity_body(code, lang, T, nodemem, coeff_id)
             push_code!(code, "}")
         end
@@ -562,7 +562,7 @@ function gen_main(lang::LangC, T, fname, funname; A = 10::Union{Integer,Matrix})
         if isa(A, Matrix)
             n = LinearAlgebra.checksquare(A)
             push_code!(code, "size_t n = $n;")
-            push_code!(code, "blas_type A[$(n*n)] = {")
+            push_code!(code, "blas_type A[$(n * n)] = {")
             print_indented_matrix(lang, code, A, ind_lvl = 2)
             push_code!(code, "};")
         else # A is an integer
