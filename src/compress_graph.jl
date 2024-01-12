@@ -3,6 +3,7 @@
 
 export compress_graph_dangling!
 export compress_graph_zero_coeff!
+export has_lincomb_with_identity
 export has_identity_lincomb
 export has_trivial_nodes
 export compress_graph_trivial!
@@ -152,6 +153,18 @@ function replace_node!(graph, node, replacement, cref)
     # Delete node from graph.
     del_node!(graph, node)
     return delete_crefs!(cref, node)
+end
+
+"""
+    has_lincomb_with_identity(graph) -> Bool
+
+Checks whether the graph has a linear combination that includes the identity
+matrix.
+"""
+function has_lincomb_with_identity(graph)
+    lincombs = [key for (key, value) in graph.operations if value == :lincomb]
+    lincomb_parents = [graph.parents[key] for key in lincombs]
+    return any(x -> :I in x, lincomb_parents)
 end
 
 """
