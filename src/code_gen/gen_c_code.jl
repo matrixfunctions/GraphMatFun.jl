@@ -235,17 +235,6 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
     )
     push_code!(code, "memslots[j+1] = master_mem + j * n * n;", ind_lvl = 2)
 
-    # Store identity explicitly only if graph has a linear combination of I.
-    if has_identity_lincomb(graph)
-        push_comment!(code, "Graph has linear combination of identities.")
-        push_comment!(code, "The matrix I is explicitly allocated.")
-        alloc_slot!(mem, num_precomputed_nodes + 1, :I)
-        nodemem = get_slot_name(mem, :I)
-        push_code!(code, "memset($nodemem, 0, n * n * sizeof(*master_mem));")
-        push_code!(code, "for(j = 0; j < n * n; j += n + 1)")
-        push_code!(code, "*($nodemem+j) = ONE;", ind_lvl = 2)
-    end
-
     return code
 end
 
