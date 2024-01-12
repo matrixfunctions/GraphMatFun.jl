@@ -58,18 +58,20 @@ function assign_coeff(::LangC, val::T, i) where {T<:Real}
 end
 
 # Constant declaration and reference.
-function declare_const(::LangC_MKL, val::T, id, type) where {T<:Complex}
-    return "const $type $id = {.real = " * string(real(val)) * ", " *
-           ".imag = " * string(imag(val)) * "};"
+function initialization_string(::LangC, val::T) where {T<:Real}
+    return "$val"
 end
-function declare_const(::LangC_OpenBLAS, val::T, id, type) where {T<:Complex}
-    return "const $type $id = " * string(real(val)) * " + " *
-           string(imag(val)) * "*I;"
+function initialization_string(::LangC_MKL, val::T) where {T<:Complex}
+    return "{.real = " * string(real(val)) * ", " *
+           ".imag = " * string(imag(val)) * "}"
 end
-function declare_const(::LangC, val::T, id, type) where {T<:Real}
-    return "const $type $id = $val;"
+function initialization_string(::LangC_OpenBLAS, val::T) where {T<:Complex}
+    return string(real(val)) * " + " * string(imag(val)) * "*I"
 end
-reference_const(::LangC, T, id) = (T <: Complex) ? "&$id" : "$id"
+function declare_const(lang::LangC, val, id, type)
+    return "const $type $id = " * initialization_string(lang, val) * ";"
+end
+reference_value(::LangC, T, id) = (T <: Complex) ? "&$id" : "$id"
 
 # Code generation.
 # Return MKL/OpenBLAS-specific includes.
@@ -100,6 +102,43 @@ function get_blas_type(::LangC_OpenBLAS, T::Type{Complex{Float64}})
     return ("openblas_complex_double", "z")
 end
 
+# Add functions to work with MKL complex types.
+function add_auxiliary_functions(code, ::LangC, T)
+    return # In general, nothing is needed.
+end
+
+function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float32}})
+    push_code!(code,
+"void fma_MKL_Complex8(MKL_Complex8 *acc,
+                       const MKL_Complex8 *a,
+                       const MKL_Complex8 *b) {
+    acc->real += a->real * b->real - a->imag * b->imag;
+    acc->imag += a->real * b->imag + a->imag * b->real;
+}
+
+void acc_MKL_Complex8(MKL_Complex8 *acc,
+                       const MKL_Complex16 *a) {
+    acc->real += a->real;
+    acc->imag += a->imag;
+}", ind_lvl = 0)
+end
+
+function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float64}})
+    push_code!(code,
+"void fma_MKL_Complex16(MKL_Complex16 *acc,
+                       const MKL_Complex16 *a,
+                       const MKL_Complex16 *b) {
+    acc->real += a->real * a->real - b->imag * b->imag;
+    acc->imag += a->real * b->imag + a->imag * b->real;
+}
+
+void acc_MKL_Complex16(MKL_Complex16 *acc,
+                       const MKL_Complex16 *a) {
+    acc->real += a->real;
+    acc->imag += a->imag;
+}", ind_lvl = 0)
+end
+
 function preprocess_codegen(graph, lang::LangC)
     return graph
 end
@@ -111,6 +150,8 @@ function function_definition(lang::LangC, graph, T, funname, precomputed_nodes)
     push_code!(code, "#include<assert.h>", ind_lvl = 0)
     push_code!(code, "#include<stdlib.h>", ind_lvl = 0)
     push_code!(code, "#include<string.h>", ind_lvl = 0)
+    push_code!(code, "")
+    add_auxiliary_functions(code, lang, T)
     push_code!(code, "")
     push_comment!(code, "Code for matrix function evaluation.", ind_lvl = 0)
     input_variables =
@@ -207,7 +248,7 @@ function function_init(lang::LangC, T, mem, graph, precomputed_nodes)
     # Initialize pointers.
     push_comment!(code, "The other slots are pointers to allocated memory.")
     push_code!(
-        code, 
+        code,
         "for (j = $(num_preallocated_slots-1); j < max_memalloc; j++)"
     )
     push_code!(code, "memslots[j+1] = master_mem + j * n * n;", ind_lvl = 2)
@@ -230,6 +271,45 @@ function function_end(lang::LangC, graph, mem)
     end
     push_code!(code, "}", ind_lvl = 0)
     return code
+end
+
+function add_lincomb_body(code, lang::LangC, T, nodemem, coeff_names, parent_mems)
+    println(T)
+    rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems.* " + i)"), " + ")
+    for_body = "*(" * nodemem * " + i) = " * (isempty(rhs) ? "0" : rhs) * ";"
+    push_code!(code, for_body; ind_lvl = 2)
+end
+
+fma_function_name(T::Type{Complex{Float32}}) = "fma_MKL_Complex8"
+fma_function_name(T::Type{Complex{Float64}}) = "fma_MKL_Complex16"
+function add_lincomb_body(code, lang::LangC_MKL, T::Type{Complex{S}},
+                          nodemem, coeff_names, parent_mems) where S <: Real
+    if isempty(coeff_names)
+        lhs = "*(" * nodemem * " + i)"
+        push_code!(code, lhs * ".real = 0;", ind_lvl = 2)
+        push_code!(code, lhs * ".imag = 0;", ind_lvl = 2)
+    else
+        for (it, (coeff, parent)) in enumerate(zip(coeff_names, parent_mems))
+            statement = fma_function_name(T) *
+                    "(" * nodemem * " + i, " *
+                    reference_value(lang, T, coeff) * ", " *
+                    parent * " + i);"
+            push_code!(code, statement; ind_lvl = 2)
+        end
+    end
+end
+
+function add_lincomb_identity_body(code, lang::LangC, T, nodemem, coeff_id)
+    push_code!(code, "*(" * nodemem * " + i) += " * coeff_id * ";", ind_lvl = 2)
+end
+
+acc_function_name(T::Type{Complex{Float32}}) = "acc_MKL_Complex8"
+acc_function_name(T::Type{Complex{Float64}}) = "acc_MKL_Complex16"
+function add_lincomb_identity_body(code, lang::LangC_MKL, T::Type{Complex{S}},
+                                   nodemem, coeff_id) where S <: Real
+    statement = acc_function_name(T) * "(" * nodemem * " + i, " *
+        reference_value(lang, T, coeff_id) * ");"
+    push_code!(code, statement, ind_lvl = 2)
 end
 
 function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
@@ -263,8 +343,8 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         parent2mem = get_slot_name(mem, parent2)
     end
 
-    rzero = reference_const(lang, T, "ZERO")
-    rone = reference_const(lang, T, "ONE")
+    rzero = reference_value(lang, T, "ZERO")
+    rone = reference_value(lang, T, "ONE")
 
     code = init_code(lang)
     push_code!(code, "")
@@ -392,12 +472,6 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
                 id_coefficient += v
             end
         end
-        if id_coefficient != 0
-            (coeff_id, coeff_id_code) = assign_coeff(lang, id_coefficient, 0)
-            for statement in coeff_id_code
-                push_code!(code, statement)
-            end
-        end
 
         # Determine a target mem: nodemem
         nodemem = nothing
@@ -417,20 +491,18 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         end
 
         # Write the linear combination.
-        push_code!(code, "for (size_t i = 0; i < n*n; i++) {")
-        rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems.* "+i)"), " + ")
-        for_body = "*(" * nodemem * " + i) = "
-        if !isempty(rhs)
-            for_body *= rhs * ";"
-        else
-            for_body *= "0;"
-        end
-        push_code!(code, for_body; ind_lvl = 2)
+        push_code!(code, "for (size_t i = 0; i < n * n; i++) {")
+        add_lincomb_body(code, lang, T, nodemem, coeff_names, parent_mems)
         push_code!(code, "}")
+        push_code!(code, "")
 
         if id_coefficient != 0
+            (coeff_id, coeff_id_code) = assign_coeff(lang, id_coefficient, 0)
+            for statement in coeff_id_code
+                push_code!(code, statement)
+            end
             push_code!(code, "for (size_t i = 0; i < n*n; i += n + 1) {")
-            push_code!(code, "*(" * nodemem * " + i) += " * coeff_id * ";", ind_lvl = 2)
+            add_lincomb_identity_body(code, lang, T, nodemem, coeff_id)
             push_code!(code, "}")
         end
 
