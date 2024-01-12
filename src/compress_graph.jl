@@ -110,24 +110,19 @@ end
 
 # Check if node is trivial because of an identity on the left (:mult or :ldiv).
 function is_trivial_left(graph, node)
-    op = graph.operations[node]
-    if (op == :lincomb)
-        return false;
-    else
-        return graph.parents[node][1] == :I &&
-            (op == :mult || op == :ldiv)
-    end
+    return graph.operations[node] ∈ [:mult, :ldiv] &&
+        graph.parents[node][1] == :I
 end
 
 # Check if node is trivial because of an identity on the right (:mult).
 function is_trivial_right(graph, node)
+    return graph.operations[node] == :mult &&
+        graph.parents[node][2] == :I
+end
 
-    op = graph.operations[node]
-    if (op == :lincomb)
-        return false;
-    else
-        return (graph.parents[node][2] == :I && op == :mult)
-    end
+# Check if node is trivial.
+function is_trivial(graph, node)
+    return is_trivial_left(graph, node) || is_trivial_right(graph, node)
 end
 
 # Return a parent that can replace a node.
@@ -166,15 +161,9 @@ Checks whether the graph has a node which is a linear combination of identity
 matrices.
 """
 function has_identity_lincomb(graph)
-    has_identity_lincomb = false
-    for (key, parents) in graph.parents
-        if graph.operations[key] == :lincomb &&
-           all(parents .== :I)
-            has_identity_lincomb = true
-            break
-        end
-    end
-    return has_identity_lincomb
+    lincombs = [key for (key, value) in graph.operations if value == :lincomb]
+    lincomb_parents = [graph.parents[key] for key in lincombs]
+    return any(x -> all(x .== :I), lincomb_parents)
 end
 
 """
@@ -184,14 +173,7 @@ Checks whether the graph has trivial nodes, that is, multiplications by the
 identity or linear systems whose coefficient is the identity matrix.
 """
 function has_trivial_nodes(graph)
-    has_trivial_nodes = false
-    for (key, parents) in graph.parents
-        if is_trivial_left(graph, key) || is_trivial_right(graph, key)
-            has_trivial_nodes = true
-            break
-        end
-    end
-    return has_trivial_nodes
+    return any(is_trivial(graph, key) for (key, value) in graph.parents)
 end
 
 """
