@@ -357,7 +357,8 @@ end
 """
     compress_graph_passthrough!(graph,cref=[];verbose=false);
 
-Identifies lincombs lincomb of length one with coeff equal to one. The node has no effect. It redirect appropriately.
+Identifies lincombs of length one with coeff equal to one.
+The node has no effect and is redirected appropriately.
 """
 
 function compress_graph_passthrough!(graph,

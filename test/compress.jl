@@ -70,10 +70,15 @@ using LinearAlgebra
     @test has_trivial_nodes(graph) == true
 
     graph = Compgraph()
-    add_mult!(graph, :I2, :I, :I) # This node is trivial
-    add_mult!(graph, :AI, :A, :I2) # This node is trivial
+    add_lincomb!(graph, :A2, [2], [:A])
+    add_output!(graph, :A2)
+    @test has_trivial_nodes(graph) == false
+
+    graph = Compgraph()
+    add_mult!(graph, :I2, :I, :I)   # This node is trivial
+    add_mult!(graph, :AI, :A, :I2)  # This node is trivial
     add_mult!(graph, :IA, :I2, :AI) # This node is trivial
-    add_ldiv!(graph, :P0, :I, :IA) # This node is trivial
+    add_ldiv!(graph, :P0, :I, :IA)  # This node is trivial
     add_output!(graph, :P0)
     graph1 = graph
     graph2 = deepcopy(graph)
