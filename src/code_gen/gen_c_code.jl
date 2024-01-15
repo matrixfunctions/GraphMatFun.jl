@@ -165,7 +165,7 @@ void acc_MKL_Complex16_double(MKL_Complex16 *acc,
 void fma_MKL_Complex16(MKL_Complex16 *acc,
                        const MKL_Complex16 *a,
                        const MKL_Complex16 *b) {
-    acc->real += a->real * a->real - b->imag * b->imag;
+    acc->real += a->real * b->real - a->imag * b->imag;
     acc->imag += a->real * b->imag + a->imag * b->real;
 }
 
