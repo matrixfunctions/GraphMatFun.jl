@@ -108,6 +108,13 @@ function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float32}})
     acc->imag += *a * b->imag;
 }
 
+void prod_MKL_Complex8_float(MKL_Complex8 *acc,
+                            const float *a,
+                            const MKL_Complex8 *b) {
+    acc->real = *a * b->real;
+    acc->imag = *a * b->imag;
+}
+
 void acc_MKL_Complex8_float(MKL_Complex8 *acc,
                             const float *a) {
     acc->real += *a;
@@ -118,6 +125,13 @@ void fma_MKL_Complex8(MKL_Complex8 *acc,
                        const MKL_Complex8 *b) {
     acc->real += a->real * b->real - a->imag * b->imag;
     acc->imag += a->real * b->imag + a->imag * b->real;
+}
+
+void prod_MKL_Complex8(MKL_Complex8 *acc,
+                       const MKL_Complex8 *a,
+                       const MKL_Complex8 *b) {
+    acc->real = a->real * b->real - a->imag * b->imag;
+    acc->imag = a->real * b->imag + a->imag * b->real;
 }
 
 void acc_MKL_Complex8(MKL_Complex8 *acc,
@@ -136,6 +150,13 @@ function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float64}})
     acc->imag += *a * b->imag;
 }
 
+void prod_MKL_Complex16_double(MKL_Complex16 *acc,
+                              const double *a,
+                              const MKL_Complex16 *b) {
+    acc->real = *a * b->real;
+    acc->imag = *a * b->imag;
+}
+
 void acc_MKL_Complex16_double(MKL_Complex16 *acc,
                              const double *a) {
     acc->real += *a;
@@ -146,6 +167,13 @@ void fma_MKL_Complex16(MKL_Complex16 *acc,
                        const MKL_Complex16 *b) {
     acc->real += a->real * a->real - b->imag * b->imag;
     acc->imag += a->real * b->imag + a->imag * b->real;
+}
+
+void prod_MKL_Complex16(MKL_Complex16 *acc,
+                       const MKL_Complex16 *a,
+                       const MKL_Complex16 *b) {
+    acc->real = a->real * b->real - a->imag * b->imag;
+    acc->imag = a->real * b->imag + a->imag * b->real;
 }
 
 void acc_MKL_Complex16(MKL_Complex16 *acc,
@@ -291,15 +319,22 @@ function add_lincomb_body(code, lang::LangC, T, nodemem,
     push_code!(code, for_body; ind_lvl = 2)
 end
 
+prod_function_name(T::Type{Complex{Float32}}, coeff_real) =
+    coeff_real ? "prod_MKL_Complex8_float" : "prod_MKL_Complex8"
+prod_function_name(T::Type{Complex{Float64}}, coeff_real) =
+    coeff_real ? "prod_MKL_Complex16_double" : "prod_MKL_Complex16"
 fma_function_name(T::Type{Complex{Float32}}, coeff_real) =
     coeff_real ? "fma_MKL_Complex8_float" : "fma_MKL_Complex8"
 fma_function_name(T::Type{Complex{Float64}}, coeff_real) =
     coeff_real ? "fma_MKL_Complex16_double" : "fma_MKL_Complex16"
 function add_lincomb_body(code, lang::LangC_MKL, T::Type{Complex{S}}, nodemem,
-                          coeff_names, coeff_is_real, parent_mems) where S <: Real
+                          coeff_names, coeff_is_real,
+                          parent_mems) where S <: Real
     for (it, (coeff, coeff_real, parent)) in
         enumerate(zip(coeff_names, coeff_is_real, parent_mems))
-        statement = fma_function_name(T, coeff_real) *
+        statement = (it == 1 ?
+                    prod_function_name(T, coeff_real) :
+                    fma_function_name(T, coeff_real)) *
                 "(" * nodemem * " + i, " *
                 reference_value(lang, T, coeff) * ", " *
                 parent * " + i);"
@@ -307,7 +342,8 @@ function add_lincomb_body(code, lang::LangC_MKL, T::Type{Complex{S}}, nodemem,
     end
 end
 
-function add_lincomb_identity_body(code, lang::LangC, T, nodemem, coeff_id, coeff_real)
+function add_lincomb_identity_body(code, lang::LangC, T,
+                                   nodemem, coeff_id, coeff_real)
     push_code!(code, "*(" * nodemem * " + i) += " * coeff_id * ";", ind_lvl = 2)
 end
 
@@ -482,7 +518,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         nodemem = nothing
         recycle_parent = nothing
         for n in graph.parents[node]
-            if (n in dealloc_list) # If it's about to deallocated
+            if (n in dealloc_list) # If it's about to be deallocated
                 nodemem = get_slot_name(mem, n)
                 recycle_parent = n
                 break
@@ -493,6 +529,19 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
             alloc_slot!(mem, nodemem_i, node)
         else
             push_comment!(code, "Smart lincomb recycle $recycle_parent.")
+            # Move parent to be recycled to the beginning of the vector.
+            index = findfirst(x -> occursin(nodemem, x), parent_mems)
+
+            splice!(parent_mems, index)
+            pushfirst!(parent_mems, nodemem)
+
+            coeff_name = coeff_names[index]
+            splice!(coeff_names, index)
+            pushfirst!(coeff_names, coeff_name)
+
+            coeff_real = coeff_is_real[index]
+            splice!(coeff_is_real, index)
+            pushfirst!(coeff_is_real, coeff_real)
         end
 
         # Write the linear combination.
@@ -500,7 +549,8 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
             push_code!(code, "memset($nodemem, 0, n * n * sizeof(*master_mem));")
         else
             push_code!(code, "for (size_t i = 0; i < n * n; i++) {")
-            add_lincomb_body(code, lang, T, nodemem, coeff_names, coeff_is_real, parent_mems)
+            add_lincomb_body(code, lang, T, nodemem,
+                             coeff_names, coeff_is_real, parent_mems)
             push_code!(code, "}")
         end
 
