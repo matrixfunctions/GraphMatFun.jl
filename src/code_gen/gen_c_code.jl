@@ -457,15 +457,20 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         coeff_is_real = Vector()
         parent_mems = Vector()
         id_coefficient = 0
+        counter = 1
         for (i, v) in enumerate(graph.coeffs[node])
             n = graph.parents[node][i]
+            if v == 0
+                continue
+            end
             if (n == :I)
                 # Coefficient of identities.
                 id_coefficient += v
             else
                 # Coefficient of other nodes.
                 (coeff_real, coeff_i, coeff_i_code) = declare_coeff(lang, v,
-                                                 "$node" * "_" * "$i")
+                                                 "$node" * "_" * "$counter")
+                counter += 1
                 push_code!(code, coeff_i_code)
                 push!(coeff_names, coeff_i)
                 push!(coeff_is_real, coeff_real)
