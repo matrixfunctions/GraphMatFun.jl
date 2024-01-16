@@ -99,92 +99,66 @@ function add_auxiliary_functions(code, ::LangC, T)
     return # In general, nothing is needed.
 end
 
+function create_auxiliary_functions(complex_type, real_type)
+    return "// Compute c <- c + a * b.
+void fma_$(complex_type)_$(real_type)($(complex_type) *c,
+                    const $(real_type) *a,
+                    const $(complex_type) *b) {
+    c->real += *a * b->real;
+    c->imag += *a * b->imag;
+}
+
+// Compute c <- a * b.
+void prod_$(complex_type)_$(real_type)($(complex_type) *c,
+                    const $(real_type) *a,
+                    const $(complex_type) *b) {
+    c->real = *a * b->real;
+    c->imag = *a * b->imag;
+}
+
+// Compute c <- c + a.
+void acc_$(complex_type)_$(real_type)($(complex_type) *c,
+                    const $(real_type) *a) {
+        c->real += *a;
+}
+
+// Compute c <- c + a * b.
+void fma_$(complex_type)($(complex_type) *c,
+                    const $(complex_type) *a,
+                    const $(complex_type) *b) {
+    c->real += a->real * b->real - a->imag * b->imag;
+    c->imag += a->real * b->imag + a->imag * b->real;
+}
+
+// Compute c <- a * b.
+void prod_$(complex_type)($(complex_type) *c,
+                    const $(complex_type) *a,
+                    const $(complex_type) *b) {
+    c->real = a->real * b->real - a->imag * b->imag;
+    c->imag = a->real * b->imag + a->imag * b->real;
+}
+
+// Compute c <- c + a.
+void acc_$(complex_type)($(complex_type) *c,
+                    const $(complex_type) *a) {
+    c->real += a->real;
+    c->imag += a->imag;
+}"
+end
 function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float32}})
-    push_code!(code,
-"void fma_MKL_Complex8_float(MKL_Complex8 *acc,
-                            const float *a,
-                            const MKL_Complex8 *b) {
-    acc->real += *a * b->real;
-    acc->imag += *a * b->imag;
-}
-
-void prod_MKL_Complex8_float(MKL_Complex8 *acc,
-                            const float *a,
-                            const MKL_Complex8 *b) {
-    acc->real = *a * b->real;
-    acc->imag = *a * b->imag;
-}
-
-void acc_MKL_Complex8_float(MKL_Complex8 *acc,
-                            const float *a) {
-    acc->real += *a;
-}
-
-void fma_MKL_Complex8(MKL_Complex8 *acc,
-                       const MKL_Complex8 *a,
-                       const MKL_Complex8 *b) {
-    acc->real += a->real * b->real - a->imag * b->imag;
-    acc->imag += a->real * b->imag + a->imag * b->real;
-}
-
-void prod_MKL_Complex8(MKL_Complex8 *acc,
-                       const MKL_Complex8 *a,
-                       const MKL_Complex8 *b) {
-    acc->real = a->real * b->real - a->imag * b->imag;
-    acc->imag = a->real * b->imag + a->imag * b->real;
-}
-
-void acc_MKL_Complex8(MKL_Complex8 *acc,
-                       const MKL_Complex16 *a) {
-    acc->real += a->real;
-    acc->imag += a->imag;
-}", ind_lvl = 0)
+    push_code!(
+        code,
+        create_auxiliary_functions("MKL_Complex8", "float"),
+        ind_lvl = 0
+    )
 end
 
 function add_auxiliary_functions(code, ::LangC_MKL, T::Type{Complex{Float64}})
-    push_code!(code,
-"void fma_MKL_Complex16_double(MKL_Complex16 *acc,
-                              const double *a,
-                              const MKL_Complex16 *b) {
-    acc->real += *a * b->real;
-    acc->imag += *a * b->imag;
-}
-
-void prod_MKL_Complex16_double(MKL_Complex16 *acc,
-                              const double *a,
-                              const MKL_Complex16 *b) {
-    acc->real = *a * b->real;
-    acc->imag = *a * b->imag;
-}
-
-void acc_MKL_Complex16_double(MKL_Complex16 *acc,
-                             const double *a) {
-    acc->real += *a;
-}
-
-void fma_MKL_Complex16(MKL_Complex16 *acc,
-                       const MKL_Complex16 *a,
-                       const MKL_Complex16 *b) {
-    acc->real += a->real * b->real - a->imag * b->imag;
-    acc->imag += a->real * b->imag + a->imag * b->real;
-}
-
-void prod_MKL_Complex16(MKL_Complex16 *acc,
-                       const MKL_Complex16 *a,
-                       const MKL_Complex16 *b) {
-    acc->real = a->real * b->real - a->imag * b->imag;
-    acc->imag = a->real * b->imag + a->imag * b->real;
-}
-
-void acc_MKL_Complex16(MKL_Complex16 *acc,
-                       const MKL_Complex16 *a) {
-    acc->real += a->real;
-    acc->imag += a->imag;
-}", ind_lvl = 0)
-end
-
-function preprocess_codegen(graph, lang::LangC)
-    return graph
+    push_code!(
+        code,
+        create_auxiliary_functions("MKL_Complex16", "double"),
+        ind_lvl = 0
+    )
 end
 
 function function_definition(lang::LangC, graph, T, funname, precomputed_nodes)
