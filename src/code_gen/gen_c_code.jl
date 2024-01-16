@@ -35,17 +35,21 @@ comment(::LangC, s) = "/* $s */"
 slotname(::LangC, i) = "memslots[$(i-1)]"
 
 # Variable declaration, initialization, and reference.
-# In C, complex types are structures and are passed by reference.
-function initialization_string(::LangC, val::T) where {T<:Real}
+# In MKL, complex types are structures and are passed by reference.
+function initialization_string(::LangC_MKL, real_part, imag_part)
+    return "{.real = " * string(real_part) * ", " *
+            ".imag = " * string(imag_part) * "}"
+end
+function initialization_string(::LangC_OpenBLAS, real_part, imag_part)
+    return string(real_part) * " + " * string(imag_part) * "*I"
+end
+function initialization_string(lang::LangC, val::T) where {T<:Complex}
+    return initialization_string(lang, real(val), imag(val))
+end
+function initialization_string(lang::LangC, val::T) where {T<:Real}
     return "$val"
 end
-function initialization_string(::LangC_MKL, val::T) where {T<:Complex}
-    return "{.real = " * string(real(val)) * ", " *
-           ".imag = " * string(imag(val)) * "}"
-end
-function initialization_string(::LangC_OpenBLAS, val::T) where {T<:Complex}
-    return string(real(val)) * " + " * string(imag(val)) * "*I"
-end
+
 function declare_var(lang::LangC, val, id, type)
     return "$type $id = " * initialization_string(lang, val) * ";"
 end
@@ -57,6 +61,18 @@ function declare_coeff(lang::LangC, val::T, id) where T
     variable_string = "coeff_$id"
     dec_init_string = declare_var(lang, actual_val, variable_string, blas_t)
     return (is_real_val, variable_string, dec_init_string)
+end
+
+function assignment_string(::LangC, var, real_part)
+    return "$var = $(real_part)"
+end
+function assignment_string(::LangC_MKL, var, real_part, imag_part)
+    return "$(string(var)).real = $(real_part); " *
+           "$(string(var)).imag = $(imag_part);"
+end
+function assignment_string(lang::LangC_OpenBLAS, var, real_part, imag_part)
+    return "$(string(var)) = " *
+            initialization_string(lang, real_part, imag_part) * ";"
 end
 
 # Constant declaration and reference.
@@ -98,7 +114,6 @@ end
 function add_auxiliary_functions(code, ::LangC, T)
     return # In general, nothing is needed.
 end
-
 function create_auxiliary_functions(complex_type, real_type)
     return "// Compute c <- c + a * b.
 void fma_$(complex_type)_$(real_type)($(complex_type) *c,
@@ -568,6 +583,14 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
     return (code, nodemem)
 end
 
+random_string() = "rand() / (1.0 * RAND_MAX)";
+function generate_random_entry(lang::LangC, ::Type{T}) where {T<:Real}
+    return assignment_string(lang, "A[i]", random_string())
+end
+function generate_random_entry(lang::LangC, ::Type{T}) where {T<:Complex}
+    return assignment_string(lang, "A[i]", random_string(), random_string())
+end
+
 function scalar_to_string(::LangC, z)
     return "$z"
 end
@@ -597,7 +620,7 @@ function compilation_string(::LangC_MKL, fname)
     return "gcc -o main_compiled $fname -lmkl_rt"
 end
 
-function gen_main(lang::LangC, T, fname, funname; A = 10::Union{Integer,Matrix})
+function gen_main(lang::LangC, T, fname, funname, graph; A = 10::Union{Integer,Matrix})
     code = init_code(lang)
     if (lang.gen_main)
         (blas_type, blas_prefix) = get_blas_type(lang, T)
@@ -635,7 +658,7 @@ function gen_main(lang::LangC, T, fname, funname; A = 10::Union{Integer,Matrix})
             push_code!(code, "srand(0);")
             push_code!(code, "blas_type *A = malloc(n * n * sizeof(*A));")
             push_code!(code, "for(i = 0; i < n * n; i++){")
-            push_code!(code, "A[i] = rand() / (1.0 * RAND_MAX);", ind_lvl = 2)
+            push_code!(code, generate_random_entry(lang, eltype(graph)), ind_lvl = 2)
             push_code!(code, "}")
         end
 

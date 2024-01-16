@@ -19,7 +19,7 @@ export gen_code
 #                    dealloc_list,   mem)
 
 # Fallback. Default to no main function
-function gen_main(lang, T, fname, funname)
+function gen_main(lang, T, fname, funname, graph)
     return init_code(lang)
 end
 
@@ -137,7 +137,7 @@ function _gen_code(fname, graph, lang, priohelp, funname, precomputed_nodes)
     println(file, to_string(function_end(lang, graph, mem)))
 
     # Generate main function, if necessary.
-    exec_code = gen_main(lang, T, fname, funname)
+    exec_code = gen_main(lang, T, fname, funname, graph)
     println(file, to_string(exec_code))
 
     if (fname isa String)
