@@ -55,12 +55,11 @@ function declare_var(lang::LangC, val, id, type)
 end
 function declare_coeff(lang::LangC, val::T, id) where T
     # Use real type regardless of T.
-    is_real_val = isreal(val)
-    actual_val = is_real_val ? real(val) : val
+    actual_val = isreal(val) ? real(val) : val
     (blas_t, blas_prefix) = get_blas_type(lang, typeof(actual_val))
     variable_string = "coeff_$id"
     dec_init_string = declare_var(lang, actual_val, variable_string, blas_t)
-    return (is_real_val, variable_string, dec_init_string)
+    return (val, variable_string, dec_init_string)
 end
 
 function assignment_string(::LangC, var, real_part)
@@ -305,7 +304,7 @@ function function_end(lang::LangC, graph, mem)
 end
 
 function add_lincomb_body(code, lang::LangC, T, nodemem,
-                          coeff_names, coeff_is_real, parent_mems)
+                          coeff_names, coeff_values, parent_mems)
     rhs = join((coeff_names .* " * ") .* ("*(" .* parent_mems .* " + i)"),
             " + \n            ")
     for_body = "*(" * nodemem * " + i) = " * (isempty(rhs) ? "0" : rhs) * ";"
@@ -321,13 +320,14 @@ fma_function_name(T::Type{Complex{Float32}}, coeff_real) =
 fma_function_name(T::Type{Complex{Float64}}, coeff_real) =
     coeff_real ? "fma_MKL_Complex16_double" : "fma_MKL_Complex16"
 function add_lincomb_body(code, lang::LangC_MKL, T::Type{Complex{S}}, nodemem,
-                          coeff_names, coeff_is_real,
+                          coeff_names, coeff_values,
                           parent_mems) where S <: Real
-    for (it, (coeff, coeff_real, parent)) in
-        enumerate(zip(coeff_names, coeff_is_real, parent_mems))
-        statement = (it == 1 ?
-                    prod_function_name(T, coeff_real) :
-                    fma_function_name(T, coeff_real)) *
+    for (it, (coeff, coeff_value, parent)) in
+        enumerate(zip(coeff_names, coeff_values, parent_mems))
+        operation = it == 1 ?
+                    prod_function_name(T, isreal(coeff_value)) :
+                    fma_function_name(T, isreal(coeff_value))
+        statement = operation *
                 "(" * nodemem * " + i, " *
                 reference_value(lang, T, coeff) * ", " *
                 parent * " + i);"
@@ -336,8 +336,12 @@ function add_lincomb_body(code, lang::LangC_MKL, T::Type{Complex{S}}, nodemem,
 end
 
 function add_lincomb_identity_body(code, lang::LangC, T,
-                                   nodemem, coeff_id, coeff_real)
-    push_code!(code, "*(" * nodemem * " + i) += " * coeff_id * ";", ind_lvl = 2)
+                                   nodemem, coeff_id, coeff_value)
+    push_code!(
+        code,
+        "*(" * nodemem * " + i) += " * coeff_id * ";",
+        ind_lvl = 2
+    )
 end
 
 acc_function_name(T::Type{Complex{Float32}}, coeff_real) =
@@ -345,8 +349,8 @@ acc_function_name(T::Type{Complex{Float32}}, coeff_real) =
 acc_function_name(T::Type{Complex{Float64}}, coeff_real) =
     coeff_real ? "acc_MKL_Complex16_double" : "acc_MKL_Complex16"
 function add_lincomb_identity_body(code, lang::LangC_MKL, T::Type{Complex{S}},
-                                   nodemem, coeff_id, coeff_real) where S <: Real
-    statement = acc_function_name(T, coeff_real) * "(" * nodemem * " + i, " *
+                                   nodemem, coeff_id, coeff_value) where S <: Real
+    statement = acc_function_name(T, isreal(coeff_value)) * "(" * nodemem * " + i, " *
         reference_value(lang, T, coeff_id) * ");"
     push_code!(code, statement, ind_lvl = 2)
 end
@@ -483,7 +487,7 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
 
         # Set coefficients.
         coeff_names = Vector()
-        coeff_is_real = Vector()
+        coeff_values = Vector()
         parent_mems = Vector()
         id_coefficient = 0
         counter = 1
@@ -497,12 +501,12 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
                 id_coefficient += v
             else
                 # Coefficient of other nodes.
-                (coeff_real, coeff_i, coeff_i_code) = declare_coeff(lang, v,
+                (coeff_value, coeff_i, coeff_i_code) = declare_coeff(lang, v,
                                                  "$node" * "_" * "$counter")
                 counter += 1
                 push_code!(code, coeff_i_code)
                 push!(coeff_names, coeff_i)
-                push!(coeff_is_real, coeff_real)
+                push!(coeff_values, coeff_value)
                 push!(parent_mems, get_slot_name(mem, n))
             end
         end
@@ -532,9 +536,9 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
             splice!(coeff_names, index)
             pushfirst!(coeff_names, coeff_name)
 
-            coeff_real = coeff_is_real[index]
-            splice!(coeff_is_real, index)
-            pushfirst!(coeff_is_real, coeff_real)
+            coeff_value = coeff_values[index]
+            splice!(coeff_values, index)
+            pushfirst!(coeff_values, coeff_value)
         end
 
         # Write the linear combination.
@@ -543,19 +547,16 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         else
             push_code!(code, "for (size_t i = 0; i < n * n; i++) {")
             add_lincomb_body(code, lang, T, nodemem,
-                             coeff_names, coeff_is_real, parent_mems)
+                             coeff_names, coeff_value, parent_mems)
             push_code!(code, "}")
         end
 
         if id_coefficient != 0
-            (coeff_real, coeff_id, coeff_id_code) = declare_coeff(lang,
+            (coeff_value, coeff_id, coeff_id_code) = declare_coeff(lang,
                     id_coefficient, "$node" * "_0")
             push_code!(code, coeff_id_code)
-            # for statement in coeff_id_code
-            #    push_code!(code, statement)
-            # end
             push_code!(code, "for (size_t i = 0; i < n * n; i += n + 1) {")
-            add_lincomb_identity_body(code, lang, T, nodemem, coeff_id, coeff_real)
+            add_lincomb_identity_body(code, lang, T, nodemem, coeff_id, coeff_value)
             push_code!(code, "}")
         end
 
