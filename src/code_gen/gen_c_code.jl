@@ -126,16 +126,20 @@ void acc_$(complex_type)_$(real_type)($(complex_type) *c,
 void fma_$(complex_type)($(complex_type) *c,
                     const $(complex_type) *a,
                     const $(complex_type) *b) {
-    c->real += a->real * b->real - a->imag * b->imag;
-    c->imag += a->real * b->imag + a->imag * b->real;
+    $(real_type) real_part = a->real * b->real - a->imag * b->imag;
+    $(real_type) imag_part = a->real * b->imag + a->imag * b->real;
+    c->real += real_part;
+    c->imag += imag_part;
 }
 
 // Compute c <- a * b.
 void prod_$(complex_type)($(complex_type) *c,
                     const $(complex_type) *a,
                     const $(complex_type) *b) {
-    c->real = a->real * b->real - a->imag * b->imag;
-    c->imag = a->real * b->imag + a->imag * b->real;
+    $(real_type) real_part = a->real * b->real - a->imag * b->imag;
+    $(real_type) imag_part = a->real * b->imag + a->imag * b->real;
+    c->real = real_part;
+    c->imag = imag_part;
 }
 
 // Compute c <- c + a.
