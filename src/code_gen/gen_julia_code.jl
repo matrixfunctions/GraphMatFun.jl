@@ -28,18 +28,7 @@ comment(::LangJulia, s) = "# $s"
 
 slotname(::LangJulia, i) = "memslots$i"
 
-function assign_coeff(lang::LangJulia, v, i)
-    if v == 1
-        return (
-            "value_one",
-            comment(lang, "Saving scalar multiplications using ValueOne()."),
-        )
-    else
-        assign_coeff_basic(lang, v, i)
-    end
-end
-
-function assign_coeff_basic(lang::LangJulia, v, i)
+function assign_coeff(::LangJulia, v, i)
     T = typeof(v)
     if big(T) == T # High precision coeffs should be parsed as such
         if real(T) == T
@@ -52,10 +41,6 @@ function assign_coeff_basic(lang::LangJulia, v, i)
     else
         return ("coeff$i", "coeff$i=$v")
     end
-end
-
-function preprocess_codegen(graph, lang::LangJulia)
-    return graph # Merge many lincombs for dot fusion
 end
 
 # Code generation.
@@ -262,29 +247,7 @@ function function_end(lang::LangJulia, graph, mem)
     return code
 end
 
-# Add a scaled identity to a matrix in julia code.
-function execute_julia_I_op(
-    code,
-    nodemem,
-    non_I_parent_mem,
-    non_I_parent_coeff,
-    I_parent_coeff,
-    lang
-)
-    push_comment!(code, "Add lincomb with identity.")
-
-    if (nodemem != non_I_parent_mem)
-        push_code!(code, "copy!($(nodemem),$(non_I_parent_mem))")
-    else
-        push_comment!(code, "No copy necessary. Inline identity multiple add")
-    end
-
-    return push_code!(
-        code,
-        "$(lang.axpby_name)($(nodemem),$non_I_parent_coeff,$I_parent_coeff,I)",
-    )
-end
-
+# The general base case. Separated for dispatch.
 function execute_operation!(
     lang::LangJulia,
     T,
@@ -294,17 +257,42 @@ function execute_operation!(
     mem,
 )
     op = graph.operations[node]
-    if (op != :lincomb)
-        return execute_operation_basic!(lang, T, graph, node, dealloc_list, mem)
-    else        # Multiple additions goes here
 
-        # Don't overwrite the list
-        dealloc_list = deepcopy(dealloc_list)
-        setdiff!(dealloc_list, keys(mem.special_names))
-        setdiff!(dealloc_list, [:I])
+    # Don't overwrite the list
+    dealloc_list = deepcopy(dealloc_list)
+    setdiff!(dealloc_list, keys(mem.special_names))
+    setdiff!(dealloc_list, [:I])
 
-        code = init_code(lang)
+    if op ∈ [:mult, :ldiv]
+        parent1 = graph.parents[node][1]
+        parent2 = graph.parents[node][2]
+        if parent1 != :I
+            parent1mem = get_slot_name(mem, parent1)
+        end
+        if parent2 != :I
+            parent2mem = get_slot_name(mem, parent2)
+        end
+    end
 
+    code = init_code(lang)
+    push_comment!(code, "Computing $node with operation: $op")
+    if op == :mult
+        # Multiplication has no inline
+        (nodemem_i, nodemem) = get_free_slot(mem)
+        alloc_slot!(mem, nodemem_i, node)
+
+        push_code!(code, "mul!($nodemem,$parent1mem,$parent2mem)")
+
+    elseif op == :ldiv
+        # Left division
+        (nodemem_i, nodemem) = get_free_slot(mem)
+        alloc_slot!(mem, nodemem_i, node)
+        if parent2 == :I
+            push_code!(code, "$nodemem=inv($parent1mem)")
+        else
+            push_code!(code, "$nodemem .=$parent1mem\\$parent2mem")
+        end
+    elseif op == :lincomb
         fused_sum = (join("x*" .* string.(graph.parents[node]), '+'))
         push_comment!(code, "Computing $node = $fused_sum")
 
@@ -314,7 +302,7 @@ function execute_operation!(
         parent_mems = Vector()
         id_coeffs = Vector() # Vector of identity additions
         for (i, v) in enumerate(coeff_list)
-            (coeff_i, coeff_i_code) = assign_coeff_basic(lang, v, i)
+            (coeff_i, coeff_i_code) = assign_coeff(lang, v, i)
             push_code!(code, coeff_i_code)
             n = graph.parents[node][i]
             if (n != :I)
@@ -376,160 +364,6 @@ function execute_operation!(
             j = get_slot_number(mem, recycle_parent)
             set_slot_number!(mem, j, node)
         end
-
-        # Deallocate
-        for n in dealloc_list
-            if n != :I # No memory is ever allocated for the identity matrix.
-                i = get_slot_number(mem, n)
-                push_comment!(code, "Deallocating $n in slot $i")
-                free!(mem, i)
-            end
-        end
-
-        return (code, nodemem)
-    end
-end
-
-# The general base case. Separated for dispatch.
-function execute_operation_basic!(
-    lang::LangJulia,
-    T,
-    graph,
-    node,
-    dealloc_list,
-    mem,
-)
-    op = graph.operations[node]
-    parent1 = graph.parents[node][1]
-    parent2 = graph.parents[node][2]
-
-    # Don't overwrite the list
-    dealloc_list = deepcopy(dealloc_list)
-    setdiff!(dealloc_list, keys(mem.special_names))
-    setdiff!(dealloc_list, [:I])
-    if parent1 != :I || has_identity_lincomb(graph)
-        parent1mem = get_slot_name(mem, parent1)
-    end
-    if parent2 != :I || has_identity_lincomb(graph)
-        parent2mem = get_slot_name(mem, parent2)
-    end
-
-    code = init_code(lang)
-    push_comment!(code, "Computing $node with operation: $op")
-    if op == :mult
-        # Multiplication has no inline
-        (nodemem_i, nodemem) = get_free_slot(mem)
-        alloc_slot!(mem, nodemem_i, node)
-
-        push_code!(code, "mul!($nodemem,$parent1mem,$parent2mem)")
-
-    elseif op == :ldiv
-        # Left division
-        (nodemem_i, nodemem) = get_free_slot(mem)
-        alloc_slot!(mem, nodemem_i, node)
-        if parent2 == :I
-            push_code!(code, "$nodemem=inv($parent1mem)")
-        else
-            push_code!(code, "$nodemem .=$parent1mem\\$parent2mem")
-        end
-
-    elseif op == :lincomb
-        coeff_vars = Vector{String}(undef, 2)
-        (coeff1, coeff1_code) = assign_coeff(lang, graph.coeffs[node][1], 1)
-        push_code!(code, coeff1_code)
-        (coeff2, coeff2_code) = assign_coeff(lang, graph.coeffs[node][2], 2)
-        push_code!(code, coeff2_code)
-
-        # Use economical memory slots
-        if ((parent1 in dealloc_list) || (parent2 in dealloc_list))
-            # Smart / inplace: parentX can be used to store newly computed value
-
-            # No allocation needed
-
-            recycle_parent = (parent1 in dealloc_list) ? parent1 : parent2
-
-            push_comment!(code, "Smart lincomb recycle $recycle_parent")
-
-            nodemem = get_slot_name(mem, recycle_parent)
-
-            if parent1 == :I || parent2 == :I
-                # BLAS does not work with unform scaling use inplace instead
-                if (parent1 == :I)
-                    non_I_parent_mem = parent2mem
-                    non_I_parent_coeff = coeff2
-                    I_parent_coeff = coeff1
-                elseif (parent2 == :I)
-                    non_I_parent_mem = parent1mem
-                    non_I_parent_coeff = coeff1
-                    I_parent_coeff = coeff2
-                end
-                execute_julia_I_op(
-                    code,
-                    nodemem,
-                    non_I_parent_mem,
-                    non_I_parent_coeff,
-                    I_parent_coeff,
-                    lang
-                )
-            else
-                if (recycle_parent == parent1)
-                    push_code!(
-                        code,
-                        "$(lang.axpby_name)($nodemem,$coeff1,$coeff2,$parent2mem)",
-                    )
-                else
-                    push_code!(
-                        code,
-                        "$(lang.axpby_name)($nodemem,$coeff2,$coeff1,$parent1mem)",
-                    )
-                end
-            end
-
-            # Avoid deallocated
-            setdiff!(dealloc_list, [recycle_parent])
-
-            # Set the memory pointer
-            j = get_slot_number(mem, recycle_parent)
-            set_slot_number!(mem, j, node)
-        else
-            # Default behavior:  Allocate new slot
-            (nodemem_i, nodemem) = get_free_slot(mem)
-
-            alloc_slot!(mem, nodemem_i, node)
-
-            if (parent1 == :I)
-                non_I_parent_mem = parent2mem
-                non_I_parent_coeff = coeff2
-                I_parent_coeff = coeff1
-                execute_julia_I_op(
-                    code,
-                    nodemem,
-                    non_I_parent_mem,
-                    non_I_parent_coeff,
-                    I_parent_coeff,
-                    lang
-                )
-            elseif (parent2 == :I)
-                non_I_parent_mem = parent1mem
-                non_I_parent_coeff = coeff1
-                I_parent_coeff = coeff2
-                execute_julia_I_op(
-                    code,
-                    nodemem,
-                    non_I_parent_mem,
-                    non_I_parent_coeff,
-                    I_parent_coeff,
-                    lang
-                )
-            else
-                push_code!(code, "copy!($(nodemem),$parent1mem)")
-                push_code!(
-                    code,
-                    "$(lang.axpby_name)($(nodemem),$coeff1,$coeff2,$parent2mem)",
-                )
-            end
-        end
-
     else
         error("Unknown operation")
     end
