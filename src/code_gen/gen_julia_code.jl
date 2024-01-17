@@ -18,7 +18,7 @@ default_alloc_function(k)="similar(A,T)"
 Code generation in julia language, with optional overwriting of input. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The `only_overwrite` specifies if `f` should be created if the overwrite funtion `f!` contains the actual code.
 """
 LangJulia() = LangJulia(true, true,  :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
-LangJulia(overwrite_input) = LangJulia(overwrite_input, true, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
+LangJulia(overwrite_input) = LangJulia(overwrite_input, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
 function LangJulia(overwrite_input, inline ; value_one_name="ValueOne",axpby_name="matfun_axpby!")
     return LangJulia(overwrite_input, inline,  :auto, default_alloc_function,false,value_one_name,axpby_name)
 end
