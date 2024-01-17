@@ -39,10 +39,6 @@ function get_slot_name(mem::CodeMem, node::Symbol)
     end
 end
 
-function is_allocated(mem::CodeMem, node::Symbol)
-    return node in mem.slots
-end
-
 # Returns a reference to a memory slot
 # which is either a new slot or
 # one of the elements in the Vector allow_inplace
