@@ -493,9 +493,6 @@ function execute_operation!(lang::LangC, T, graph, node, dealloc_list, mem)
         counter = 1
         for (i, v) in enumerate(graph.coeffs[node])
             n = graph.parents[node][i]
-            if v == 0
-                continue
-            end
             if (n == :I)
                 # Coefficient of identities.
                 id_coefficient += v
