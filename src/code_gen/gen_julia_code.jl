@@ -272,19 +272,7 @@ function execute_operation!(
 
         # Adjust the result with inplace additions of identity
         for c in id_coeffs
-            if VERSION > v"1.7.0-DEV.1240"
-                push_code!(code, "mul!($nodemem,true,I*$c,true,true)")
-            else
-                push_comment!(
-                    code,
-                    "This julia version does not support inplace identity add.",
-                )
-                push_comment!(
-                    code,
-                    "Update to Julia 1.7.0 or newer for better performance.",
-                )
-                push_code!(code, "$nodemem+=I*$c")
-            end
+            push_code!(code, "mul!($nodemem, true, I*$c, true, true)")
         end
 
         if !(isnothing(recycle_parent))
