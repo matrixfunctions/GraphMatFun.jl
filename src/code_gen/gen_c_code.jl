@@ -103,10 +103,10 @@ function get_blas_type(::LangC_MKL, T::Type{Complex{Float64}})
     return ("MKL_Complex16", "z")
 end
 function get_blas_type(::LangC_OpenBLAS, T::Type{Complex{Float32}})
-    return ("openblas_complex_float", "c")
+    return ("lapack_complex_float", "c")
 end
 function get_blas_type(::LangC_OpenBLAS, T::Type{Complex{Float64}})
-    return ("openblas_complex_double", "z")
+    return ("lapack_complex_double", "z")
 end
 
 # Add functions to work with MKL complex types.
