@@ -42,7 +42,7 @@ using LinearAlgebra, StaticArrays
     # Test Statically sized matrix
     (graph, crefs) = graph_ps_degopt([3 4 2 1 0.1 1.0])
     fname = tempname() * ".jl"
-    lang = LangJulia(true, true)
+    lang = LangJulia(true)
     begin
         gen_code(fname, graph, funname = "thisfunction",lang=lang)
         # and execution
@@ -56,7 +56,7 @@ using LinearAlgebra, StaticArrays
 
     # Test precomputed nodes
     fname = tempname() * ".jl"
-    lang = LangJulia(true, true)
+    lang = LangJulia(true)
     begin
         gen_code(fname, graph, funname = "thisfunction2",precomputed_nodes=[:A,:A2])
         # and execution
