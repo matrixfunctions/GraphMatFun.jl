@@ -24,9 +24,7 @@ using LinearAlgebra, StaticArrays
                 TT = eltype(a);
                 A = convert.(TT,[3 4.0; 5.5 0.1]);
                 ti = time_ns()
-                lang = LangJulia(t1,t2,
-                                 value_one_name="ValueOne_"*string(ti),
-                                 axpby_name="matfun_axpby_"*string(ti)*"!")
+                lang = LangJulia(t1, t2)
                 fname = tempname() * ".jl"
                 begin # To avoid generated codes interfere
                     gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
@@ -44,9 +42,7 @@ using LinearAlgebra, StaticArrays
     # Test Statically sized matrix
     (graph, crefs) = graph_ps_degopt([3 4 2 1 0.1 1.0])
     fname = tempname() * ".jl"
-    lang = LangJulia(true,true,
-                     value_one_name="ValueOne_"*string(time_ns()),
-                     axpby_name="matfun_axpby_"*string(time_ns())*"!")
+    lang = LangJulia(true, true)
     begin
         gen_code(fname, graph, funname = "thisfunction",lang=lang)
         # and execution
@@ -60,9 +56,7 @@ using LinearAlgebra, StaticArrays
 
     # Test precomputed nodes
     fname = tempname() * ".jl"
-    lang = LangJulia(true,true,
-                     value_one_name="ValueOne_"*string(time_ns()),
-                     axpby_name="matfun_axpby_"*string(time_ns())*"!")
+    lang = LangJulia(true, true)
     begin
         gen_code(fname, graph, funname = "thisfunction2",precomputed_nodes=[:A,:A2])
         # and execution

@@ -4,23 +4,24 @@ export LangJulia
 struct LangJulia
     overwrite_input::Any # Overwrite input
     inline::Any
-    axpby_header::Any
     alloc_function
     only_overwrite
-    value_one_name
-    axpby_name
 end
 default_alloc_function(k)="similar(A,T)"
 
 """
-    LangJulia(overwrite_input=true,inline=true,axpby_header=:auto,alloc_function,only_overwrite=false)
+    LangJulia(overwrite_input=true,inline=true,alloc_function,only_overwrite=false)
 
-Code generation in julia language, with optional overwriting of input. The `axpby_header` specifies if axpby function calls should be included in the beginning of the file. The parameter `alloc_function` is a function of three parameters `alloc_function(k)` where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The `only_overwrite` specifies if `f` should be created if the overwrite funtion `f!` contains the actual code.
+Code generation in julia language, with optional overwriting of input. The
+parameter `alloc_function` is a function of three parameters `alloc_function(k)`
+where `k` is the memory slot (default is `alloc_function(k)=similar(A,T)`). The
+`only_overwrite` specifies if `f` should be created if the overwrite funtion
+    `f!` contains the actual code.
 """
-LangJulia() = LangJulia(true, true,  :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
-LangJulia(overwrite_input) = LangJulia(overwrite_input, true, :auto, default_alloc_function,false,"ValueOne","matfun_axpby!")
-function LangJulia(overwrite_input, inline ; value_one_name="ValueOne",axpby_name="matfun_axpby!")
-    return LangJulia(overwrite_input, inline,  :auto, default_alloc_function,false,value_one_name,axpby_name)
+LangJulia() = LangJulia(true, true, default_alloc_function, false)
+LangJulia(overwrite_input) = LangJulia(overwrite_input, true, default_alloc_function, false)
+function LangJulia(overwrite_input, inline)
+    return LangJulia(overwrite_input, inline, default_alloc_function, false)
 end
 
 # Language specific operations.
@@ -44,52 +45,6 @@ function assign_coeff(::LangJulia, v, i)
 end
 
 # Code generation.
-function push_code_matfun_axpby_I!(lang,code)
-    # Add code for matfun_axpby! using UniformScaling.
-    value_one_name=lang.value_one_name;
-    axpby_name=lang.axpby_name
-    return push_code_verbatim_string!(
-        code,
-        "
-# Compute X <- a X + b I.
-function $axpby_name(X,a,b,Y::UniformScaling)
-    m,n=size(X)
-    if ~(a isa $value_one_name)
-        rmul!(X,a)
-    end
-    @inbounds for i=1:n
-        X[i,i]+=(b isa $value_one_name) ? 1 : b
-    end
-end\n",
-    )
-end
-
-function push_code_matfun_axpby!(lang,code)
-    # Add code for generic matfun_axpby! function.
-    value_one_name=lang.value_one_name;
-    axpby_name=lang.axpby_name
-    return push_code_verbatim_string!(
-        code,
-        "
-# Compute X <- a X + b Y.
-function $axpby_name(X,a,b,Y)
-    m,n=size(X)
-    if ~(a isa $value_one_name)
-        rmul!(X,a)
-    end
-    @inbounds for i=1:m
-        @inbounds for j=1:n
-            if (b isa $value_one_name)
-                X[i,j]+=Y[i,j]
-            else
-                X[i,j]+=b*Y[i,j]
-            end
-        end
-    end
-end\n",
-    )
-end
-
 function function_definition(
     lang::LangJulia,
     graph,
@@ -98,27 +53,8 @@ function function_definition(
     precomputed_nodes,
 )
     code = init_code(lang)
-    axpby_header = lang.axpby_header
-    if (lang.axpby_header == :auto)
-        axpby_header = false
-    end
 
     push_code!(code, "using LinearAlgebra", ind_lvl = 0)
-    # If graph has linear combinations, add corresponding axpby functions.
-    if any(values(graph.operations) .== :lincomb)
-        push_code!(code, "\nstruct $(lang.value_one_name); end\n$(lang.value_one_name)()", ind_lvl = 0)
-    end
-    lincomb_nodes =
-        filter(x -> graph.operations[x] == :lincomb, keys(graph.operations))
-    lincomb_with_I =
-        filter(y -> any(map(x -> x == :I, graph.parents[y])), lincomb_nodes)
-    if (!isempty(lincomb_with_I) && axpby_header)
-        push_code_matfun_axpby_I!(lang,code)
-    end
-    if (!isempty(setdiff!(lincomb_nodes, lincomb_with_I)) && axpby_header)
-        push_code_matfun_axpby!(lang,code)
-    end
-
     input_variables = join(precomputed_nodes, ", ")
     inline_string = lang.inline ? "@inline " : ""
     # Generate version a bang version of the function.
@@ -213,11 +149,6 @@ function function_init(lang::LangJulia, T, mem, graph, precomputed_nodes)
     else
         push_comment!(code, "Uniform scaling is exploited.")
         push_comment!(code, "No matrix I explicitly allocated.")
-    end
-
-    # If needed, initialize variable of type ValueOne for axpby with a=1 or b=1.
-    if (any(map(x -> any(x .== 1), values(graph.coeffs))))
-        push_code!(code, "value_one=$(lang.value_one_name)()")
     end
 
     return code
