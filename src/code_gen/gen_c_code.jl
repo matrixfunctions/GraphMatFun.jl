@@ -592,28 +592,6 @@ function generate_random_entry(lang::LangC, ::Type{T}) where {T<:Complex}
     return assignment_string(lang, "A[i]", random_string(), random_string())
 end
 
-function scalar_to_string(::LangC, z)
-    return "$z"
-end
-function scalar_to_string(::LangC_OpenBLAS, z::T) where {T<:Complex}
-    return "$(real(z)) + $(imag(z)) * I"
-end
-function scalar_to_string(::LangC_MKL, z::T) where {T<:Complex}
-    return "{$(real(z)), $(imag(z))}"
-end
-function print_indented_matrix(lang::LangC, code, A; ind_lvl = 1)
-    (m, n) = size(A)
-    for j = 1:n
-        column_string = ""
-        for i = 1:m
-            column_string *=
-                scalar_to_string(lang, A[i, j]) * (i != m ? ", " : "")
-        end
-        column_string *= (j != n ? "," : "")
-        push_code!(code, column_string, ind_lvl = ind_lvl)
-    end
-end
-
 function compilation_string(::LangC_OpenBLAS, fname)
     return "gcc -o main_compiled $fname -lblas -llapacke"
 end
@@ -621,7 +599,7 @@ function compilation_string(::LangC_MKL, fname)
     return "gcc -o main_compiled $fname -lmkl_rt"
 end
 
-function gen_main(lang::LangC, T, fname, funname, graph; A = 10::Union{Integer,Matrix})
+function gen_main(lang::LangC, T, fname, funname, graph)
     code = init_code(lang)
     if (lang.gen_main)
         (blas_type, blas_prefix) = get_blas_type(lang, T)
@@ -647,21 +625,13 @@ function gen_main(lang::LangC, T, fname, funname, graph; A = 10::Union{Integer,M
         push_code!(code, "size_t i;")
 
         # Generate matrix.
-        if isa(A, Matrix)
-            n = LinearAlgebra.checksquare(A)
-            push_code!(code, "size_t n = $n;")
-            push_code!(code, "blas_type A[$(n * n)] = {")
-            print_indented_matrix(lang, code, A, ind_lvl = 2)
-            push_code!(code, "};")
-        else # A is an integer
-            n = A
-            push_code!(code, "size_t n = $n;")
-            push_code!(code, "srand(0);")
-            push_code!(code, "blas_type *A = malloc(n * n * sizeof(*A));")
-            push_code!(code, "for(i = 0; i < n * n; i++){")
-            push_code!(code, generate_random_entry(lang, eltype(graph)), ind_lvl = 2)
-            push_code!(code, "}")
-        end
+        n = 4
+        push_code!(code, "size_t n = $n;")
+        push_code!(code, "srand(0);")
+        push_code!(code, "blas_type *A = malloc(n * n * sizeof(*A));")
+        push_code!(code, "for(i = 0; i < n * n; i++){")
+        push_code!(code, generate_random_entry(lang, eltype(graph)), ind_lvl = 2)
+        push_code!(code, "}")
 
         # Call polynomial evaluation function.
         push_code!(code, "blas_type *B = malloc(n * n * sizeof(*A));")
