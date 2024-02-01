@@ -30,8 +30,7 @@ function graph_bigraph(graph0)
 
         if length(coeffs)>2
             # Overwrite it!
-            add_sum!(graph,node, coeffs,parents,
-                     unused_base_name(graph,node))
+            add_lincomb!(graph,node, coeffs, parents)
         elseif (length(coeffs)==1) # Expand by a trivial multiplication
             graph.parents[node]=[:I;parents[1]];
             graph.coeffs[node]=[0;coeffs[1]];
