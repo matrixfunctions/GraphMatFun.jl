@@ -34,19 +34,17 @@ Removes dangling nodes in the graph. If a node is not used anywhere and it is
 not in the output, it can safely be removed.
 """
 function compress_graph_dangling!(graph, cref = []; verbose = false)
-    # Remove dangling nodes
+    # Remove dangling nodes.
     modified = true
     while modified
         modified = false
+        # Find all nodes that are parent of at least one node in the graph.
+        all_parents = unique(collect(Iterators.flatten(values(graph.parents))))
         for (key, parents) in graph.parents
-            nof_children = 0
-            for (pkey, pparents) in graph.parents
-                nof_children += sum(pparents .== key)
-            end
-
-            if (nof_children == 0 && !(key in graph.outputs))
+            # Delete nodes that are not parents and are not output nodes.
+            if key ∉ all_parents && !(key ∈ graph.outputs)
                 conditional_println("Delete dangling: $key", verbose)
-                del_node!(graph,key)
+                del_node!(graph, key)
                 delete_crefs!(cref, key)
                 modified = true
                 break
@@ -87,7 +85,6 @@ function compress_graph_zero_coeff!(
             deleteat!(graph.parents[node],idx);
             deleteat!(graph.coeffs[node],idx);
             modified=true;
-
 
             # Update the cref list
 
@@ -360,7 +357,6 @@ end
 Identifies lincombs of length one with coeff equal to one.
 The node has no effect and is redirected appropriately.
 """
-
 function compress_graph_passthrough!(graph,
                                      cref=[];
                                      verbose = false)
