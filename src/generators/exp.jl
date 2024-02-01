@@ -123,10 +123,10 @@ function graph_exp_native_jl_low(C, input)
     end
 
     a = view(C, 1:2:n-1)
-    cref[1:s+1] = add_sum!(graph, :V, a, evenmon, :V)
+    cref[1:s+1] = add_lincomb!(graph, :V, a, evenmon)
 
     a = view(C, 2:2:n)
-    cref[s+2:n] = add_sum!(graph, :Ua, a, evenmon, :Ua)
+    cref[s+2:n] = add_lincomb!(graph, :Ua, a, evenmon)
     add_mult!(graph, :U, :Ua, input)
 
     add_lincomb!(graph, :X, 1.0, :V, 1.0, :U)
@@ -162,12 +162,12 @@ function graph_exp_native_jl_high(CC, s, input)
 
     # Ub3= CC[14].*A6 .+ CC[12].*A4 .+ CC[10].*A2
     a = view(CC, 10:2:14)
-    cref[1:3] = add_sum!(graph, :Ub3, a, [:A2, :A4, :A6], :Ub)
+    cref[1:3] = add_lincomb!(graph, :Ub3, a, [:A2, :A4, :A6])
     add_mult!(graph, :Ub, :Ub3, :A6)
 
     # Ua = CC[8].*A6 .+ CC[6].*A4 .+ CC[4].*A2 .+ CC[2].*Inn
     a = view(CC, 2:2:8)
-    cref[4:7] = add_sum!(graph, :Ua, a, [:I, :A2, :A4, :A6], :Ua)
+    cref[4:7] = add_lincomb!(graph, :Ua, a, [:I, :A2, :A4, :A6])
 
     add_lincomb!(graph, :Uc, 1.0, :Ub, 1.0, :Ua)
     add_mult!(graph, :U, C, :Uc)
@@ -177,12 +177,12 @@ function graph_exp_native_jl_high(CC, s, input)
 
     # Vb3= CC[13].*A6 .+ CC[11].*A4 .+ CC[9].*A2
     a = view(CC, 9:2:13)
-    cref[8:10] = add_sum!(graph, :Vb3, a, [:A2, :A4, :A6], :Vb)
+    cref[8:10] = add_lincomb!(graph, :Vb3, a, [:A2, :A4, :A6])
     add_mult!(graph, :Vb, :Vb3, :A6)
 
     # Va = CC[7].*A6 .+ CC[5].*A4 .+ CC[3].*A2 .+ CC[1].*Inn
     a = view(CC, 1:2:7)
-    cref[11:14] = add_sum!(graph, :Va, a, [:I, :A2, :A4, :A6], :Va)
+    cref[11:14] = add_lincomb!(graph, :Va, a, [:I, :A2, :A4, :A6])
 
     add_lincomb!(graph, :V, 1.0, :Vb, 1.0, :Va)
 

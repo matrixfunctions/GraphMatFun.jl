@@ -43,7 +43,7 @@ function graph_monomial(a; input = :A, polyname = :P)
     end
 
     # Sum up the polynomial
-    cref[:] .= add_sum!(graph, outkey, a, nodelist, polyname)
+    cref[:] .= add_lincomb!(graph, outkey, a, nodelist)
 
     add_output!(graph, outkey)
     return (graph, cref)
