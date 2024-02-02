@@ -1,4 +1,3 @@
-
 # Graphs and their manipulation
 
 
@@ -18,7 +17,6 @@ In general a graph is composed of linear combinations ``C = \alpha A + \beta B``
 add_lincomb!
 add_mult!
 add_ldiv!
-add_sum!
 ```
 
 The graph can have multiple outputs and the behavior controlled.

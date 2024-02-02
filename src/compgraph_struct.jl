@@ -12,7 +12,6 @@ export get_topo_order
 export add_mult!
 export add_lincomb!
 export add_ldiv!
-export add_sum!
 export add_output!
 export del_output!
 export clear_outputs!
@@ -111,7 +110,6 @@ end
 The operation `α1*p1+α2*p2` is added to the graph.
 The result is stored in node `node`.
 
-See also [`add_sum!`](@ref).
 """
 function add_lincomb!(graph, node, α1, p1, α2, p2)
     check_node_name_legality(graph, node)
@@ -241,40 +239,6 @@ function rename_node!(graph, src, dest, cref = Vector())
         end
     end
     return nothing
-end
-
-"""
-    cref=add_sum!(graph,node,c,nodelist,base_name=node)
-
-Adds a linear combination of more than two nodes, given in `nodelist::Vector`,
-with coefficients given in `c`. The `base_name` is temporary variables for the
-summing. The sum is stored in `node`.
-
-Returns `cref` list with references.
-"""
-function add_sum!(graph, node, c, nodelist, base_name = node)
-    if size(nodelist, 1) == 1
-        error("Summing one element not allowed.")
-    elseif (size(nodelist, 1) == 2)
-        # Direct call to lincomb if we sum two nodes
-        add_lincomb!(graph, node, c[1], nodelist[1], c[2], nodelist[2])
-        return [(node, 1), (node, 2)]
-    end
-
-    cref = Vector{Tuple{Symbol,Int}}()
-    key = Symbol("$(base_name)2")
-    add_lincomb!(graph, key, c[1], nodelist[1], c[2], nodelist[2])
-    push!(cref, (key, 1))
-    push!(cref, (key, 2))
-    for k = 3:size(nodelist, 1)
-        prev_key = key
-        key = Symbol("$(base_name)$k")
-        add_lincomb!(graph, key, 1, prev_key, c[k], nodelist[k])
-        push!(cref, (key, 2))
-    end
-    # Rename the final sum as the target node
-    rename_node!(graph, key, node, cref)
-    return cref
 end
 
 """
