@@ -29,4 +29,13 @@ using LinearAlgebra
     helper[:Z2] = -1
     order = get_topo_order(g, priohelp = helper, will_not_dealloc = [:I])[1]
     @test order[1:4] == [:X1; :X2; :X3; :Z1]
+
+    add_mult!(g, :Z, :B, :B)
+    try
+        get_topo_order(g)
+    catch e
+        @test e isa Exception
+        @test sprint(showerror, e) ==
+            "Graph is disconnected. Nodes [:Z] cannot be computed."
+    end
 end

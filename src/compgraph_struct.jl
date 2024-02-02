@@ -319,7 +319,7 @@ function set_coeffs!(graph, x, cref = get_all_cref(graph))
     end
     if !(length(x) == length(cref))
         error(
-            "Vector of coefficients and defined set of coefficients" *
+            "Vector of coefficients and defined set of coefficients " *
             "do not have the same length.",
         )
     end

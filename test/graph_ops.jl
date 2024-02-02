@@ -67,6 +67,12 @@ using LinearAlgebra, Polynomials
     add_lincomb!(graph, :AI, 2.0, :A, 2.0, :I)
     add_mult!(graph, :Pout, :AI, :A)
     add_output!(graph, :Pout)
+    try
+        rename_node!(graph, :Z, :Z_new)
+    catch e
+        @test e isa Exception
+        @test sprint(showerror, e) == "Node Z not present in the graph."
+    end
 
     graph1 = deepcopy(graph)
     rename_node!(graph1, :AI, :B)
@@ -91,5 +97,20 @@ using LinearAlgebra, Polynomials
     # Removal of output node
     del_output!(graph, :Pout)
     @test isempty(graph.outputs)
+
+    # Setting and getting coefficients
+    graph = Compgraph()
+    add_lincomb!(graph, :B, [1.0], [:A])
+    add_output!(graph, :B)
+    set_coeffs!(graph, 2.0, get_all_cref(graph)[1])
+    @test graph.coeffs[:B][1] == 2.0
+    try
+        set_coeffs!(graph, [1.0, 2.0])
+    catch e
+        @test e isa Exception
+        @test sprint(showerror, e) == "Vector of coefficients and defined " *
+            "set of coefficients do not have the same length."
+    end
+    @test get_coeffs(graph, get_all_cref(graph)[1]) == [2.0]
 
 end
