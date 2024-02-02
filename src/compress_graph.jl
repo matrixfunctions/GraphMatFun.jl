@@ -15,16 +15,13 @@ function conditional_println(out_string, verbose)
     return verbose && println(out_string)
 end
 
+# Delete node from cref vector.
 function delete_crefs!(cref, n)
-    II = [] # II will be list of nodes not to remove
-    for (i, c) in enumerate(cref)
-        if (c[1] != n)
-            push!(II, i)
-        end
-    end
+    # Find the indices of cref elements to be kept.
+    kept_indices = findall(c -> c[1] != n, cref)
     cref_org = copy(cref)
     empty!(cref)
-    return append!(cref, cref_org[II])
+    return append!(cref, cref_org[kept_indices])
 end
 
 """
