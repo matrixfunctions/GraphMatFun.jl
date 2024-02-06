@@ -1,5 +1,22 @@
 using LinearAlgebra, StaticArrays
+
+function run_and_check_error(fname, graph, lang, err_string)
+    try
+        gen_code(fname, graph, lang = lang)
+    catch e
+        @test e isa Exception
+        @test sprint(showerror, e) == err_string
+    end
+end
+
 @testset "code gen" begin
+
+    # Generate erroring graphs.
+    empty_graph = Compgraph()
+    trivial_graph = Compgraph()
+    add_mult!(trivial_graph, :B, :A, :I)
+    add_output!(trivial_graph, :B)
+
     a = Vector{Number}(undef, 6)
     a[1] = 0.11
     a[2] = 0.11 + 0.1im
@@ -26,6 +43,10 @@ using LinearAlgebra, StaticArrays
                 ti = time_ns()
                 lang = LangJulia(t1, t2)
                 fname = tempname() * ".jl"
+                run_and_check_error(fname, empty_graph, lang,
+                    "Unable to generate code for graphs without operations.")
+                run_and_check_error(fname, trivial_graph, lang,
+                    "Please run compress_graph!() on the graph first.")
                 begin # To avoid generated codes interfere
                     gen_code(fname, graph, lang = lang, funname = "dummy_$(ti)")
                     # and execution
@@ -77,18 +98,33 @@ using LinearAlgebra, StaticArrays
 
         # Test Matlab code generation (not execution)
         fname = tempname() * ".m"
-        gen_code(fname, graph, lang = LangMatlab())
+        lang = LangMatlab()
+        run_and_check_error(fname, empty_graph, lang,
+            "Unable to generate code for graphs without operations.")
+        run_and_check_error(fname, trivial_graph, lang,
+            "Please run compress_graph!() on the graph first.")
+        gen_code(fname, graph, lang = lang)
         rm(fname)
 
         # Test C code generation
         for gen_main in (true, false)
             for overwrite_input in (true, false)
+                lang = LangC_MKL(gen_main, overwrite_input)
+                run_and_check_error(fname, empty_graph, lang,
+                    "Unable to generate code for graphs without operations.")
+                run_and_check_error(fname, trivial_graph, lang,
+                    "Please run compress_graph!() on the graph first.")
                 fname = tempname() * ".c"
-                gen_code(fname, graph, lang = LangC_MKL(gen_main, overwrite_input))
+                gen_code(fname, graph, lang = lang)
                 rm(fname)
 
+                lang = LangC_OpenBLAS(gen_main, overwrite_input)
+                run_and_check_error(fname, empty_graph, lang,
+                    "Unable to generate code for graphs without operations.")
+                run_and_check_error(fname, trivial_graph, lang,
+                    "Please run compress_graph!() on the graph first.")
                 fname = tempname() * ".c"
-                gen_code(fname, graph, lang = LangC_OpenBLAS(gen_main, overwrite_input))
+                gen_code(fname, graph, lang = lang)
                 rm(fname)
             end
         end
