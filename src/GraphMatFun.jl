@@ -32,4 +32,6 @@ include("error_bounds.jl")
 # Code generations
 include("code_gen/gen_code.jl")
 
+# Visualization
+include("visualization.jl");
 end
