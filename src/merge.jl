@@ -1,4 +1,5 @@
 export merge_graphs;
+export split_lincomb!;
 
 # Change a symbol name using prefix & postfix
 function translate_keyname(key, prefix, postfix, skip_basic, input)
@@ -114,4 +115,72 @@ function merge_graphs(
     end
 
     return Compgraph{T}(operations, parents, coeffs, outputs)
+end
+
+
+"""
+      (g,cref_modified,new_crefs)=split_lincomb!(g,node,ind2;
+                        newnode=node_new,
+                        cref_list=[])
+
+Takes the lincomb operation in node and splits it into two lincombs, by
+creating a new node newnode. The new node consists of the linear combination
+of the coefficients moving (node, ind2[1]),... (node,ind2[end]) and the
+old lincomb object has the old coefficients and an additional term pointing
+to newnode. The cref_list is updated to the new coefficient pointers. The
+new_crefs list contains all the new coefficient pointers.
+
+
+In this way, the graph is unchanged but one of the linear combinations is
+split up into two.
+
+"""
+function split_lincomb!(g,node,ind2;
+                        newnode=Symbol("$(node)_new"),
+                        cref_list=[])
+
+    @show newnode
+    # get ind1 = complement of ind2
+    nof_lincombs=size(g.coeffs[node],1);
+    @show nof_lincombs
+    ind1=map(i -> !(i in ind2), 1:nof_lincombs)
+
+    org_parents=g.parents[node];
+    org_coeffs=g.coeffs[node];
+
+    @show org_coeffs
+
+    # Move ind2 to a new lincomb
+    add_lincomb!(g,newnode,org_coeffs[ind2],org_parents[ind2])
+
+    @show newnode
+    # Store ind1 lincomb info
+    new_parents1=[org_parents[ind1];newnode]
+    new_coeffs1=[org_coeffs[ind1];1]
+
+    # Update the node lincomb data to point ind2 + newnode
+    empty!(g.coeffs[node]);
+    push!(g.coeffs[node], new_coeffs1...)
+    empty!(g.parents[node]);
+    push!(g.parents[node], new_parents1...)
+
+
+    # Update the cref_list
+
+    new_crefs=[];
+    replace_list=Dict();
+    for (j,i)=enumerate(ind2);
+        replace_list[(node,i)]=(newnode,j)
+        push!(new_crefs,(newnode,j));
+    end
+
+
+    for (cref_old,cref_new) in replace_list
+        @show cref_old
+        @show cref_new
+        ii=findall( [cref_old] .== cref_list )
+        map(j -> cref_list[j]=cref_new, ii);
+    end
+
+    return (g,cref_list,new_crefs)
 end
