@@ -70,7 +70,12 @@ function opt_gauss_newton!(
             break
         end
 
-        d = solve_linlsqr!(Jac, res, linlsqr, droptol)
+        if (linlsqr isa LinLsqrSolve) # Refactored behaviour
+            d = solve_linlsqr!(Jac, res, linlsqr)
+        else # Old behavior
+            d = solve_linlsqr!(Jac, res, linlsqr, droptol)
+        end
+
         x = get_coeffs(graph, cref)
         x -= γ0 * d
         set_coeffs!(graph, x, cref)
