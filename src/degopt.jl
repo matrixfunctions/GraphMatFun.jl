@@ -172,7 +172,7 @@ import LinearAlgebra.normalize!; # for overloading
 
 Normalizes the [`Degopt`](@ref) coefficients, in the way specified by `tp`. If
 the `tp==:row1` the `degopt` will be transformed to an equivalent
-[`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.  If `tp==:col1` the first column in the `Ha` and `Hb` matrices will be transformed to zero.
+[`Degopt`](@ref) with first row equal to `(0 1) (0 1)`.  If `tp==:col1` the first column in the `Ha` and `Hb` matrices will be transformed to zero. If `tp=diag1` the first superdiagonal in `Ha` and `Hb` will be transformed to one. 
 """
 function normalize!(degopt::Degopt, tp = :row1)
     if (tp == :row1)
@@ -229,7 +229,28 @@ function normalize!(degopt::Degopt, tp = :row1)
         degopt.x[:]=degopt2.x[:];
         degopt.y[:]=degopt2.y[:];
         return degopt
-    else
+    elseif (tp == :diag1)
+        m=length(degopt.x) # Nof mult
+        
+        for r=1:m
+            factor1=degopt.x[r][1][end];
+            factor2=degopt.x[r][2][end];
+
+            # divide the A-coeffs in row r with factor1 
+            degopt.x[r][1] .= degopt.x[r][1] ./ factor1;
+            # divide the B-coeffs in row r with factor1             
+            degopt.x[r][2] .= degopt.x[r][2] ./ factor2;    
+
+            # Multiply the A and B and y coeffs for col r+2 with factor
+            factor=factor1*factor2;
+            for k=(r+1):m
+                degopt.x[k][1][r+2] = degopt.x[k][1][r+2]*factor;
+                degopt.x[k][2][r+2] = degopt.x[k][2][r+2]*factor;        
+            end
+            degopt.y[r+2] = degopt.y[r+2]*factor;        
+        end        
+        
+    else        
         error("Unknown normalization")
     end
 end
